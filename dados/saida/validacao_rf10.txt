@@ -1,0 +1,101 @@
+
+# Validação — RF10: Geração e edição de imagens
+
+Responsável pela revisão humana: Maria Luiza
+Modelo utilizado: gpt-image-1
+
+## Geração inicial
+
+Arquivo: imagem_rf10_original.png
+
+A geração por IA produziu um comunicado institucional sobre matrículas, mas apresentou problemas de legibilidade, erros de grafia e ausência do brasão oficial.
+
+## Edição por IA
+
+Arquivo: imagem_rf10_editada.png
+
+Foi solicitada a inclusão de uma linha amarelo-dourada abaixo da faixa verde, preservando o restante da composição.
+
+A API concluiu a operação, mas o resultado apresentou falhas:
+
+- Alteração indevida de textos.
+- Distorção de palavras e caracteres.
+- Modificação de detalhes do brasão.
+- Perda de legibilidade do rodapé.
+- Posicionamento inadequado do detalhe solicitado.
+
+Resultado da revisão: REPROVADO para utilização como comunicado institucional.
+
+## Correção e versão final
+
+Arquivo: imagem_rf10_layout_formal.png
+
+A versão final foi diagramada com Pillow, utilizando o brasão original de Mato Grosso e textos definidos diretamente no código.
+
+Foram preservados:
+- Cabeçalho institucional.
+- Brasão original.
+- Faixa verde com título.
+- Orientações sobre documentação e acompanhamento.
+- Aviso de que a solicitação não confirma a matrícula.
+- Identificação de peça demonstrativa.
+
+Resultado da revisão: APROVADO para demonstração.
+
+## Conclusão
+
+O RF10 demonstrou a geração e a edição de imagens por IA, incluindo limitações de fidelidade visual e textual.
+
+A revisão humana identificou os problemas e orientou a utilização de uma versão diagramada programaticamente.
+
+A peça é exclusivamente demonstrativa e não constitui comunicado oficial do Governo do Estado de Mato Grosso.
+
+
+## Nota de proveniência — RF10
+
+**Finalidade:** produção de uma peça visual demonstrativa
+sobre orientações para matrícula em cursos técnicos.
+
+**Modelo de IA:** gpt-image-1 (OpenAI).
+
+**Geração por IA:**
+- Arquivo: imagem_rf10_original.png
+- Prompt: registrado em metadados_rf10.json.
+- Resultado: rejeitado para uso institucional devido a
+  erros textuais e ausência do brasão original.
+
+**Edição por IA:**
+- Entrada: imagem_rf10_layout_formal.png
+- Saída: imagem_rf10_editada.png
+- Prompt: registrado em metadados_edicao_rf10.json.
+- Resultado: rejeitado devido a distorções nos textos,
+  no brasão e no rodapé.
+
+**Versão final selecionada:**
+- Arquivo: imagem_rf10_layout_formal.png
+- Técnica: diagramação programática com Pillow.
+- Brasão: arquivo original fornecido como referência.
+- Conteúdo textual: inserido diretamente no código Python.
+- Revisão humana: aprovada para demonstração.
+
+**Rastreabilidade:**
+- As datas das chamadas de IA estão registradas nos
+  respectivos arquivos JSON de metadados.
+- Os prompts e o modelo utilizado foram preservados.
+- Os arquivos originais e editados foram mantidos para
+  comparação e auditoria.
+
+**Limitação identificada:**
+A edição generativa não preservou integralmente os textos
+e símbolos institucionais, mesmo com instruções explícitas.
+
+**Identificação:**
+A peça final foi diagramada com Pillow, com apoio de IA
+durante o processo de desenvolvimento e avaliação.
+Não deve ser apresentada como imagem integralmente
+gerada por IA.
+
+**Uso autorizado:**
+Material exclusivamente demonstrativo para o projeto
+FIC_DEV 2026. Não constitui comunicado oficial do
+Governo do Estado de Mato Grosso.
