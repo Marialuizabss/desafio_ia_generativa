@@ -1,0 +1,37 @@
+# Validação da transcrição — RF06
+
+**Responsável:** Maria Luiza  
+**Arquivo de entrada:** entrada_audio.mp3  
+**Modelo:** gpt-4o-transcribe  
+**Idioma:** Português (pt)
+
+## Resultado
+
+A transcrição automática identificou corretamente a maior parte das informações do áudio, incluindo protocolo, nome completo, datas, curso, carga horária e documentos.
+
+## Divergências identificadas
+
+**1. Turno**
+
+- Fala original: “no turno noturno”.
+- Transcrição automática: “noturno, noturno”.
+- Classificação: erro leve de reconhecimento.
+
+**2. E-mail**
+
+- Transcrição automática: “marcos.almeida.teste.exemplo.com”.
+- Problema: ausência do símbolo `@` e possível divergência na grafia do domínio.
+- Classificação: erro relevante, exigindo confirmação humana.
+
+## Revisão humana
+
+A transcrição foi avaliada e foram identificadas divergências. O campo de turno pode ser corrigido conforme a escuta confirmada. O endereço eletrônico permanece pendente de conferência.
+
+**Atualização da revisão humana — RF06**
+
+- Turno corrigido para "no turno noturno".
+- E-mail corrigido para "marcos.almeida.teste@exemplo.com", conforme confirmação humana.
+- Transcrição original preservada sem alterações.
+- Transcrição revisada salva separadamente.
+- Não foi realizada nova chamada à API.
+- Revisão textual concluída, com as duas divergências identificadas e corrigidas.
