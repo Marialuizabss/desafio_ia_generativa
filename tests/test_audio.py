@@ -11,16 +11,17 @@ class TestRF06Transcricao(unittest.TestCase):
 
     def test_audio_inexistente(self):
         with TemporaryDirectory() as pasta:
-            with patch.object(audio, "BASE_DIR", Path(pasta)):
-                with self.assertRaises(FileNotFoundError):
-                    audio.transcrever_audio()
+            ausente = Path(pasta) / "entrada_audio.mp3"
+            with self.assertRaises(FileNotFoundError):
+                audio.transcrever_audio(ausente)
 
     def test_transcricao_vazia(self):
         with TemporaryDirectory() as pasta:
             base = Path(pasta)
             entrada = base / "dados" / "originais"
             entrada.mkdir(parents=True)
-            (entrada / "entrada_audio.mp3").write_bytes(b"audio-ficticio")
+            arquivo = entrada / "entrada_audio.mp3"
+            arquivo.write_bytes(b"audio-ficticio")
 
             cliente = MagicMock()
             cliente.audio.transcriptions.create.return_value.text = "   "
@@ -28,7 +29,7 @@ class TestRF06Transcricao(unittest.TestCase):
             with patch.object(audio, "BASE_DIR", base):
                 with patch.object(audio, "OpenAI", return_value=cliente):
                     with self.assertRaises(ValueError):
-                        audio.transcrever_audio()
+                        audio.transcrever_audio(arquivo)
 
 
     def test_transcricao_sucesso(self):
@@ -36,7 +37,8 @@ class TestRF06Transcricao(unittest.TestCase):
             base = Path(pasta)
             entrada = base / "dados" / "originais"
             entrada.mkdir(parents=True)
-            (entrada / "entrada_audio.mp3").write_bytes(b"audio-ficticio")
+            arquivo = entrada / "entrada_audio.mp3"
+            arquivo.write_bytes(b"audio-ficticio")
 
             cliente = MagicMock()
             cliente.audio.transcriptions.create.return_value.text = (
@@ -45,7 +47,7 @@ class TestRF06Transcricao(unittest.TestCase):
 
             with patch.object(audio, "BASE_DIR", base):
                 with patch.object(audio, "OpenAI", return_value=cliente):
-                    audio.transcrever_audio()
+                    audio.transcrever_audio(arquivo)
 
             saida = base / "dados" / "processados"
             logs = base / "resultados" / "logs"

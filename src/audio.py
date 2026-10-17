@@ -14,8 +14,10 @@ MODELO = "gpt-4o-transcribe"
 IDIOMA = "pt"
 
 
-def transcrever_audio():
-    entrada = BASE_DIR / "dados" / "originais" / "entrada_audio.mp3"
+def transcrever_audio(caminho):
+    entrada = Path(caminho)
+    if not entrada.is_absolute():
+        entrada = BASE_DIR / entrada
     pasta_saida = BASE_DIR / "dados" / "processados"
     pasta_logs = BASE_DIR / "resultados" / "logs"
 
@@ -115,4 +117,4 @@ def gerar_audio():
 
 
 if __name__ == "__main__":
-    transcrever_audio()
+    transcrever_audio(BASE_DIR / "dados" / "originais" / "entrada_audio.mp3")
