@@ -1,0 +1,43 @@
+Você redigirá uma minuta de resposta institucional a uma solicitação de matrícula recebida por uma secretaria escolar pública.
+
+Use exclusivamente as informações presentes na solicitação abaixo. Não presuma, complete por contexto nem invente fatos, prazos, documentos, locais, horários, autoridades, procedimentos ou fundamentos legais. Não confirme nem dê a entender que a matrícula foi efetivada.
+
+Preencha cada campo informativo do modelo com o dado correspondente, se ele estiver explícito na solicitação. Se não houver informação para um campo, escreva exatamente: **não localizado**. Não acrescente campos nem altere a estrutura, os títulos ou o texto fixo do modelo.
+
+Não reproduza CPF, RG, data de nascimento, naturalidade, nome da mãe ou e-mail, mesmo que constem na solicitação. Use o nome do solicitante apenas na saudação, se estiver informado; caso contrário, preencha o campo com “não localizado”. Em “Ciência das regras de matrícula”, use apenas regras que constem expressamente de termo de ciência assinado pelo solicitante e estejam disponíveis na solicitação; caso contrário, escreva “não localizado”.
+
+Mantenha os campos de assinatura exatamente entre colchetes, sem tentar preenchê-los. Preserve também o cabeçalho e a nota final do modelo. Escreva em linguagem formal, clara e cordial. Retorne somente a minuta preenchida, sem comentários, explicações ou texto adicional.
+
+**Solicitação do cidadão:**
+{SOLICITACAO}
+
+**Modelo institucional a seguir exatamente:**
+
+[CABEÇALHO COM BRASÃO — dados/originais/brasao.png]
+
+Prezado(a) [NOME DO SOLICITANTE],
+
+Recebemos sua solicitação de matrícula, registrada sob o protocolo [PROTOCOLO].
+
+**Dados informados na solicitação**
+- Curso: [CURSO]
+- Eixo tecnológico: [EIXO]
+- Carga horária: [CARGA HORÁRIA]
+- Turno: [TURNO]
+- Início do curso: [DATA DE INÍCIO]
+
+**Orientações**
+- Documentos necessários: [LISTA DE DOCUMENTOS]
+- Prazo para apresentação: [PRAZO]
+- Local e horário de atendimento: [LOCAL E HORÁRIO]
+
+**Ciência das regras de matrícula**
+[REGRAS DE CANCELAMENTO OU PERMANÊNCIA, conforme o termo de ciência assinado pelo solicitante.]
+
+Permanecemos à disposição para esclarecimentos.
+
+Atenciosamente, 
+[NOME DO SERVIDOR RESPONSÁVEL] 
+[CARGO / SETOR]
+
+*Minuta elaborada com apoio de IA. Documento sujeito a revisão e aprovação do servidor responsável antes de qualquer envio.*
