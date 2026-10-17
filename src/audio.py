@@ -78,10 +78,6 @@ def transcrever_audio():
         raise
 
 
-if __name__ == "__main__":
-    transcrever_audio()
-
-
 def gerar_audio():
     entrada = BASE_DIR / "resultados" / "minutas" / "texto_rf07.txt"
     saida = BASE_DIR / "resultados" / "audios" / "audio_rf07.mp3"
@@ -93,6 +89,13 @@ def gerar_audio():
 
     if not texto:
         raise ValueError("O texto para síntese de voz está vazio.")
+
+    if "não localizado" in texto.casefold():
+        aviso = (
+            "Atenção: esta minuta contém campos não localizados. "
+            "Confira as informações antes de prosseguir."
+        )
+        texto = f"{aviso}\n\n{texto}"
 
     saida.parent.mkdir(parents=True, exist_ok=True)
 
@@ -109,3 +112,7 @@ def gerar_audio():
         resposta.stream_to_file(saida)
 
     print(f"Áudio gerado com sucesso: {saida}")
+
+
+if __name__ == "__main__":
+    transcrever_audio()

@@ -1,4 +1,4 @@
-
+﻿
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -30,7 +30,7 @@ class TestRF06Transcricao(unittest.TestCase):
                     with self.assertRaises(ValueError):
                         audio.transcrever_audio()
 
-     
+
     def test_transcricao_sucesso(self):
         with TemporaryDirectory() as pasta:
             base = Path(pasta)
@@ -40,7 +40,7 @@ class TestRF06Transcricao(unittest.TestCase):
 
             cliente = MagicMock()
             cliente.audio.transcriptions.create.return_value.text = (
-                "Solicito informações sobre matrícula."
+                "Solicito informaÃ§Ãµes sobre matrÃ­cula."
             )
 
             with patch.object(audio, "BASE_DIR", base):
@@ -57,10 +57,10 @@ class TestRF06Transcricao(unittest.TestCase):
             )
 
             self.assertEqual(
-                texto, "Solicito informações sobre matrícula."
+                texto, "Solicito informaÃ§Ãµes sobre matrÃ­cula."
             )
             self.assertIn('"status": "sucesso"', metadados)
-            self.assertIn('"requisito": "RF06"', metadados)                   
+            self.assertIn('"requisito": "RF06"', metadados)
 
 
 class TestRF07Sintese(unittest.TestCase):
@@ -84,7 +84,7 @@ class TestRF07Sintese(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     audio.gerar_audio()
 
-    
+
     def test_geracao_audio_sucesso(self):
         with TemporaryDirectory() as pasta:
             base = Path(pasta)
@@ -92,7 +92,7 @@ class TestRF07Sintese(unittest.TestCase):
             entrada.mkdir(parents=True)
 
             (entrada / "texto_rf07.txt").write_text(
-                "Sua solicitação foi recebida.",
+                "Sua solicitaÃ§Ã£o foi recebida.",
                 encoding="utf-8"
             )
 
@@ -128,9 +128,44 @@ class TestRF07Sintese(unittest.TestCase):
             cliente.audio.speech.with_streaming_response.create.assert_called_once_with(
                 model="tts-1-hd",
                 voice="nova",
-                input="Sua solicitação foi recebida.",
+                input="Sua solicitaÃ§Ã£o foi recebida.",
                 response_format="mp3",
             )
+
+
+    def test_avisa_campos_nao_localizados(self):
+        with TemporaryDirectory() as pasta:
+            base = Path(pasta)
+            entrada = base / "resultados" / "minutas"
+            entrada.mkdir(parents=True)
+
+            (entrada / "texto_rf07.txt").write_text(
+                "Curso: TÃ©cnico em Enfermagem. Prazo: nÃ£o localizado.",
+                encoding="utf-8",
+            )
+
+            cliente = MagicMock()
+            resposta = MagicMock()
+
+            streaming = (
+                cliente.audio.speech
+                .with_streaming_response.create
+                .return_value
+            )
+            streaming.__enter__.return_value = resposta
+
+            with patch.object(audio, "BASE_DIR", base):
+                with patch.object(audio, "OpenAI", return_value=cliente):
+                    audio.gerar_audio()
+
+            argumentos = (
+                cliente.audio.speech
+                .with_streaming_response.create.call_args.kwargs
+            )
+
+            self.assertIn("AtenÃ§Ã£o", argumentos["input"])
+            self.assertIn("nÃ£o localizados", argumentos["input"])
+            self.assertIn("Confira as informaÃ§Ãµes", argumentos["input"])
 
 
 if __name__ == "__main__":
