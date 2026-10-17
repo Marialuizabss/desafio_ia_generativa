@@ -30,6 +30,15 @@ CAMPOS_INSTITUCIONAIS = (
 
 CAMPOS = CAMPOS_SOLICITACAO + CAMPOS_INSTITUCIONAIS
 
+CATEGORIAS = (
+    "matricula",
+    "documentacao",
+    "frequencia_cancelamento",
+    "informacao_geral",
+    "reclamacao",
+    "outros",
+)
+
 
 @dataclass
 class Campo:
@@ -101,3 +110,73 @@ class Extracao:
     def de_dict(cls, dados: dict | None) -> "Extracao":
         dados = dados or {}
         return cls(**{nome: dados[nome] for nome in CAMPOS if nome in dados})
+
+
+@dataclass
+class ResultadoExtracao:
+    """Resposta completa da análise, com a extração que preenche a minuta."""
+
+    extracao: Extracao
+    categoria: str
+    assunto: str
+    pedido: str
+    alertas_seguranca: list[str]
+    requer_revisao: bool
+    minuta: str
+
+    @property
+    def campos_ausentes(self) -> list[str]:
+        return self.extracao.campos_ausentes
+
+    def para_dict(self) -> dict:
+        return {
+            "categoria": self.categoria,
+            "assunto": self.assunto,
+            "pedido": self.pedido,
+            "campos": self.extracao.para_dict(),
+            "campos_ausentes": self.campos_ausentes,
+            "alertas_seguranca": list(self.alertas_seguranca),
+            "requer_revisao": True,
+            "minuta": self.minuta,
+        }
+
+
+def resultado_de_dict(dados: dict | None, arquivo: str) -> ResultadoExtracao:
+    """Monta o resultado a partir do JSON do modelo.
+
+    A fonte de um campo preenchido passa a ser ``arquivo``. Campo ausente
+    permanece com fonte ``"nenhuma"``.
+    """
+
+    dados = dados or {}
+    campos = dados.get("campos")
+    extracao = Extracao.de_dict(campos if isinstance(campos, dict) else {})
+    for nome in CAMPOS:
+        campo = getattr(extracao, nome)
+        if not campo.ausente:
+            campo.fonte = arquivo
+
+    categoria = str(dados.get("categoria") or "").strip()
+    if categoria not in CATEGORIAS:
+        categoria = "outros"
+
+    alertas = dados.get("alertas_seguranca") or []
+    if not isinstance(alertas, list):
+        alertas = [alertas]
+
+    return ResultadoExtracao(
+        extracao=extracao,
+        categoria=categoria,
+        assunto=_texto_ou_ausente(dados.get("assunto")),
+        pedido=_texto_ou_ausente(dados.get("pedido")),
+        alertas_seguranca=[
+            item for item in (str(alerta).strip() for alerta in alertas) if item
+        ],
+        requer_revisao=True,
+        minuta=str(dados.get("minuta") or "").strip(),
+    )
+
+
+def _texto_ou_ausente(valor) -> str:
+    texto = "" if valor is None else str(valor).strip()
+    return texto or VALOR_AUSENTE

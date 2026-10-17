@@ -1,0 +1,67 @@
+{
+  "categoria": "matricula",
+  "assunto": "Pedido de efetivação de matrícula no curso técnico em enfermagem",
+  "pedido": "Solicita a efetivação da matrícula e informações sobre os documentos que ainda precisa apresentar.",
+  "campos": {
+    "solicitante": {
+      "valor": "Marcos Vinícius de Almeida Santos",
+      "fonte": "dados/originais/entrada_audio.mp3"
+    },
+    "protocolo": {
+      "valor": "2026-000142",
+      "fonte": "dados/originais/entrada_audio.mp3"
+    },
+    "data_solicitacao": {
+      "valor": "14/10/2026",
+      "fonte": "dados/originais/entrada_audio.mp3"
+    },
+    "curso": {
+      "valor": "Técnico em enfermagem",
+      "fonte": "dados/originais/entrada_audio.mp3"
+    },
+    "eixo": {
+      "valor": "Saúde",
+      "fonte": "dados/originais/entrada_audio.mp3"
+    },
+    "carga_horaria": {
+      "valor": "1.200 horas",
+      "fonte": "dados/originais/entrada_audio.mp3"
+    },
+    "turno": {
+      "valor": "Noturno",
+      "fonte": "dados/originais/entrada_audio.mp3"
+    },
+    "data_inicio": {
+      "valor": "não localizado",
+      "fonte": "nenhuma"
+    },
+    "regras_ciencia": {
+      "valor": "Declara estar ciente de que a matrícula será cancelada automaticamente se faltar sem justificativa comprovada nos dois primeiros dias de aula consecutivos ou em três dias de aula consecutivos ou não nos dez primeiros dias de aula.",
+      "fonte": "dados/originais/entrada_audio.mp3"
+    },
+    "documentos_necessarios": {
+      "valor": "não localizado",
+      "fonte": "nenhuma"
+    },
+    "prazo_apresentacao": {
+      "valor": "não localizado",
+      "fonte": "nenhuma"
+    },
+    "local_horario": {
+      "valor": "não localizado",
+      "fonte": "nenhuma"
+    }
+  },
+  "campos_ausentes": [
+    "data_inicio",
+    "documentos_necessarios",
+    "prazo_apresentacao",
+    "local_horario"
+  ],
+  "alertas_seguranca": [],
+  "requer_revisao": true,
+  "minuta": "[CABEÇALHO COM BRASÃO — dados/originais/brasao.png]\n\nPrezado(a) Marcos Vinícius de Almeida Santos,\n\nRecebemos sua solicitação de matrícula, registrada sob o protocolo 2026-000142.\n\n**Dados informados na solicitação**\n- Curso: Técnico em enfermagem\n- Eixo tecnológico: Saúde\n- Carga horária: 1.200 horas\n- Turno: Noturno\n- Início do curso: não localizado\n\n**Orientações**\n- Documentos necessários: não localizado\n- Prazo para apresentação: não localizado\n- Local e horário de atendimento: não localizado\n\n**Ciência das regras de matrícula**\nDeclara estar ciente de que a matrícula será cancelada automaticamente se faltar sem justificativa comprovada nos dois primeiros dias de aula consecutivos ou em três dias de aula consecutivos ou não nos dez primeiros dias de aula.\n\nPermanecemos à disposição para esclarecimentos.\n\nAtenciosamente, \n[NOME DO SERVIDOR RESPONSÁVEL] \n[CARGO / SETOR]\n\n*Minuta elaborada com apoio de IA. Documento sujeito a revisão e aprovação do servidor responsável antes de qualquer envio.*",
+  "modalidade": "audio",
+  "arquivo_origem": "dados/originais/entrada_audio.mp3",
+  "texto_extraido": "Bom dia, meu protocolo é 2026-000142, de 14 de outubro de 2026. Meu nome é Marcos Vinícius de Almeida Santos, nasci em 12 de agosto de 2008, em Cuiabá, e quero pedir a efetivação da minha matrícula no curso técnico em enfermagem do eixo tecnológico de saúde, com carga horária de 1.200 horas noturno, noturno. Meu CPF é 1-2-3-4-5-6-7-8-9-00, meu RG é 1-2-3-4-5-6-7-8, o nome da minha mãe é Lúcia Helena de Almeida Santos, e o meu e-mail é marcos.almeida.teste.com. Declaro estar ciente de que a matrícula será cancelada automaticamente se eu faltar sem justificativa comprovada nos dois primeiros dias de aula consecutivos ou em três dias de aula consecutivos ou não nos dez primeiros dias de aula. Peço que informem quais os documentos ainda preciso apresentar. Muito obrigado."
+}

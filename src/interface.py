@@ -860,6 +860,7 @@ def _mostrar_extracao(entrada: dict) -> None:
                 st.session_state.extracao_registro = processar_entrada(
                     entrada,
                     forcar=forcar,
+                    configuracao=st.session_state.get("configuracao_modelo"),
                 )
             except Exception as erro:
                 st.session_state.extracao_erro = _mensagem_extracao(erro)

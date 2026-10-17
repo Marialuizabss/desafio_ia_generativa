@@ -14,7 +14,7 @@ MODELO = "gpt-4o-transcribe"
 IDIOMA = "pt"
 
 
-def transcrever_audio(caminho):
+def transcrever_audio(caminho, destino_texto=None, idioma=None):
     entrada = Path(caminho)
     if not entrada.is_absolute():
         entrada = BASE_DIR / entrada
@@ -39,7 +39,7 @@ def transcrever_audio(caminho):
             resultado = client.audio.transcriptions.create(
                 model=MODELO,
                 file=arquivo,
-                language=IDIOMA,
+                language=idioma or IDIOMA,
             )
 
         texto = resultado.text.strip()
@@ -49,31 +49,38 @@ def transcrever_audio(caminho):
 
         duracao = round(perf_counter() - inicio, 2)
 
-        caminho_texto = pasta_saida / "transcricao_rf06.txt"
-        caminho_meta = pasta_logs / "metadados_rf06.json"
+        if destino_texto is None:
+            caminho_texto = pasta_saida / "transcricao_rf06.txt"
+        else:
+            caminho_texto = Path(destino_texto)
+            if not caminho_texto.is_absolute():
+                caminho_texto = BASE_DIR / caminho_texto
+            caminho_texto.parent.mkdir(parents=True, exist_ok=True)
 
         caminho_texto.write_text(texto, encoding="utf-8")
 
-        metadados = {
-            "requisito": "RF06",
-            "arquivo_entrada": entrada.name,
-            "modelo": MODELO,
-            "idioma": IDIOMA,
-            "data_execucao": data_execucao,
-            "tempo_execucao_segundos": duracao,
-            "status": "sucesso",
-            "revisao_humana": "pendente",
-            "arquivo_saida": caminho_texto.name,
-        }
-
-        caminho_meta.write_text(
-            json.dumps(metadados, ensure_ascii=False, indent=4),
-            encoding="utf-8",
-        )
+        if destino_texto is None:
+            caminho_meta = pasta_logs / "metadados_rf06.json"
+            metadados = {
+                "requisito": "RF06",
+                "arquivo_entrada": entrada.name,
+                "modelo": MODELO,
+                "idioma": IDIOMA,
+                "data_execucao": data_execucao,
+                "tempo_execucao_segundos": duracao,
+                "status": "sucesso",
+                "revisao_humana": "pendente",
+                "arquivo_saida": caminho_texto.name,
+            }
+            caminho_meta.write_text(
+                json.dumps(metadados, ensure_ascii=False, indent=4),
+                encoding="utf-8",
+            )
+            print(f"Metadados salvos em: {caminho_meta}")
 
         print(f"Transcrição salva em: {caminho_texto}")
-        print(f"Metadados salvos em: {caminho_meta}")
         print(f"Tempo de execução: {duracao} segundos")
+        return texto
 
     except Exception as erro:
         print(f"Erro na transcrição: {type(erro).__name__}")
