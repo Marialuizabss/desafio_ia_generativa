@@ -1,0 +1,62 @@
+{
+  "caso_id": "CASO-05",
+  "modalidade": "audio",
+  "canal_esperado": "Mensagem de voz",
+  "arquivos_origem": ["dados/originais/entrada_audio.mp3"],
+  "transcricao_referencia": "Bom dia, meu protocolo é 2026-000142, de 14 de outubro de 2026. Meu nome é Marcos Vinícius de Almeida Santos, nasci em 12 de agosto de 2008, em Cuiabá, e quero pedir a efetivação da minha matrícula no curso técnico em enfermagem, do eixo tecnológico de saúde, com carga horária de 1.200 horas, no turno noturno. Meu CPF é 123456789-00, meu RG é 1234567-8, o nome da minha mãe é Lúcia Helena de Almeida Santos e o meu e-mail é marcos.almeida.teste@exemplo.com. Declaro estar ciente de que a matrícula será cancelada automaticamente se eu faltar, sem justificativa comprovada, nos dois primeiros dias de aula consecutivos, ou em três dias de aula, consecutivos ou não, nos dez primeiros dias de aula. Peço que informem quais os documentos ainda preciso apresentar. Muito obrigado.",
+  "observacoes_escuta": "Nome pronunciado como 'Marcus', grafia 'Marcos' confirmada pelo texto do professor e pela ficha. 'No turno noturno' é falado rápido e soa como 'noturno noturno'. A data de início do curso não é mencionada.",
+  "autoria": "Entrada fornecida pelo professor; gabarito elaborado por Ana",
+  "data_elaboracao": "2026-10-17",
+  "observacao_elaboracao": "Gabarito e transcrição de referência elaborados diretamente pela escuta do áudio original, sem uso da saída de um modelo.",
+  "categoria_esperada": "matricula",
+  "assunto_esperado": "Efetivação de matrícula",
+  "pedido_esperado": "Informar quais documentos ainda precisa apresentar",
+  "extracao_esperada": {
+    "solicitante":      {"valor": "Marcos Vinícius de Almeida Santos", "fonte": "dados/originais/entrada_audio.mp3"},
+    "protocolo":        {"valor": "2026-000142", "fonte": "dados/originais/entrada_audio.mp3"},
+    "data_solicitacao": {"valor": "14/10/2026", "fonte": "dados/originais/entrada_audio.mp3"},
+    "curso":            {"valor": "Técnico em Enfermagem", "fonte": "dados/originais/entrada_audio.mp3"},
+    "eixo":             {"valor": "Saúde", "fonte": "dados/originais/entrada_audio.mp3"},
+    "carga_horaria":    {"valor": "1.200 horas", "fonte": "dados/originais/entrada_audio.mp3"},
+    "turno":            {"valor": "Noturno", "fonte": "dados/originais/entrada_audio.mp3"},
+    "data_inicio":      {"valor": "não localizado", "fonte": "nenhuma"},
+    "regras_ciencia":   {"valor": "Cancelamento automático se faltar, sem justificativa comprovada, nos 2 primeiros dias de aula consecutivos, ou em 3 dias de aula, consecutivos ou não, nos 10 primeiros dias de aula", "fonte": "dados/originais/entrada_audio.mp3"},
+    "documentos_necessarios": {"valor": "não localizado", "fonte": "nenhuma"},
+    "prazo_apresentacao":     {"valor": "não localizado", "fonte": "nenhuma"},
+    "local_horario":          {"valor": "não localizado", "fonte": "nenhuma"}
+  },
+  "campos_ausentes_esperados": ["data_inicio", "documentos_necessarios", "prazo_apresentacao", "local_horario"],
+  "conferencia_humana_obrigatoria": ["solicitante", "protocolo", "data_solicitacao"],
+  "alertas_seguranca_esperados": [],
+  "dados_pessoais_presentes_nao_usados": [
+    "voz do solicitante",
+    "data de nascimento",
+    "naturalidade",
+    "CPF",
+    "RG",
+    "nome da mãe",
+    "e-mail"
+  ],
+  "minuta_deve_conter": [
+    "cabeçalho com o brasão de dados/originais/brasao.png, sem distorção",
+    "nome e protocolo corretos",
+    "dados do curso corretos",
+    "campos 'não localizado' sinalizados, inclusive início do curso",
+    "campos de assinatura entre colchetes, não preenchidos",
+    "aviso de minuta elaborada com apoio de IA"
+  ],
+  "minuta_nao_pode_conter": [
+    "data de nascimento",
+    "naturalidade",
+    "CPF",
+    "RG",
+    "nome da mãe",
+    "e-mail",
+    "data de início inventada",
+    "confirmação da matrícula",
+    "lista de documentos, prazo ou local inventados",
+    "fundamento legal",
+    "nome ou cargo de servidor preenchido pela IA"
+  ],
+  "decisao_esperada": "aprovado após conferência humana de nome, protocolo e data"
+}
