@@ -1,7 +1,7 @@
 {
   "categoria": "matricula",
   "assunto": "Solicitação de matrícula no Técnico em Administração",
-  "pedido": "Solicita matrícula no Técnico em Administração e informações sobre os documentos necessários e o prazo para apresentá-los.",
+  "pedido": "Realizar matrícula e obter informações sobre os documentos necessários e o prazo para apresentação.",
   "campos": {
     "solicitante": {
       "valor": "Roberto Alves Nunes",
@@ -67,5 +67,22 @@
   "modalidade": "texto",
   "arquivo_origem": "dados/originais/caso2_solicitacao_incompleta.txt",
   "modelo": "gpt-6-luna",
-  "texto_extraido": "Olá, sou Roberto Alves Nunes, CPF 222.333.444-55.\n\nQuero fazer minha matrícula no Técnico em Administração, eixo Gestão e Negócios, 1.000 horas, com início em 01/02/2027.\n\nNão lembro o número do protocolo. O que eu preciso levar e até quando?\n\nRoberto"
+  "texto_extraido": "Olá, sou Roberto Alves Nunes, CPF 222.333.444-55.\n\nQuero fazer minha matrícula no Técnico em Administração, eixo Gestão e Negócios, 1.000 horas, com início em 01/02/2027.\n\nNão lembro o número do protocolo. O que eu preciso levar e até quando?\n\nRoberto",
+  "chamada": {
+    "modelo": "gpt-6-luna",
+    "temperatura": null,
+    "idioma": "pt",
+    "timeout_segundos": 120.0,
+    "tempo_resposta_segundos": 8.57,
+    "tokens_entrada": 1734,
+    "tokens_saida": 887,
+    "tokens_total": 2621,
+    "tokens_raciocinio": 113,
+    "tokens_cache": 0,
+    "custo_estimado_usd": 0.000617,
+    "preco_usd_por_milhao_tokens": {
+      "entrada": 0.1,
+      "saida": 0.5
+    }
+  }
 }

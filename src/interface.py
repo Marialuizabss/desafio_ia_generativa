@@ -899,6 +899,7 @@ def _resumo_extracao(registro: dict) -> None:
     )
     if ausentes:
         st.caption("Campos não localizados: " + ", ".join(ausentes))
+    _resumo_chamada(registro.get("chamada") or {})
     if aviso_alerta:
         st.markdown(aviso_alerta, unsafe_allow_html=True)
     st.caption("Revisão humana obrigatória antes de qualquer envio.")
@@ -906,6 +907,23 @@ def _resumo_extracao(registro: dict) -> None:
     if minuta:
         with st.expander("Minuta"):
             st.markdown(minuta)
+
+
+def _resumo_chamada(chamada: dict) -> None:
+    if not chamada:
+        return
+    partes = []
+    if chamada.get("temperatura") is not None:
+        partes.append(f"temperatura {chamada['temperatura']}")
+    if chamada.get("tempo_resposta_segundos") is not None:
+        partes.append(f"{chamada['tempo_resposta_segundos']} s")
+    if chamada.get("tokens_total") is not None:
+        partes.append(f"{chamada['tokens_total']} tokens")
+    if chamada.get("custo_estimado_usd") is not None:
+        custo = f"{chamada['custo_estimado_usd']:.6f}".replace(".", ",")
+        partes.append(f"US$ {custo}")
+    if partes:
+        st.caption("Chamada: " + " · ".join(partes))
 
 
 def _mensagem_extracao(erro: Exception) -> str:

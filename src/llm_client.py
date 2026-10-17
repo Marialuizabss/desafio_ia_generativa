@@ -2,6 +2,7 @@
 
 import json
 from pathlib import Path
+from time import perf_counter
 
 from dotenv import load_dotenv
 from openai import (
@@ -27,6 +28,19 @@ load_dotenv(BASE_DIR / ".env")
 
 MODELO = "gpt-6-luna"
 TIMEOUT_SEGUNDOS = 120.0
+MODELOS_COM_TEMPERATURA = {"gpt-4o"}
+
+# Dólares por 1 milhão de tokens. O custo gravado é uma estimativa com esta tabela.
+PRECOS_USD_POR_MILHAO = {
+    "gpt-6-luna": {"entrada": 0.10, "saida": 0.50},
+    "gpt-4o": {"entrada": 2.50, "saida": 10.00},
+}
+
+NOMES_IDIOMA = {
+    "pt": "português",
+    "en": "inglês",
+    "es": "espanhol",
+}
 
 PROMPT_SISTEMA = """
 # Papel
@@ -155,7 +169,8 @@ def extrair_campos(
     arquivo: str,
     modelo: str | None = None,
     temperatura: float | None = None,
-) -> ResultadoExtracao:
+    idioma: str | None = None,
+) -> tuple[ResultadoExtracao, dict]:
     """Analisa o texto e devolve a extração preenchida pelo modelo.
 
     ``texto`` pode ser a solicitação digitada, a transcrição do áudio ou o
@@ -171,9 +186,10 @@ def extrair_campos(
         raise ValueError("Informe o arquivo de origem da solicitação.")
 
     modelo_id = (modelo or MODELO).strip()
+    temperatura_usada = _temperatura(temperatura)
     consulta = {
         "model": modelo_id,
-        "instructions": _prompt_sistema(),
+        "instructions": _prompt_sistema(idioma),
         "input": _embrulhar(texto, arquivo),
         "store": False,
         "text": {
@@ -185,14 +201,19 @@ def extrair_campos(
             }
         },
     }
+    if temperatura_usada is not None and modelo_id in MODELOS_COM_TEMPERATURA:
+        consulta["temperature"] = temperatura_usada
+        temperatura_enviada = temperatura_usada
+    else:
+        temperatura_enviada = None
     if modelo_id.startswith("gpt-6"):
         consulta["reasoning"] = {"effort": "low"}
-    elif temperatura is not None:
-        consulta["temperature"] = float(temperatura)
 
     try:
         cliente = OpenAI(timeout=TIMEOUT_SEGUNDOS, max_retries=2)
+        inicio = perf_counter()
         resposta = cliente.responses.create(**consulta)
+        duracao = round(perf_counter() - inicio, 2)
     except OpenAIError as erro:
         raise ValueError(_mensagem_de_falha(erro)) from erro
 
@@ -207,15 +228,70 @@ def extrair_campos(
     if not isinstance(dados, dict):
         raise ValueError("A API não retornou um objeto JSON.")
 
-    return resultado_de_dict(dados, arquivo)
+    return resultado_de_dict(dados, arquivo), _registrar_chamada(
+        resposta,
+        modelo_id,
+        temperatura_enviada,
+        idioma,
+        duracao,
+    )
 
 
-def _prompt_sistema() -> str:
+def _temperatura(valor) -> float | None:
+    if valor is None or valor == "":
+        return None
+    return round(float(valor), 1)
+
+
+def _prompt_sistema(idioma: str | None = None) -> str:
     modelo = BASE_DIR / "prompts" / "modelo_minuta.md"
     if not modelo.is_file():
         raise FileNotFoundError(f"Modelo de minuta não encontrado: {modelo}")
     texto_modelo = modelo.read_text(encoding="utf-8").strip()
-    return f"{PROMPT_SISTEMA}\n\n# Modelo da minuta\n{texto_modelo}\n"
+    return f"{PROMPT_SISTEMA}\n\n# Modelo da minuta\n{texto_modelo}\n{_instrucao_idioma(idioma)}"
+
+
+def _instrucao_idioma(idioma: str | None) -> str:
+    if not idioma:
+        return ""
+    nome = NOMES_IDIOMA.get(idioma, idioma)
+    return (
+        "\n# Idioma\n"
+        f"Escreva assunto, pedido, valores e minuta em {nome}. "
+        "Mantenha a estrutura do modelo da minuta.\n"
+    )
+
+
+def _registrar_chamada(resposta, modelo_id, temperatura, idioma, duracao) -> dict:
+    uso = getattr(resposta, "usage", None)
+    entrada = getattr(uso, "input_tokens", None) if uso else None
+    saida = getattr(uso, "output_tokens", None) if uso else None
+    total = getattr(uso, "total_tokens", None) if uso else None
+    detalhes_entrada = getattr(uso, "input_tokens_details", None) if uso else None
+    detalhes_saida = getattr(uso, "output_tokens_details", None) if uso else None
+    custo, preco = _custo_estimado(modelo_id, entrada, saida)
+    return {
+        "modelo": modelo_id,
+        "temperatura": temperatura,
+        "idioma": idioma,
+        "timeout_segundos": TIMEOUT_SEGUNDOS,
+        "tempo_resposta_segundos": duracao,
+        "tokens_entrada": entrada,
+        "tokens_saida": saida,
+        "tokens_total": total,
+        "tokens_raciocinio": getattr(detalhes_saida, "reasoning_tokens", None),
+        "tokens_cache": getattr(detalhes_entrada, "cached_tokens", None),
+        "custo_estimado_usd": custo,
+        "preco_usd_por_milhao_tokens": preco,
+    }
+
+
+def _custo_estimado(modelo_id: str, entrada, saida):
+    preco = PRECOS_USD_POR_MILHAO.get(modelo_id)
+    if preco is None or entrada is None or saida is None:
+        return None, None
+    valor = (entrada * preco["entrada"] + saida * preco["saida"]) / 1_000_000
+    return round(valor, 6), dict(preco)
 
 
 def _embrulhar(texto: str, arquivo: str) -> str:

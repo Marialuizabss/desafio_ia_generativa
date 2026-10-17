@@ -42,20 +42,30 @@ def processar_entrada(entrada: dict, forcar: bool = False, configuracao: dict | 
     modelo_id, temperatura, idioma = _configuracao(configuracao)
     if saida.is_file() and not forcar:
         registro = json.loads(saida.read_text(encoding="utf-8"))
+        chamada = registro.get("chamada") or {}
         if (
             registro.get("arquivo_origem") == arquivo
             and registro.get("modelo") == modelo_id
+            and chamada.get("temperatura") == temperatura
+            and chamada.get("idioma") == idioma
         ):
             registro["arquivo_extracao"] = saida.relative_to(BASE_DIR).as_posix()
             return registro
 
     texto = _extrair_texto(modalidade, caminho, entrada, idioma)
-    resultado = extrair_campos(texto, arquivo, modelo=modelo_id, temperatura=temperatura)
+    resultado, chamada = extrair_campos(
+        texto,
+        arquivo,
+        modelo=modelo_id,
+        temperatura=temperatura,
+        idioma=idioma,
+    )
     registro = resultado.para_dict()
     registro["modalidade"] = modalidade
     registro["arquivo_origem"] = arquivo
     registro["modelo"] = modelo_id
     registro["texto_extraido"] = texto
+    registro["chamada"] = chamada
 
     saida.write_text(
         json.dumps(registro, ensure_ascii=False, indent=2),
@@ -77,8 +87,10 @@ def _configuracao(configuracao: dict | None) -> tuple[str, float | None, str | N
         modelo = MODELO
     parametros = dados.get("parametros") or {}
     temperatura = parametros.get("temperatura")
-    idioma = parametros.get("idioma")
-    return modelo, temperatura, idioma or None
+    if temperatura is not None:
+        temperatura = round(float(temperatura), 1)
+    idioma = parametros.get("idioma") or None
+    return modelo, temperatura, idioma
 
 
 def _extrair_texto(modalidade: str, caminho: Path, entrada: dict, idioma: str | None) -> str:

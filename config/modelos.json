@@ -26,10 +26,10 @@
     {
       "id": "gpt-6-luna",
       "nome": "GPT-6 Luna",
-      "descricao": "Analisa a solicitação e redige a minuta.",
+      "descricao": "Analisa a solicitação e redige a minuta. Este modelo não aceita temperatura.",
       "padroes": {
         "idioma": "pt",
-        "temperatura": 0.0,
+        "temperatura": null,
         "tamanho": null,
         "qualidade": null
       }
