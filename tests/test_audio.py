@@ -40,7 +40,7 @@ class TestRF06Transcricao(unittest.TestCase):
 
             cliente = MagicMock()
             cliente.audio.transcriptions.create.return_value.text = (
-                "Solicito informaÃ§Ãµes sobre matrÃ­cula."
+                "Solicito informações sobre matrícula."
             )
 
             with patch.object(audio, "BASE_DIR", base):
@@ -57,7 +57,7 @@ class TestRF06Transcricao(unittest.TestCase):
             )
 
             self.assertEqual(
-                texto, "Solicito informaÃ§Ãµes sobre matrÃ­cula."
+                texto, "Solicito informações sobre matrícula."
             )
             self.assertIn('"status": "sucesso"', metadados)
             self.assertIn('"requisito": "RF06"', metadados)
@@ -92,7 +92,7 @@ class TestRF07Sintese(unittest.TestCase):
             entrada.mkdir(parents=True)
 
             (entrada / "texto_rf07.txt").write_text(
-                "Sua solicitaÃ§Ã£o foi recebida.",
+                "Sua solicitação foi recebida.",
                 encoding="utf-8"
             )
 
@@ -128,7 +128,7 @@ class TestRF07Sintese(unittest.TestCase):
             cliente.audio.speech.with_streaming_response.create.assert_called_once_with(
                 model="tts-1-hd",
                 voice="nova",
-                input="Sua solicitaÃ§Ã£o foi recebida.",
+                input="Sua solicitação foi recebida.",
                 response_format="mp3",
             )
 
@@ -140,7 +140,7 @@ class TestRF07Sintese(unittest.TestCase):
             entrada.mkdir(parents=True)
 
             (entrada / "texto_rf07.txt").write_text(
-                "Curso: TÃ©cnico em Enfermagem. Prazo: nÃ£o localizado.",
+                "Curso: Técnico em Enfermagem. Prazo: não localizado.",
                 encoding="utf-8",
             )
 
@@ -163,9 +163,9 @@ class TestRF07Sintese(unittest.TestCase):
                 .with_streaming_response.create.call_args.kwargs
             )
 
-            self.assertIn("AtenÃ§Ã£o", argumentos["input"])
-            self.assertIn("nÃ£o localizados", argumentos["input"])
-            self.assertIn("Confira as informaÃ§Ãµes", argumentos["input"])
+            self.assertIn("Atenção", argumentos["input"])
+            self.assertIn("não localizados", argumentos["input"])
+            self.assertIn("Confira as informações", argumentos["input"])
 
 
 if __name__ == "__main__":
