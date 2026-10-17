@@ -13,12 +13,28 @@ Depois da confirmação, a entrada fica em ``st.session_state["entrada"]``:
 - ``tipo_mime``: tipo do arquivo
 - ``tamanho_bytes``: tamanho do texto ou do arquivo
 - ``conteudo``: bytes guardados
+
+A escolha do modelo fica em ``st.session_state["configuracao_modelo"]``:
+
+- ``modelo``: id escolhido em ``config/modelos.json``
+- ``parametros``: idioma, temperatura, tamanho e qualidade que se aplicam
+  a esse modelo, já com o que o usuário alterou
 """
 
 from html import escape
 from pathlib import Path
 
 import streamlit as st
+
+try:
+    from fluxo import processar_entrada
+except ImportError:
+    from src.fluxo import processar_entrada
+
+try:
+    from src.configuracao import carregar_modelos, obter_modelo, parametros_aplicaveis, rotulo_da_opcao
+except ImportError:
+    from configuracao import carregar_modelos, obter_modelo, parametros_aplicaveis, rotulo_da_opcao
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 PASTA_ORIGINAIS = BASE_DIR / "dados" / "originais"
@@ -64,6 +80,28 @@ MIME_AUDIO = {
 }
 
 LIMITE_TEXTO = 20_000
+
+ROTULOS_CAMPOS = (
+    ("solicitante", "Solicitante"),
+    ("protocolo", "Protocolo"),
+    ("data_solicitacao", "Data"),
+    ("curso", "Curso"),
+    ("eixo", "Eixo"),
+    ("carga_horaria", "Carga horária"),
+    ("turno", "Turno"),
+    ("data_inicio", "Início"),
+    ("regras_ciencia", "Ciência das regras"),
+    ("documentos_necessarios", "Documentos"),
+    ("prazo_apresentacao", "Prazo"),
+    ("local_horario", "Local e horário"),
+)
+
+ROTULOS_PARAMETRO = {
+    "idioma": "Idioma",
+    "temperatura": "Temperatura",
+    "tamanho": "Tamanho",
+    "qualidade": "Qualidade",
+}
 
 ESTILOS = """
 <style>
@@ -310,6 +348,40 @@ ESTILOS = """
     font-size: 0.92rem;
   }
 
+  .st-key-modelo {
+    margin-top: 1.35rem;
+    padding-top: 0.35rem;
+  }
+
+  .st-key-modelo [data-baseweb="select"] > div {
+    border-radius: 14px;
+    border-color: var(--linha);
+    background: var(--suave);
+  }
+
+  .st-key-modelo [data-testid="stSlider"] [data-baseweb="slider"] [role="slider"] {
+    background: var(--verde);
+  }
+
+  .st-key-restaurar_padroes {
+    margin-top: 0.15rem;
+  }
+
+  .st-key-restaurar_padroes [data-testid="stBaseButton-secondary"] {
+    border: 1px solid var(--linha) !important;
+    border-radius: 14px !important;
+    background: transparent !important;
+    color: var(--verde) !important;
+    min-height: 2.7rem;
+    font-weight: 600;
+    box-shadow: none !important;
+  }
+
+  .st-key-restaurar_padroes [data-testid="stBaseButton-secondary"]:hover {
+    border-color: var(--verde) !important;
+    color: var(--verde-escuro) !important;
+  }
+
   .st-key-confirmar {
     margin-top: 0.85rem;
   }
@@ -448,6 +520,7 @@ def renderizar() -> None:
 
     with st.container(key="folha"):
         _cabecalho()
+        _secao_modelo()
         if st.session_state.confirmada and st.session_state.entrada:
             _entrada_registrada(st.session_state.entrada)
         else:
@@ -460,6 +533,10 @@ def _iniciar_estado() -> None:
     st.session_state.setdefault("entrada", None)
     st.session_state.setdefault("texto_guardado", "")
     st.session_state.setdefault("erro", None)
+    st.session_state.setdefault("extracao_chave", None)
+    st.session_state.setdefault("extracao_registro", None)
+    st.session_state.setdefault("extracao_erro", None)
+    st.session_state.setdefault("extracao_forcar", False)
 
 
 def _cabecalho() -> None:
@@ -474,6 +551,104 @@ def _cabecalho() -> None:
         """,
         unsafe_allow_html=True,
     )
+
+
+def _secao_modelo() -> None:
+    try:
+        config = carregar_modelos()
+    except ValueError as erro:
+        st.markdown(
+            f'<p class="aviso">{escape(str(erro))}</p>',
+            unsafe_allow_html=True,
+        )
+        return
+
+    ids = [modelo["id"] for modelo in config["modelos"]]
+    if st.session_state.get("modelo_escolhido") not in ids:
+        st.session_state.modelo_escolhido = config["modelo_padrao"]
+    modelo = obter_modelo(config, st.session_state.modelo_escolhido)
+    for nome, valor in parametros_aplicaveis(modelo).items():
+        st.session_state.setdefault(f"cfg_{nome}", valor)
+
+    with st.container(key="modelo"):
+        st.markdown('<p class="rotulo">Modelo</p>', unsafe_allow_html=True)
+        st.selectbox(
+            "Modelo",
+            ids,
+            key="modelo_escolhido",
+            format_func=lambda modelo_id: obter_modelo(config, modelo_id)["nome"],
+            on_change=_ao_trocar_modelo,
+            label_visibility="collapsed",
+        )
+        modelo = obter_modelo(config, st.session_state.modelo_escolhido)
+        st.caption(modelo["descricao"])
+        _parametros_do_modelo(config, modelo)
+        if _parametros_alterados(modelo):
+            st.button(
+                "Restaurar padrões",
+                key="restaurar_padroes",
+                width="stretch",
+                on_click=_restaurar_padroes,
+            )
+        _guardar_configuracao(modelo)
+
+
+def _parametros_do_modelo(config: dict, modelo: dict) -> None:
+    nomes = list(parametros_aplicaveis(modelo))
+    if not nomes:
+        return
+    colunas = st.columns(len(nomes), gap="small")
+    for coluna, nome in zip(colunas, nomes):
+        with coluna:
+            if nome == "temperatura":
+                faixa = config["temperatura"]
+                st.slider(
+                    ROTULOS_PARAMETRO[nome],
+                    min_value=faixa["minimo"],
+                    max_value=faixa["maximo"],
+                    step=faixa["passo"],
+                    key="cfg_temperatura",
+                )
+                continue
+            opcoes = [item["valor"] for item in config["opcoes"][nome]]
+            st.selectbox(
+                ROTULOS_PARAMETRO[nome],
+                opcoes,
+                key=f"cfg_{nome}",
+                format_func=lambda valor, parametro=nome: rotulo_da_opcao(config, parametro, valor),
+            )
+
+
+def _guardar_configuracao(modelo: dict) -> None:
+    st.session_state.configuracao_modelo = {
+        "modelo": modelo["id"],
+        "parametros": {
+            nome: st.session_state.get(f"cfg_{nome}")
+            for nome in parametros_aplicaveis(modelo)
+        },
+    }
+
+
+def _parametros_alterados(modelo: dict) -> bool:
+    for nome, padrao in parametros_aplicaveis(modelo).items():
+        atual = st.session_state.get(f"cfg_{nome}")
+        if isinstance(padrao, float):
+            if atual is None or abs(float(atual) - padrao) > 0.001:
+                return True
+        elif atual != padrao:
+            return True
+    return False
+
+
+def _ao_trocar_modelo() -> None:
+    config = carregar_modelos()
+    modelo = obter_modelo(config, st.session_state.modelo_escolhido)
+    for nome, valor in parametros_aplicaveis(modelo).items():
+        st.session_state[f"cfg_{nome}"] = valor
+
+
+def _restaurar_padroes() -> None:
+    _ao_trocar_modelo()
 
 
 def _formulario() -> None:
@@ -649,16 +824,97 @@ def _entrada_registrada(entrada: dict) -> None:
             entrada["conteudo"],
         )
 
-    st.markdown(
-        '<p class="orientacao" style="margin-top:1rem">Esta entrada fica disponível para a próxima etapa.</p>',
-        unsafe_allow_html=True,
-    )
+    _mostrar_extracao(entrada)
     st.button(
         "Escolher outra entrada",
         key="alterar",
         width="stretch",
         on_click=_alterar,
     )
+
+
+def _mostrar_extracao(entrada: dict) -> None:
+    chave = entrada.get("caminho_copia")
+    if st.session_state.get("extracao_chave") != chave:
+        st.session_state.extracao_registro = None
+        st.session_state.extracao_erro = None
+        st.session_state.extracao_chave = chave
+
+    if st.session_state.extracao_erro:
+        st.markdown(
+            f'<p class="aviso">{escape(st.session_state.extracao_erro)}</p>',
+            unsafe_allow_html=True,
+        )
+        if st.button("Tentar de novo", key="repetir_extracao", width="stretch"):
+            st.session_state.extracao_erro = None
+            st.session_state.extracao_registro = None
+            st.session_state.extracao_forcar = True
+            st.rerun()
+        return
+
+    if not st.session_state.extracao_registro:
+        with st.spinner("Extraindo o texto e preenchendo os campos..."):
+            try:
+                forcar = st.session_state.extracao_forcar
+                st.session_state.extracao_forcar = False
+                st.session_state.extracao_registro = processar_entrada(
+                    entrada,
+                    forcar=forcar,
+                )
+            except Exception as erro:
+                st.session_state.extracao_erro = _mensagem_extracao(erro)
+                st.rerun()
+
+    _resumo_extracao(st.session_state.extracao_registro)
+
+
+def _resumo_extracao(registro: dict) -> None:
+    campos = registro.get("campos") or {}
+    ausentes = registro.get("campos_ausentes") or []
+    linhas = []
+    for chave, rotulo in ROTULOS_CAMPOS:
+        valor = ((campos.get(chave) or {}).get("valor")) or "não localizado"
+        linhas.append(
+            f"<div><dt>{escape(rotulo)}</dt><dd>{escape(str(valor))}</dd></div>"
+        )
+    alertas = registro.get("alertas_seguranca") or []
+    aviso_alerta = ""
+    if alertas:
+        itens = "".join(f"<li>{escape(str(item))}</li>" for item in alertas)
+        aviso_alerta = f'<ul class="orientacao">{itens}</ul>'
+
+    st.markdown('<p class="rotulo">Extração</p>', unsafe_allow_html=True)
+    st.markdown(
+        f"""
+        <dl class="ficha">
+          <div><dt>Categoria</dt><dd>{escape(str(registro.get("categoria") or ""))}</dd></div>
+          <div><dt>Assunto</dt><dd>{escape(str(registro.get("assunto") or ""))}</dd></div>
+          <div class="amplo"><dt>Pedido</dt><dd>{escape(str(registro.get("pedido") or ""))}</dd></div>
+          {"".join(linhas)}
+          <div class="amplo"><dt>Arquivo</dt><dd>{escape(str(registro.get("arquivo_extracao") or ""))}</dd></div>
+        </dl>
+        """,
+        unsafe_allow_html=True,
+    )
+    if ausentes:
+        st.caption("Campos não localizados: " + ", ".join(ausentes))
+    if aviso_alerta:
+        st.markdown(aviso_alerta, unsafe_allow_html=True)
+    st.caption("Revisão humana obrigatória antes de qualquer envio.")
+    minuta = (registro.get("minuta") or "").strip()
+    if minuta:
+        with st.expander("Minuta"):
+            st.markdown(minuta)
+
+
+def _mensagem_extracao(erro: Exception) -> str:
+    if isinstance(erro, (ValueError, FileNotFoundError, OSError)):
+        texto = str(erro)
+    else:
+        texto = "Não foi possível concluir a extração."
+    if "sk-" in texto or "api_key" in texto.casefold():
+        return "A consulta ao modelo falhou. Confira a chave da API no arquivo .env."
+    return texto
 
 
 def _escolher(modalidade: str) -> None:
@@ -698,6 +954,10 @@ def _alterar() -> None:
         st.session_state.rascunho_texto = entrada["texto"]
     st.session_state.confirmada = False
     st.session_state.erro = None
+    st.session_state.extracao_chave = None
+    st.session_state.extracao_registro = None
+    st.session_state.extracao_erro = None
+    st.session_state.extracao_forcar = False
 
 
 def _pendencia(modalidade: str, arquivo) -> str | None:
