@@ -2,8 +2,9 @@
   "requisito": "RF10",
   "etapa": "edicao",
   "modelo": "gpt-image-1",
-  "imagem_entrada": "dados\\saida\\imagem_rf10_layout_formal.png",
-  "imagem_saida": "dados\\saida\\imagem_rf10_editada.png",
+  "imagem_entrada": "resultados/imagens/imagem_rf10_layout_formal.png",
+  "imagem_saida": "resultados/imagens/imagem_rf10_editada.png",
+  "observacao_caminhos": "Caminhos originais na execucao: dados\\saida\\imagem_rf10_layout_formal.png e dados\\saida\\imagem_rf10_editada.png. Arquivos movidos em 2026-10-17 para seguir a estrutura de diretorios do enunciado.",
   "prompt": "Edite a imagem fornecida preservando seu estilo de\n    comunicado institucional formal.\n\n    Alteração solicitada:\n    Adicione uma linha horizontal fina e discreta na cor\n    amarelo-dourado imediatamente abaixo da faixa verde\n    do título principal.\n\n    Preserve:\n    - O brasão de Mato Grosso.\n    - Todos os textos exatamente como estão.\n    - A organização das seções.\n    - As cores institucionais.\n    - O aviso e o rodapé demonstrativo.\n\n    Não adicione informações novas.\n    Não modifique nomes, datas ou outros textos.",
   "data_execucao_utc": "2026-10-17T07:23:59.566862+00:00",
   "revisao_humana": "pendente"

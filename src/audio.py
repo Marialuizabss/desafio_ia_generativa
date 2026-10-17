@@ -15,13 +15,15 @@ IDIOMA = "pt"
 
 
 def transcrever_audio():
-    entrada = BASE_DIR / "dados" / "entrada" / "entrada_audio.mp3"
-    pasta_saida = BASE_DIR / "dados" / "saida"
+    entrada = BASE_DIR / "dados" / "originais" / "entrada_audio.mp3"
+    pasta_saida = BASE_DIR / "dados" / "processados"
+    pasta_logs = BASE_DIR / "resultados" / "logs"
 
     if not entrada.is_file():
         raise FileNotFoundError(f"Áudio não encontrado: {entrada}")
 
     pasta_saida.mkdir(parents=True, exist_ok=True)
+    pasta_logs.mkdir(parents=True, exist_ok=True)
 
     inicio = perf_counter()
     data_execucao = datetime.now().astimezone().isoformat()
@@ -46,7 +48,7 @@ def transcrever_audio():
         duracao = round(perf_counter() - inicio, 2)
 
         caminho_texto = pasta_saida / "transcricao_rf06.txt"
-        caminho_meta = pasta_saida / "metadados_rf06.json"
+        caminho_meta = pasta_logs / "metadados_rf06.json"
 
         caminho_texto.write_text(texto, encoding="utf-8")
 
@@ -81,8 +83,8 @@ if __name__ == "__main__":
 
 
 def gerar_audio():
-    entrada = BASE_DIR / "dados" / "entrada" / "texto_rf07.txt"
-    saida = BASE_DIR / "dados" / "saida" / "audio_rf07.mp3"
+    entrada = BASE_DIR / "resultados" / "minutas" / "texto_rf07.txt"
+    saida = BASE_DIR / "resultados" / "audios" / "audio_rf07.mp3"
 
     if not entrada.is_file():
         raise FileNotFoundError(f"Texto não encontrado: {entrada}")

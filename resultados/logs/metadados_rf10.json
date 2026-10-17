@@ -4,7 +4,8 @@
   "modelo": "gpt-image-1",
   "prompt": "Crie uma arte gráfica institucional vertical, elegante e formal,\npara um comunicado informativo sobre matrículas em cursos técnicos\nno Estado de Mato Grosso, Brasil.\n\nIdentidade visual:\n- Fundo branco.\n- Verde institucional como cor principal.\n- Detalhes discretos em amarelo.\n- Tipografia legível e composição administrativa.\n- Espaço livre centralizado no topo para inserir posteriormente\n  o brasão oficial do Estado de Mato Grosso.\n- Não desenhe nem invente um brasão.\n\nConteúdo:\nTítulo: ORIENTAÇÕES PARA MATRÍCULA\n\nSeções:\nDOCUMENTAÇÃO\nConsulte a secretaria escolar para confirmar os documentos exigidos.\n\nACOMPANHAMENTO\nAcompanhe a análise da solicitação e as próximas orientações.\n\nAVISO IMPORTANTE\nO recebimento da solicitação não confirma automaticamente a matrícula.\n\nRodapé:\nPeça demonstrativa — Projeto FIC_DEV 2026.\nNão constitui comunicado oficial.\n\nNão invente datas, prazos, endereços ou documentos obrigatórios.\nNão inclua dados pessoais de estudantes.",
   "data_execucao_utc": "2026-10-17T07:14:59.170063+00:00",
-  "arquivo_gerado": "dados\\saida\\imagem_rf10_original.png",
+  "arquivo_gerado": "resultados/imagens/imagem_rf10_original.png",
   "revisao_humana": "pendente",
-  "observacao": "Arte demonstrativa, sem dados pessoais."
+  "observacao": "Arte demonstrativa, sem dados pessoais.",
+  "observacao_caminhos": "Caminho original na execucao: dados\\saida\\imagem_rf10_original.png. Arquivo movido em 2026-10-17 para seguir a estrutura de diretorios do enunciado."
 }

@@ -3,8 +3,8 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 
 BASE = Path(__file__).resolve().parent.parent
-BRASAO = BASE / "dados/entrada/brasao.png"
-SAIDA = BASE / "dados/saida/imagem_rf10_layout_formal.png"
+BRASAO = BASE / "dados/originais/brasao.png"
+SAIDA = BASE / "resultados/imagens/imagem_rf10_layout_formal.png"
 
 LARGURA, ALTURA = 1024, 1536
 VERDE = "#165C3F"

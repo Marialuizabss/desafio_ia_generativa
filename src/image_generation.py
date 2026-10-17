@@ -48,10 +48,11 @@ Não inclua dados pessoais de estudantes.
 """
 
 def gerar_imagem():
-    saida = BASE_DIR / "dados" / "saida" / "imagem_rf10_original.png"
-    metadados = BASE_DIR / "dados" / "saida" / "metadados_rf10.json"
+    saida = BASE_DIR / "resultados" / "imagens" / "imagem_rf10_original.png"
+    metadados = BASE_DIR / "resultados" / "logs" / "metadados_rf10.json"
 
     saida.parent.mkdir(parents=True, exist_ok=True)
+    metadados.parent.mkdir(parents=True, exist_ok=True)
 
     if saida.exists():
         raise FileExistsError(
@@ -101,15 +102,17 @@ if __name__ == "__main__":
 
 
 def editar_imagem():
-    entrada = BASE_DIR / "dados" / "saida" / "imagem_rf10_layout_formal.png"
-    saida = BASE_DIR / "dados" / "saida" / "imagem_rf10_editada.png"
-    metadados = BASE_DIR / "dados" / "saida" / "metadados_edicao_rf10.json"
+    entrada = BASE_DIR / "resultados" / "imagens" / "imagem_rf10_layout_formal.png"
+    saida = BASE_DIR / "resultados" / "imagens" / "imagem_rf10_editada.png"
+    metadados = BASE_DIR / "resultados" / "logs" / "metadados_edicao_rf10.json"
 
     if not entrada.is_file():
         raise FileNotFoundError(f"Imagem não encontrada: {entrada}")
 
     if saida.exists():
         raise FileExistsError(f"A imagem editada já existe: {saida}")
+
+    metadados.parent.mkdir(parents=True, exist_ok=True)
 
     prompt_edicao = """
     Edite a imagem fornecida preservando seu estilo de

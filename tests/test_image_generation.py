@@ -15,8 +15,9 @@ class TestRF10Imagens(unittest.TestCase):
         self.temp = TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.base = Path(self.temp.name)
-        self.saida = self.base / "dados" / "saida"
+        self.saida = self.base / "resultados" / "imagens"
         self.saida.mkdir(parents=True)
+        self.logs = self.base / "resultados" / "logs"
 
         self.patcher = patch.object(imagens, "BASE_DIR", self.base)
         self.patcher.start()
@@ -32,7 +33,7 @@ class TestRF10Imagens(unittest.TestCase):
             imagens.gerar_imagem()
 
         arquivo = self.saida / "imagem_rf10_original.png"
-        metadados = self.saida / "metadados_rf10.json"
+        metadados = self.logs / "metadados_rf10.json"
 
         self.assertEqual(arquivo.read_bytes(), b"imagem-simulada")
         self.assertTrue(metadados.is_file())
@@ -117,7 +118,7 @@ class TestRF10Imagens(unittest.TestCase):
             imagens.editar_imagem()
 
         arquivo = self.saida / "imagem_rf10_editada.png"
-        metadados = self.saida / "metadados_edicao_rf10.json"
+        metadados = self.logs / "metadados_edicao_rf10.json"
 
         self.assertEqual(arquivo.read_bytes(), b"imagem-editada")
 

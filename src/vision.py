@@ -12,7 +12,7 @@ load_dotenv(BASE_DIR / ".env")
 
 def extrair_ficha():
     entrada = BASE_DIR / "dados" / "processados" / "entrada_rf08_pagina1.png"
-    saida = BASE_DIR / "dados" / "saida" / "extracao_rf08.json"
+    saida = BASE_DIR / "dados" / "processados" / "extracao_rf08.json"
 
     if not entrada.is_file():
         raise FileNotFoundError(f"Imagem não encontrada: {entrada}")

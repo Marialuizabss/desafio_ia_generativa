@@ -18,7 +18,7 @@ class TestRF06Transcricao(unittest.TestCase):
     def test_transcricao_vazia(self):
         with TemporaryDirectory() as pasta:
             base = Path(pasta)
-            entrada = base / "dados" / "entrada"
+            entrada = base / "dados" / "originais"
             entrada.mkdir(parents=True)
             (entrada / "entrada_audio.mp3").write_bytes(b"audio-ficticio")
 
@@ -34,7 +34,7 @@ class TestRF06Transcricao(unittest.TestCase):
     def test_transcricao_sucesso(self):
         with TemporaryDirectory() as pasta:
             base = Path(pasta)
-            entrada = base / "dados" / "entrada"
+            entrada = base / "dados" / "originais"
             entrada.mkdir(parents=True)
             (entrada / "entrada_audio.mp3").write_bytes(b"audio-ficticio")
 
@@ -47,11 +47,12 @@ class TestRF06Transcricao(unittest.TestCase):
                 with patch.object(audio, "OpenAI", return_value=cliente):
                     audio.transcrever_audio()
 
-            saida = base / "dados" / "saida"
+            saida = base / "dados" / "processados"
+            logs = base / "resultados" / "logs"
             texto = (saida / "transcricao_rf06.txt").read_text(
                 encoding="utf-8"
             )
-            metadados = (saida / "metadados_rf06.json").read_text(
+            metadados = (logs / "metadados_rf06.json").read_text(
                 encoding="utf-8"
             )
 
@@ -73,7 +74,7 @@ class TestRF07Sintese(unittest.TestCase):
     def test_texto_vazio(self):
         with TemporaryDirectory() as pasta:
             base = Path(pasta)
-            entrada = base / "dados" / "entrada"
+            entrada = base / "resultados" / "minutas"
             entrada.mkdir(parents=True)
             (entrada / "texto_rf07.txt").write_text(
                 "   ", encoding="utf-8"
@@ -87,7 +88,7 @@ class TestRF07Sintese(unittest.TestCase):
     def test_geracao_audio_sucesso(self):
         with TemporaryDirectory() as pasta:
             base = Path(pasta)
-            entrada = base / "dados" / "entrada"
+            entrada = base / "resultados" / "minutas"
             entrada.mkdir(parents=True)
 
             (entrada / "texto_rf07.txt").write_text(
@@ -115,7 +116,7 @@ class TestRF07Sintese(unittest.TestCase):
                     audio.gerar_audio()
 
             arquivo_saida = (
-                base / "dados" / "saida" / "audio_rf07.mp3"
+                base / "resultados" / "audios" / "audio_rf07.mp3"
             )
 
             self.assertTrue(arquivo_saida.is_file())

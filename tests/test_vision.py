@@ -71,7 +71,7 @@ class TestRF08Visao(unittest.TestCase):
                     vision.extrair_ficha()
 
             arquivo_saida = (
-                base / "dados" / "saida" / "extracao_rf08.json"
+                base / "dados" / "processados" / "extracao_rf08.json"
             )
 
             self.assertTrue(arquivo_saida.is_file())
