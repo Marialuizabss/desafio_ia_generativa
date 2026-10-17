@@ -78,3 +78,32 @@ def transcrever_audio():
 
 if __name__ == "__main__":
     transcrever_audio()
+
+
+def gerar_audio():
+    entrada = BASE_DIR / "dados" / "entrada" / "texto_rf07.txt"
+    saida = BASE_DIR / "dados" / "saida" / "audio_rf07.mp3"
+
+    if not entrada.is_file():
+        raise FileNotFoundError(f"Texto não encontrado: {entrada}")
+
+    texto = entrada.read_text(encoding="utf-8").strip()
+
+    if not texto:
+        raise ValueError("O texto para síntese de voz está vazio.")
+
+    saida.parent.mkdir(parents=True, exist_ok=True)
+
+    print("Iniciando geração de áudio...")
+
+    client = OpenAI(timeout=120.0, max_retries=2)
+
+    with client.audio.speech.with_streaming_response.create(
+        model="tts-1-hd",
+        voice="nova",
+        input=texto,
+        response_format="mp3",
+    ) as resposta:
+        resposta.stream_to_file(saida)
+
+    print(f"Áudio gerado com sucesso: {saida}")
