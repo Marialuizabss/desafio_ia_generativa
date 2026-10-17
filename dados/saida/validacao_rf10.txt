@@ -99,3 +99,15 @@ gerada por IA.
 Material exclusivamente demonstrativo para o projeto
 FIC_DEV 2026. Não constitui comunicado oficial do
 Governo do Estado de Mato Grosso.
+
+## Avaliação visual e seleção da arte final
+
+**Arte principal selecionada:** `imagem_rf10_layout_formal.png`
+
+**Justificativa:** a versão diagramada programaticamente apresenta melhor legibilidade, alinhamento e organização das informações. A composição utiliza o brasão disponibilizado para o projeto, cores institucionais e indicação de material demonstrativo.
+
+**Limitação identificada:** as imagens produzidas e editadas diretamente pelo modelo generativo apresentaram distorções em parte dos textos. Portanto, a geração e a edição por IA não garantiram fidelidade textual suficiente para utilizar essas versões como arte final.
+
+**Solução adotada:** manter as imagens original e editada como evidências do processo e selecionar a versão diagramada com Pillow como principal resultado visual do RF10.
+
+**Revisão humana:** a escolha da arte final foi realizada por inspeção visual. O material é demonstrativo, não constitui comunicado oficial e deve passar por revisão antes de qualquer utilização institucional real.
