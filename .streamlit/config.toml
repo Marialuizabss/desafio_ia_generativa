@@ -1,0 +1,18 @@
+[theme]
+base = "light"
+primaryColor = "#165C3F"
+backgroundColor = "#E9EEEA"
+secondaryBackgroundColor = "#FFFFFF"
+textColor = "#173028"
+font = "sans serif"
+baseRadius = "0.8rem"
+buttonRadius = "0.8rem"
+
+[server]
+address = "127.0.0.1"
+
+[browser]
+gatherUsageStats = false
+
+[client]
+toolbarMode = "minimal"

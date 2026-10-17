@@ -3,3 +3,7 @@ openai==3.33.0
 python-dotenv==1.2.4
 PyMuPDF==1.28.2
 Pillow==13.0.0
+# O Streamlit 1.66 declara pillow<13. A interface roda com o Pillow 13 acima.
+# Se o pip recusar os dois juntos:
+#   pip install streamlit==1.66.0 && pip install --upgrade --no-deps Pillow==13.0.0
+streamlit==1.66.0
