@@ -1,0 +1,54 @@
+# Validação — RF08: OCR e visão computacional
+
+Responsável pela revisão humana: Maria Luiza
+
+Modelo utilizado: gpt-4o  
+Documento de entrada: entrada_rf08.pdf  
+Imagem processada: entrada_rf08_pagina1.png
+
+## Resultado da extração
+
+A API realizou a leitura da ficha de matrícula digitalizada e gerou um arquivo JSON estruturado.
+
+O resultado apresentou divergências em seis campos da ficha de matrícula, identificadas durante a revisão humana.
+
+## Divergências identificadas
+
+| Campo | Extração original da IA | Valor corrigido |
+|---|---|---|
+| Código | 2022-000142 | 2026-000142 |
+| Nome | MARLON VINICIUS DE ALMEIDA SANTOS | MARCOS VINICIUS DE ALMEIDA SANTOS |
+| Data de nascimento | 12/05/2008 | 12/08/2008 |
+| Nome da mãe | LUCA HELENA DE ALMEIDA SANTOS | LUCIA HELENA DE ALMEIDA SANTOS |
+| E-mail | MARLON.ALMEIDA.TESTE@EXEMPLO.COM | MARCOS.ALMEIDA.TESTE@EXEMPLO.COM |
+| Data da matrícula | 17/01/2026 | 14/10/2026 |
+
+## Revisão humana
+
+- Extração original preservada sem alterações.
+- Seis divergências identificadas e corrigidas manualmente.
+- Demais campos sujeitos à conferência final com o documento original.
+- JSON revisado validado com `python -m json.tool`.
+- Não foi realizada nova chamada à API durante a revisão.
+
+## Conclusão
+
+A extração automática foi funcional, mas apresentou erros na interpretação de campos manuscritos.
+
+**Resultado:** Aprovado para demonstração, com ressalvas quanto à precisão do OCR.
+
+A revisão humana permanece necessária antes de utilizar os dados em processos administrativos.
+
+## Testes de tratamento de erros — RF08
+
+**Teste 1 — Imagem inexistente**
+- Método: simulação com `unittest.mock`.
+- Resultado: APROVADO.
+- Comportamento observado: a função lançou `FileNotFoundError`.
+
+**Teste 2 — Resposta vazia da API**
+- Método: simulação da resposta com `unittest.mock` e `MagicMock`.
+- Resultado: APROVADO.
+- Comportamento observado: a função lançou `ValueError` com a mensagem "A API retornou uma resposta vazia."
+
+**Conclusão:** Os dois testes de tratamento de erros foram aprovados. Nenhuma chamada real à API foi realizada durante os testes.

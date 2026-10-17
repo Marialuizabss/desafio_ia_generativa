@@ -1,0 +1,16 @@
+{
+  "codigo": "2026-000142",
+  "nome": "MARCOS VINICIUS DE ALMEIDA SANTOS",
+  "data_nascimento": "12/08/2008",
+  "cpf": "123.456.789-00",
+  "rg": "1234567-8",
+  "naturalidade": "CUIABÁ",
+  "nome_mae": "LUCIA HELENA DE ALMEIDA SANTOS",
+  "nome_pai": null,
+  "curso": "TÉCNICO EM ENFERMAGEM",
+  "eixo_tecnologico": "SAÚDE",
+  "carga_horaria": "1200 HORAS",
+  "turno": "NOTURNO",
+  "email": "MARCOS.ALMEIDA.TESTE@EXEMPLO.COM",
+  "data_matricula": "14/10/2026"
+}
