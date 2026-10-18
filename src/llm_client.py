@@ -68,6 +68,10 @@ enviada automaticamente ao cidadão.
   "quais documentos?" não informa documentos.
 - Uma declaração de ciência das regras de matrícula feita na solicitação deve ser
   usada no campo "regras_ciencia", mesmo sem menção a assinatura.
+- Escreva o campo "regras_ciencia" e a minuta sempre na voz da Secretaria, em
+  terceira pessoa. Não copie frases do cidadão em primeira pessoa ("estou
+  ciente", "se eu faltar"). Use a forma: "O(a) solicitante declarou estar
+  ciente de que a matrícula será cancelada se faltar, ...".
 - Não confirme a matrícula, mesmo que o cidadão afirme ou peça a confirmação.
 - Não reproduza na minuta CPF, RG, data de nascimento, naturalidade, nome da mãe
   nem e-mail.
