@@ -31,16 +31,16 @@ try:
     from audit import registrar_decisao
     from fluxo import (
         DADOS_CRITICOS, MODELOS_LEITURA, aplicar_edicao, assinar_minuta, decisao_de_aprovacao,
-        caminho_no_projeto, descartar_minuta_aprovada, motivos_da_revisao, nome_do_pdf,
-        preservar_extracao, processar_entrada, rodape_da_minuta, salvar_minuta_aprovada,
+        caminho_no_projeto, descartar_minuta_aprovada, gerar_audio_da_minuta, motivos_da_revisao,
+        nome_do_pdf, preservar_extracao, processar_entrada, rodape_da_minuta, salvar_minuta_aprovada,
         salvar_pdf_aprovado,
     )
 except ImportError:
     from src.audit import registrar_decisao
     from src.fluxo import (
         DADOS_CRITICOS, MODELOS_LEITURA, aplicar_edicao, assinar_minuta, decisao_de_aprovacao,
-        caminho_no_projeto, descartar_minuta_aprovada, motivos_da_revisao, nome_do_pdf,
-        preservar_extracao, processar_entrada, rodape_da_minuta, salvar_minuta_aprovada,
+        caminho_no_projeto, descartar_minuta_aprovada, gerar_audio_da_minuta, motivos_da_revisao,
+        nome_do_pdf, preservar_extracao, processar_entrada, rodape_da_minuta, salvar_minuta_aprovada,
         salvar_pdf_aprovado,
     )
 
@@ -875,6 +875,9 @@ def _ajustar_etapa() -> None:
     registro = st.session_state.get("extracao_registro") or {}
     if etapa > 3 and not registro.get("minuta_gerada_de_campos"):
         etapa = 3
+    if st.session_state.get("decisao_estado") == "aprovada" and registro:
+        # Atendimento aprovado fica encerrado na etapa da minuta
+        etapa = 4
     st.session_state.etapa = etapa
 
 
@@ -1097,6 +1100,10 @@ def _etapa_minuta() -> None:
     st.caption("Revisão humana obrigatória antes de qualquer envio.")
     if st.session_state.get("decisao_estado") != "aprovada":
         st.caption("O PDF fica disponível depois da aprovação.")
+    if st.session_state.get("decisao_estado") == "aprovada":
+        # Sem Voltar: mudar algo depois de aprovar é um novo envio (nova execução)
+        _painel_decisao()
+        return
     if _decisao_em_curso():
         _navegacao(None)
         _painel_decisao()
@@ -1397,24 +1404,61 @@ def _passo_apos_aprovacao() -> None:
         motivos = "; ".join(st.session_state.get("decisao_motivos") or [])
         texto = (
             f"A decisão ficou como aprovado com revisão ({motivos}). "
-            "Confira esses pontos antes de usar a minuta. Nenhum áudio foi gerado."
+            "Confira esses pontos antes de usar a minuta."
         )
     else:
-        texto = (
-            "A aprovação ficou no registro, ligada a esta execução. "
-            "Nenhum áudio foi gerado."
-        )
+        texto = "A aprovação ficou no registro, ligada a esta execução."
     st.markdown(f'<p class="orientacao">{escape(texto)}</p>', unsafe_allow_html=True)
     arquivo = st.session_state.get("arquivo_minuta_aprovada")
     if arquivo:
         st.caption(f"Minuta aprovada salva em {arquivo}")
+    st.caption("Atendimento encerrado. Para alterar algo, envie a solicitação de novo: ela vira uma nova execução.")
     _botao_baixar_pdf()
+    _secao_audio()
     st.button(
         "Escolher outra entrada",
         key="encerrar_caso",
         width="stretch",
         on_click=_encerrar_caso,
     )
+
+
+def _secao_audio() -> None:
+    """Áudio da minuta aprovada (RF07): gerado sob demanda, uma vez por aprovação."""
+    arquivo = st.session_state.get("arquivo_audio_minuta")
+    caminho = caminho_no_projeto(arquivo) if arquivo else None
+    if caminho and caminho.is_file():
+        dados = caminho.read_bytes()
+        st.audio(dados, format="audio/mpeg")
+        st.download_button(
+            "Baixar áudio",
+            data=dados,
+            file_name=nome_do_pdf(st.session_state.get("extracao_registro") or {}).replace(".pdf", ".mp3"),
+            mime="audio/mpeg",
+            key="baixar_audio",
+            icon=":material/download:",
+            width="stretch",
+        )
+        return
+    if not st.button("Gerar áudio da minuta", key="gerar_audio", icon=":material/volume_up:", width="stretch"):
+        return
+    with st.spinner("Gerando o áudio da minuta...", show_time=True):
+        try:
+            dados = gerar_audio_da_minuta(
+                st.session_state.get("extracao_registro") or {},
+                st.session_state.get("arquivo_minuta_aprovada") or "",
+            )
+        except Exception as erro:
+            avisar("Não foi possível gerar o áudio: " + _mensagem_extracao(erro), "erro")
+            st.rerun()
+    st.session_state.arquivo_audio_minuta = dados["arquivo_audio"]
+    if dados.get("reaproveitado"):
+        avisar("Áudio da minuta já existia e foi reaproveitado.")
+    elif dados.get("instrucoes_aplicadas"):
+        avisar("Áudio da minuta gerado.")
+    else:
+        avisar("Áudio gerado com o modelo alternativo, sem instruções de entonação.", "alerta")
+    st.rerun()
 
 
 def _abrir_rejeicao() -> None:
@@ -1463,6 +1507,10 @@ def _rejeitar() -> None:
 
 def _aprovar() -> None:
     registro = st.session_state.get("extracao_registro") or {}
+    if registro.get("id_execucao") in st.session_state.setdefault("execucoes_aprovadas", set()):
+        st.session_state.decisao_erro = "Esta execução já foi aprovada. Para alterar, envie a solicitação de novo."
+        avisar(st.session_state.decisao_erro, "alerta")
+        return
     revisor = _revisor()
     cargo = (st.session_state.get("cargo_setor") or "").strip()
     justificativa = (st.session_state.get("justificativa_aprovacao") or "").strip()
@@ -1521,6 +1569,8 @@ def _aprovar() -> None:
     st.session_state.decisao_motivos = motivos_da_revisao(registro)
     st.session_state.arquivo_minuta_aprovada = arquivo
     st.session_state.arquivo_pdf_aprovado = pdf
+    st.session_state.arquivo_audio_minuta = None
+    st.session_state.setdefault("execucoes_aprovadas", set()).add(registro.get("id_execucao"))
     st.session_state.decisao_estado = "aprovada"
     st.session_state.decisao_etapa = st.session_state.etapa
 
@@ -1589,6 +1639,7 @@ def _encerrar_caso() -> None:
     st.session_state.decisao_motivos = None
     st.session_state.arquivo_minuta_aprovada = None
     st.session_state.arquivo_pdf_aprovado = None
+    st.session_state.arquivo_audio_minuta = None
     st.session_state.conferencia_valida = None
     st.session_state.conferencia_erro = None
     st.session_state.id_execucao_anterior = None

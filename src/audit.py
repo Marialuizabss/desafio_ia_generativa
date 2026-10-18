@@ -134,6 +134,13 @@ def registrar_revisao(
     return _gravar(evento)
 
 
+def registrar_audio_minuta(id_execucao: str, dados: dict) -> dict:
+    """Grava a geração do áudio da minuta aprovada (RF07), com sucesso ou erro."""
+    if not id_execucao:
+        raise ValueError("A execução do áudio não foi identificada.")
+    return _gravar({"evento": "audio_minuta", "id_execucao": id_execucao, "data_hora": _agora(), **dados})
+
+
 def ler_registro() -> list[dict]:
     """Todos os eventos, na ordem em que foram gravados."""
     if not ARQUIVO_REGISTRO.is_file():

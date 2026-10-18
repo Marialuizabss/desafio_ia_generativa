@@ -170,10 +170,6 @@ class TestRF07Sintese(unittest.TestCase):
             self.assertIn("Confira as informações", argumentos["input"])
 
 
-if __name__ == "__main__":
-    unittest.main()
-
-
 class TestRF06Duracao(unittest.TestCase):
     """A duração vem do cabeçalho do arquivo, sem chamar a API."""
 
@@ -198,3 +194,102 @@ class TestRF06Duracao(unittest.TestCase):
     def test_audio_do_projeto(self):
         caminho = Path(__file__).resolve().parent.parent / "dados" / "originais" / "entrada_audio.mp3"
         self.assertAlmostEqual(audio.duracao_do_audio(caminho), 89.16, places=1)
+
+
+MINUTA_APROVADA = (
+    "[CABEÇALHO COM BRASÃO — dados/originais/brasao.png]\n\n"
+    "Prezado(a) Marcos Vinícius de Almeida Santos,\n\n"
+    "Recebemos sua solicitação de matrícula, registrada sob o protocolo 2026-000142.\n\n"
+    "**Dados informados na solicitação**\n"
+    "- Curso: Técnico em Enfermagem\n"
+    "- Início do curso: 01/02/2027\n\n"
+    "**Orientações**\n"
+    "- Prazo para apresentação: não localizado\n\n"
+    "Atenciosamente,\nAna Beatriz\nSecretaria Escolar\n\n"
+    "*Minuta elaborada com apoio de IA.*"
+)
+
+
+def _palavras(texto):
+    import re
+
+    return {palavra.casefold() for palavra in re.findall(r"[A-Za-zÀ-ÿ]+", texto)}
+
+
+def _cliente_de_voz(erro_no_primeiro=None):
+    cliente = MagicMock()
+    chamadas = []
+
+    def criar(**argumentos):
+        chamadas.append(argumentos)
+        if erro_no_primeiro is not None and len(chamadas) == 1:
+            raise erro_no_primeiro
+        contexto = MagicMock()
+        resposta = MagicMock()
+        resposta.stream_to_file.side_effect = lambda caminho: Path(caminho).write_bytes(b"mp3-simulado")
+        contexto.__enter__.return_value = resposta
+        return contexto
+
+    cliente.audio.speech.with_streaming_response.create.side_effect = criar
+    return cliente, chamadas
+
+
+class TestRF07MinutaAprovada(unittest.TestCase):
+    """O áudio sai do texto aprovado, só com ajustes de forma para a voz."""
+
+    def test_texto_para_fala_sem_formatacao(self):
+        falado = audio.preparar_texto_para_fala(MINUTA_APROVADA)
+
+        self.assertNotIn("CABEÇALHO", falado)
+        self.assertNotIn("**", falado)
+        self.assertNotIn("- Curso", falado)
+        self.assertIn("protocolo 2026, traço, 0 0 0 1 4 2.", falado)
+        self.assertIn("Início do curso: 1º de fevereiro de 2027.", falado)
+        self.assertIn("Prezado ou prezada Marcos", falado)
+        self.assertTrue(falado.startswith(audio.AVISO_NAO_LOCALIZADO))
+
+    def test_nenhuma_palavra_do_texto_aprovado_se_perde(self):
+        aprovado = MINUTA_APROVADA.replace("[CABEÇALHO COM BRASÃO — dados/originais/brasao.png]", "")
+        aprovado = aprovado.replace("(a)", "")
+        faltando = _palavras(aprovado) - _palavras(audio.preparar_texto_para_fala(MINUTA_APROVADA))
+        self.assertEqual(faltando, set())
+
+    def test_sem_campo_ausente_nao_ha_aviso(self):
+        falado = audio.preparar_texto_para_fala("Prezado(a) Ana,\n\nTexto completo.")
+        self.assertNotIn("Atenção", falado)
+
+    def test_sintese_usa_instrucoes_e_guarda_o_texto_falado(self):
+        cliente, chamadas = _cliente_de_voz()
+        with TemporaryDirectory() as pasta, patch.object(audio, "OpenAI", return_value=cliente):
+            destino = Path(pasta) / "audio_minuta_caso_12345678.mp3"
+            dados = audio.sintetizar_minuta(MINUTA_APROVADA, destino)
+
+            self.assertEqual(destino.read_bytes(), b"mp3-simulado")
+            falado = (Path(pasta) / "audio_minuta_caso_12345678_texto_falado.txt").read_text(encoding="utf-8")
+        self.assertEqual(chamadas[0]["model"], "gpt-4o-mini-tts")
+        self.assertEqual(chamadas[0]["voice"], "nova")
+        self.assertEqual(chamadas[0]["instructions"], audio.INSTRUCOES_VOZ)
+        self.assertEqual(chamadas[0]["input"] + "\n", falado)
+        self.assertTrue(dados["instrucoes_aplicadas"])
+
+    def test_sem_acesso_ao_modelo_usa_o_alternativo_e_registra(self):
+        from openai import NotFoundError
+
+        resposta = MagicMock(status_code=404, headers={})
+        erro = NotFoundError("modelo indisponível", response=resposta, body=None)
+        cliente, chamadas = _cliente_de_voz(erro_no_primeiro=erro)
+        with TemporaryDirectory() as pasta, patch.object(audio, "OpenAI", return_value=cliente):
+            dados = audio.sintetizar_minuta(MINUTA_APROVADA, Path(pasta) / "a.mp3")
+
+        self.assertEqual(chamadas[1]["model"], "tts-1-hd")
+        self.assertNotIn("instructions", chamadas[1])
+        self.assertFalse(dados["instrucoes_aplicadas"])
+        self.assertIsNone(dados["instrucoes"])
+
+    def test_minuta_vazia(self):
+        with self.assertRaises(ValueError):
+            audio.sintetizar_minuta("   ", Path("nao_usado.mp3"))
+
+
+if __name__ == "__main__":
+    unittest.main()

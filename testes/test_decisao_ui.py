@@ -447,3 +447,92 @@ class TestDecisaoInterface(unittest.TestCase):
         self.registro["duracao_audio_segundos"] = 89.16
         tela = self._ate_revisao()
         self.assertIn("lido por gpt-4o-transcribe · duração 1min29s", _texto(tela))
+
+    # ---- B3: áudio da minuta aprovada
+
+    def _sintese_falsa(self):
+        chamadas = []
+
+        def sintetizar(minuta, destino):
+            chamadas.append(minuta)
+            destino = Path(destino)
+            destino.parent.mkdir(parents=True, exist_ok=True)
+            destino.write_bytes(b"mp3")
+            falado = destino.with_name(f"{destino.stem}_texto_falado.txt")
+            falado.write_text("texto falado", encoding="utf-8")
+            return {
+                "arquivo_audio": destino, "arquivo_texto_falado": falado, "modelo": "gpt-4o-mini-tts",
+                "voz": "nova", "instrucoes": "x", "instrucoes_aplicadas": True,
+                "duracao_audio_segundos": None, "tempo_geracao_segundos": 0.1, "custo_estimado_usd": None,
+            }
+
+        return chamadas, sintetizar
+
+    def test_audio_so_depois_de_aprovar_e_gerado_uma_vez(self):
+        tela = self._ate_minuta()
+        self.assertNotIn("gerar_audio", [botao.key for botao in tela.button])
+
+        tela = self._aprovar_texto(tela, servidor="Ana Beatriz", cargo="SECITECI")
+        chamadas, sintetizar = self._sintese_falsa()
+        with patch("src.fluxo.sintetizar_minuta", side_effect=sintetizar):
+            tela.button(key="gerar_audio").click().run()
+            self.assertFalse(tela.exception)
+            self.assertEqual(len(tela.get("audio")), 1)
+            self.assertNotIn("gerar_audio", [botao.key for botao in tela.button])
+            tela.run()
+
+        self.assertEqual(len(chamadas), 1)
+        self.assertIn("Ana Beatriz", chamadas[0])
+        self.assertNotIn("[NOME DO SERVIDOR RESPONSÁVEL]", chamadas[0])
+        linhas = [json.loads(linha) for linha in self.log.read_text(encoding="utf-8").splitlines()]
+        evento = [linha for linha in linhas if linha.get("evento") == "audio_minuta"][0]
+        self.assertEqual(evento["resultado"], "sucesso")
+        self.assertEqual(evento["id_execucao"], "teste-edicao")
+        self.assertTrue(evento["arquivo_audio"].startswith("resultados/audios/audio_minuta_"))
+        self.assertTrue((self.base / evento["arquivo_audio"]).is_file())
+
+    def test_falha_no_audio_registra_erro_e_nao_deixa_arquivo(self):
+        tela = self._aprovar_texto(self._ate_minuta())
+        with patch("src.fluxo.sintetizar_minuta", side_effect=RuntimeError("voz indisponível")):
+            tela.button(key="gerar_audio").click().run()
+
+        self.assertFalse(tela.exception)
+        self.assertTrue(any("aviso-toast erro" in item.value for item in tela.markdown if "<style>" not in item.value))
+        linhas = [json.loads(linha) for linha in self.log.read_text(encoding="utf-8").splitlines()]
+        evento = [linha for linha in linhas if linha.get("evento") == "audio_minuta"][0]
+        self.assertEqual(evento["resultado"], "erro")
+        audios = self.base / "resultados" / "audios"
+        self.assertEqual(list(audios.iterdir()) if audios.exists() else [], [])
+
+    def test_rejeicao_nao_oferece_audio(self):
+        tela = self._ate_minuta()
+        tela.button(key="rejeitar").click().run()
+        tela.text_input(key="revisor").set_value("Ana").run()
+        tela.text_area(key="justificativa_rejeicao").set_value("Dados errados.").run()
+        tela.button(key="confirmar_rejeicao").click().run()
+        self.assertNotIn("gerar_audio", [botao.key for botao in tela.button])
+
+    # ---- atendimento aprovado fica encerrado
+
+    def test_depois_de_aprovar_nao_ha_voltar_e_o_quadro_fica(self):
+        tela = self._aprovar_texto(self._ate_minuta())
+        chaves = [botao.key for botao in tela.button]
+        self.assertNotIn("voltar", chaves)
+        self.assertIn("encerrar_caso", chaves)
+        self.assertIn("Atendimento encerrado.", "\n".join(item.value for item in tela.caption))
+
+        tela.session_state["etapa"] = 3
+        tela.run()
+        self.assertIn("Rascunho montado com os campos revisados.", _texto(tela))
+        self.assertNotIn("aprovar", [botao.key for botao in tela.button])
+        self.assertEqual(len(self._eventos()), 1)
+
+    def test_rejeicao_continua_podendo_voltar_e_corrigir(self):
+        tela = self._ate_minuta()
+        tela.button(key="rejeitar").click().run()
+        tela.text_input(key="revisor").set_value("Ana").run()
+        tela.text_area(key="justificativa_rejeicao").set_value("Turno errado.").run()
+        tela.button(key="confirmar_rejeicao").click().run()
+        chaves = [botao.key for botao in tela.button]
+        self.assertIn("voltar", chaves)
+        self.assertIn("corrigir_campos", chaves)

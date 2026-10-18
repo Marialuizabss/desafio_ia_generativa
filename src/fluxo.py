@@ -12,20 +12,20 @@ from time import perf_counter
 from uuid import uuid4
 
 try:
-    from audit import decisoes_ligadas, registrar_execucao, registrar_revisao
+    from audit import decisoes_ligadas, registrar_audio_minuta, registrar_execucao, registrar_revisao
     from audio import IDIOMA as IDIOMA_TRANSCRICAO
     from audio import MODELO as MODELO_TRANSCRICAO
-    from audio import duracao_do_audio
+    from audio import duracao_do_audio, sintetizar_minuta
     from audio import transcrever_audio
     from extracao import CAMPOS, CAMPOS_SOLICITACAO, CATEGORIAS, FONTE_AUSENTE, VALOR_AUSENTE
     from llm_client import extrair_campos, montar_minuta
     from privacidade import contar_remocoes, minimizar_texto
     from vision import ler_texto_visual
 except ImportError:
-    from src.audit import decisoes_ligadas, registrar_execucao, registrar_revisao
+    from src.audit import decisoes_ligadas, registrar_audio_minuta, registrar_execucao, registrar_revisao
     from src.audio import IDIOMA as IDIOMA_TRANSCRICAO
     from src.audio import MODELO as MODELO_TRANSCRICAO
-    from src.audio import duracao_do_audio
+    from src.audio import duracao_do_audio, sintetizar_minuta
     from src.audio import transcrever_audio
     from src.extracao import CAMPOS, CAMPOS_SOLICITACAO, CATEGORIAS, FONTE_AUSENTE, VALOR_AUSENTE
     from src.llm_client import extrair_campos, montar_minuta
@@ -291,6 +291,44 @@ def salvar_pdf_aprovado(arquivo_minuta: str, dados: bytes) -> str:
         raise FileExistsError(f"O PDF já existe: {destino.name}")
     destino.write_bytes(dados)
     return destino.relative_to(BASE_DIR).as_posix()
+
+
+def gerar_audio_da_minuta(registro: dict, arquivo_minuta: str) -> dict:
+    """Gera o áudio da minuta aprovada (RF07) e registra no log.
+
+    O áudio sai do arquivo aprovado (já assinado), então corresponde ao texto
+    aprovado. Se o áudio dessa aprovação já existe, devolve o existente sem
+    chamar a API.
+    """
+    id_execucao = (registro.get("id_execucao") or "").strip()
+    if not id_execucao:
+        raise ValueError("A execução avaliada não foi identificada.")
+    minuta = caminho_no_projeto(arquivo_minuta)
+    if not minuta.is_file():
+        raise FileNotFoundError(f"Minuta aprovada não encontrada: {arquivo_minuta}")
+    nome = minuta.stem.replace("minuta_", "audio_minuta_", 1)
+    destino = BASE_DIR / "resultados" / "audios" / f"{nome}.mp3"
+    if destino.is_file():
+        return {"arquivo_audio": destino.relative_to(BASE_DIR).as_posix(), "reaproveitado": True}
+
+    try:
+        dados = sintetizar_minuta(minuta.read_text(encoding="utf-8"), destino)
+    except Exception as erro:
+        for arquivo in (destino, destino.with_name(f"{destino.stem}_texto_falado.txt")):
+            arquivo.unlink(missing_ok=True)
+        registrar_audio_minuta(id_execucao, {
+            "resultado": "erro",
+            "arquivo_minuta": arquivo_minuta,
+            "erro": f"{type(erro).__name__}: {erro}",
+        })
+        raise
+    dados = {
+        **dados,
+        "arquivo_audio": Path(dados["arquivo_audio"]).relative_to(BASE_DIR).as_posix(),
+        "arquivo_texto_falado": Path(dados["arquivo_texto_falado"]).relative_to(BASE_DIR).as_posix(),
+    }
+    registrar_audio_minuta(id_execucao, {"resultado": "sucesso", "arquivo_minuta": arquivo_minuta, **dados})
+    return dados
 
 
 def caminho_no_projeto(relativo: str) -> Path:
