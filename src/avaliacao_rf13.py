@@ -6,13 +6,18 @@ com o gabarito e aplica a parte automática do protocolo
 (documentacao/rf13_protocolo_avaliacao.md): fidelidade, completude, formato e
 segurança. Linguagem e decisão final ficam para a revisão humana.
 
-Extrações já feitas com a mesma configuração e já minimizadas (por exemplo,
-pela interface) são reaproveitadas, como o próprio fluxo faz; o registro indica
-quais foram e quando foram feitas.
+A minuta avaliada é a que o sistema entrega para a revisão: o modelo
+institucional preenchido pelo código com os campos extraídos (montar_minuta),
+antes de qualquer edição humana. A minuta que a IA escreve na resposta é
+guardada só como registro (CASO-XX_minuta_ia.md).
+
+Extrações já feitas com a mesma configuração e versão do prompt são
+reaproveitadas, como o próprio fluxo faz; o registro indica quais foram.
 
 Uso:
     python -m src.avaliacao_rf13                     # avalia os 7 casos
     python -m src.avaliacao_rf13 --refazer CASO-06   # gera de novo os casos indicados
+    python -m src.avaliacao_rf13 --todos             # gera de novo os 7 casos
 """
 
 import hashlib
@@ -27,7 +32,7 @@ from src.configuracao import carregar_modelos, obter_modelo, parametros_aplicave
 from src.experimento_rf03 import PROIBIDOS_COMUNS, procurar_texto_fixo_alterado, procurar_vazamento
 from src.extracao import CAMPOS, CAMPOS_SOLICITACAO, VALOR_AUSENTE
 from src.fluxo import PASTA_PROCESSADOS, processar_entrada
-from src.llm_client import _prompt_sistema
+from src.llm_client import _prompt_sistema, montar_minuta
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 PASTA_SAIDA = BASE_DIR / "resultados" / "avaliacao"
@@ -250,11 +255,17 @@ def avaliar_caso(caso, configuracao, pasta, refazer=False):
     reaproveitado = antes is not None and arquivo_extracao.stat().st_mtime == antes
     gabarito = json.loads((BASE_DIR / caso["gabarito"]).read_text(encoding="utf-8"))
 
-    campos, erros_campos = comparar_campos(registro, gabarito)
-    erros = erros_campos + verificar_minuta(registro, gabarito, caso)
+    # A minuta avaliada é a montada pelo código com os campos extraídos (etapa 3 da interface)
+    minuta_ia = registro.get("minuta") or ""
+    valores = {nome: (registro["campos"].get(nome) or {}).get("valor") for nome in CAMPOS}
+    avaliado = {**registro, "minuta": montar_minuta(valores), "minuta_ia": minuta_ia}
 
-    salvar_json(pasta / f"{caso['caso_id']}_resultado.json", registro)
-    (pasta / f"{caso['caso_id']}_minuta.md").write_text(registro.get("minuta") or "", encoding="utf-8")
+    campos, erros_campos = comparar_campos(avaliado, gabarito)
+    erros = erros_campos + verificar_minuta(avaliado, gabarito, caso)
+
+    salvar_json(pasta / f"{caso['caso_id']}_resultado.json", avaliado)
+    (pasta / f"{caso['caso_id']}_minuta.md").write_text(avaliado["minuta"], encoding="utf-8")
+    (pasta / f"{caso['caso_id']}_minuta_ia.md").write_text(minuta_ia, encoding="utf-8")
 
     return {
         "caso_id": caso["caso_id"],
@@ -266,6 +277,8 @@ def avaliar_caso(caso, configuracao, pasta, refazer=False):
         "nova_geracao": refazer,
         "data_extracao": datetime.fromtimestamp(arquivo_extracao.stat().st_mtime).astimezone().isoformat(),
         "modelo": registro.get("modelo"),
+        "id_execucao": registro.get("id_execucao"),
+        "minuta_avaliada": "montada pelo código a partir dos campos extraídos",
         "chamada": registro.get("chamada"),
         "dados_removidos": registro.get("dados_removidos"),
         "campos": campos,
@@ -299,6 +312,9 @@ def escrever_matriz(pasta, avaliacoes, versoes, configuracao):
         "",
         f"Prompt: versão base `{versoes['base']}` (a mesma do RF03) acrescida da instrução de idioma "
         f"da interface → `{versoes['com_idioma']}`",
+        "",
+        "Minuta avaliada: a montada pelo código a partir dos campos extraídos (a que o servidor revisa "
+        "na interface). A minuta escrita pela IA fica em `CASO-XX_minuta_ia.md`, só como registro.",
         "",
         "Notas: 2 = sem erro, 1 = erro menor, 0 = erro maior ou crítico. Linguagem e decisão final "
         "dependem da revisão humana.",
@@ -348,8 +364,10 @@ def escrever_matriz(pasta, avaliacoes, versoes, configuracao):
 def ler_refazer(argumentos):
     if not argumentos:
         return set()
+    if argumentos == ["--todos"]:
+        return {caso["caso_id"] for caso in CASOS}
     if argumentos[0] != "--refazer" or len(argumentos) < 2:
-        raise SystemExit("Uso: python -m src.avaliacao_rf13 [--refazer CASO-06 ...]")
+        raise SystemExit("Uso: python -m src.avaliacao_rf13 [--todos | --refazer CASO-06 ...]")
     conhecidos = {caso["caso_id"].casefold(): caso["caso_id"] for caso in CASOS}
     desconhecidos = [item for item in argumentos[1:] if item.casefold() not in conhecidos]
     if desconhecidos:

@@ -1,7 +1,7 @@
 {
   "categoria": "matricula",
   "assunto": "Solicitação de efetivação de matrícula no curso Técnico em Enfermagem",
-  "pedido": "Solicitação de efetivação da matrícula e informação sobre os documentos ainda necessários para apresentação.",
+  "pedido": "Solicita a efetivação da matrícula no curso Técnico em Enfermagem e informações sobre os documentos que ainda precisa apresentar.",
   "campos": {
     "solicitante": {
       "valor": "Marcos Vinícius de Almeida Santos",
@@ -63,6 +63,8 @@
   "modalidade": "texto",
   "arquivo_origem": "dados/originais/entrada_texto.txt",
   "modelo": "gpt-5.6-luna",
+  "id_execucao_anterior": "191ad1d8-2135-415e-9d59-92e4bd370a99",
+  "arquivo_extracao_anterior": "dados/processados/extracao_entrada_texto__191ad1d8-2135-415e-9d59-92e4bd370a99.json",
   "texto_extraido": "Canal: E-mail\nProtocolo: 2026-000142\nData: 14/10/2026\n\nPrezados,\n\nMeu nome é Marcos Vinícius de Almeida Santos, nasci em [DATA DE NASCIMENTO REMOVIDA], em [NATURALIDADE REMOVIDA], e solicito a efetivação da minha matrícula no curso Técnico em Enfermagem, eixo tecnológico Saúde, com carga horária de 1200 horas, turno noturno. O curso tem início em 01/02/2027 e a data da matrícula é 14/10/2026.\n\nMeus demais dados são: CPF [CPF REMOVIDO]; RG [RG REMOVIDO]; nome da mãe, [FILIAÇÃO REMOVIDA]; e-mail [E-MAIL REMOVIDO].\n\nDeclaro estar ciente de que a matrícula será automaticamente cancelada se eu faltar, sem justificativa comprovada, nos dois primeiros dias de aula consecutivos ou em três dias de aula, consecutivos ou não, nos dez primeiros dias de aula.\n\nPeço que me informem quais documentos ainda preciso apresentar.\n\nAtenciosamente,\nMarcos Vinícius de Almeida Santos",
   "dados_removidos": {
     "cpf": 1,
@@ -77,13 +79,13 @@
     "temperatura": null,
     "idioma": "pt",
     "timeout_segundos": 120.0,
-    "tempo_resposta_segundos": 6.94,
+    "tempo_resposta_segundos": 8.38,
     "tokens_entrada": 2008,
-    "tokens_saida": 799,
-    "tokens_total": 2807,
-    "tokens_raciocinio": 83,
-    "tokens_cache": 2005,
-    "custo_estimado_usd": 0.00136,
+    "tokens_saida": 792,
+    "tokens_total": 2800,
+    "tokens_raciocinio": 69,
+    "tokens_cache": 1737,
+    "custo_estimado_usd": 0.001352,
     "preco_usd_por_milhao_tokens": {
       "entrada": 0.2,
       "saida": 1.2
@@ -97,7 +99,5 @@
       "store": false
     }
   },
-  "id_execucao": "191ad1d8-2135-415e-9d59-92e4bd370a99",
-  "arquivo_extracao": "dados/processados/extracao_entrada_texto.json",
-  "minuta_gerada_de_campos": true
+  "id_execucao": "6b6fffaa-6f67-4a5c-b095-c66d52094264"
 }
