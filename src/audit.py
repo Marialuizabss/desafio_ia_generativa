@@ -65,6 +65,8 @@ def registrar_decisao(
     conferencia_dados_criticos: bool | None = None,
     arquivo_preservado: str = "",
     arquivo_minuta: str = "",
+    cargo_setor: str = "",
+    dados_conferidos: list[str] | None = None,
 ) -> dict:
     """Grava a decisão humana sobre uma execução já registrada."""
     if not id_execucao:
@@ -95,6 +97,11 @@ def registrar_decisao(
     minuta = (arquivo_minuta or "").strip()
     if minuta:
         evento["arquivo_minuta"] = minuta
+    cargo = (cargo_setor or "").strip()
+    if cargo:
+        evento["cargo_setor"] = cargo
+    if dados_conferidos:
+        evento["dados_conferidos"] = list(dados_conferidos)
     return _gravar(evento)
 
 

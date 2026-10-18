@@ -21,6 +21,7 @@ A escolha do modelo fica em ``st.session_state["configuracao_modelo"]``:
   a esse modelo, já com o que o usuário alterou
 """
 
+from hashlib import sha1
 from html import escape
 from pathlib import Path
 
@@ -29,14 +30,16 @@ import streamlit as st
 try:
     from audit import registrar_decisao
     from fluxo import (
-        aplicar_edicao, decisao_de_aprovacao, descartar_minuta_aprovada, motivos_da_revisao,
-        preservar_extracao, processar_entrada, salvar_minuta_aprovada,
+        DADOS_CRITICOS, MODELOS_LEITURA, aplicar_edicao, assinar_minuta, decisao_de_aprovacao,
+        descartar_minuta_aprovada, motivos_da_revisao, preservar_extracao, processar_entrada,
+        salvar_minuta_aprovada,
     )
 except ImportError:
     from src.audit import registrar_decisao
     from src.fluxo import (
-        aplicar_edicao, decisao_de_aprovacao, descartar_minuta_aprovada, motivos_da_revisao,
-        preservar_extracao, processar_entrada, salvar_minuta_aprovada,
+        DADOS_CRITICOS, MODELOS_LEITURA, aplicar_edicao, assinar_minuta, decisao_de_aprovacao,
+        descartar_minuta_aprovada, motivos_da_revisao, preservar_extracao, processar_entrada,
+        salvar_minuta_aprovada,
     )
 
 try:
@@ -122,6 +125,10 @@ ROTULOS_CATEGORIA = {
 }
 
 CAMPOS_LONGOS = {"regras_ciencia", "documentos_necessarios", "local_horario"}
+
+# Avisos no canto superior direito: a cor e o ícone indicam o tipo
+ICONES_AVISO = {"sucesso": "✅", "alerta": "⚠️", "erro": "❌"}
+MODALIDADES_COM_CONFERENCIA = {"audio", "imagem"}
 
 ROTULOS_PARAMETRO = {
     "idioma": "Idioma",
@@ -674,6 +681,108 @@ ESTILOS = """
       grid-template-columns: 1fr;
     }
   }
+  [class*="st-key-avisos_"] {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 1000000;
+    width: min(360px, calc(100vw - 2rem));
+    pointer-events: none;
+  }
+
+  .aviso-toast {
+    display: flex;
+    gap: 0.6rem;
+    align-items: flex-start;
+    margin: 0 0 0.5rem;
+    padding: 0.8rem 1rem;
+    border: 1px solid;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    line-height: 1.45;
+    box-shadow: 0 10px 28px rgba(23, 32, 51, 0.12);
+    animation: entrar-aviso 0.25s ease-out, sair-aviso 0.4s ease-in 4s forwards;
+  }
+
+  .aviso-toast.alerta,
+  .aviso-toast.erro {
+    animation: entrar-aviso 0.25s ease-out, sair-aviso 0.4s ease-in 8s forwards;
+  }
+
+  .aviso-toast.sucesso {
+    border-color: #B7DFC3;
+    background: #E6F4EA;
+    color: #1E4D2B;
+  }
+
+  .aviso-toast.alerta {
+    border-color: #E8C547;
+    background: #FFF7D6;
+    color: #5A4300;
+  }
+
+  .aviso-toast.erro {
+    border-color: #F2B8B5;
+    background: #FDE8E8;
+    color: #7A1F1F;
+  }
+
+  @keyframes entrar-aviso {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: none; }
+  }
+
+  @keyframes sair-aviso {
+    to { opacity: 0; transform: translateX(16px); visibility: hidden; }
+  }
+
+  .alerta-seguranca {
+    margin: 0.6rem 0 0.6rem;
+    padding: 0.9rem 1rem 0.75rem;
+    border: 1px solid #E8C547;
+    border-left: 4px solid #D9A400;
+    border-radius: 12px;
+    background: #FFF7D6;
+    color: #5A4300;
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+
+  .alerta-seguranca .titulo-alerta {
+    margin: 0 0 0.3rem;
+    font-weight: 700;
+    font-size: 0.95rem;
+  }
+
+  .alerta-seguranca p {
+    margin: 0 0 0.35rem;
+  }
+
+  .alerta-seguranca ul {
+    margin: 0.2rem 0 0;
+    padding-left: 1.2rem;
+  }
+
+  .cartao-erro {
+    display: flex;
+    gap: 0.55rem;
+    align-items: flex-start;
+    margin: 0.4rem 0 0.2rem;
+    padding: 0.75rem 0.95rem;
+    border: 1px solid #F2B8B5;
+    border-left: 4px solid #D64545;
+    border-radius: 12px;
+    background: #FDE8E8;
+    color: #7A1F1F;
+    font-size: 0.88rem;
+    line-height: 1.45;
+  }
+
+  .origem-dados {
+    margin: 0 0 0.6rem;
+    color: var(--apoio);
+    font-size: 0.78rem;
+  }
 </style>
 """
 
@@ -711,6 +820,29 @@ def renderizar() -> None:
                 _etapa_revisao()
             else:
                 _etapa_minuta()
+    _mostrar_avisos()
+
+
+def avisar(mensagem: str, tipo: str = "sucesso") -> None:
+    """Guarda o aviso para o fim da execução; ele sobrevive à troca de etapa."""
+    st.session_state.setdefault("avisos", []).append((mensagem, tipo))
+
+
+def _mostrar_avisos() -> None:
+    """Desenha os avisos guardados; somem sozinhos (sucesso 4 s, alerta e erro 8 s)."""
+    avisos = st.session_state.get("avisos", [])
+    st.session_state.avisos = []
+    if not avisos:
+        return
+    itens = "".join(
+        f'<div class="aviso-toast {tipo}" role="{"alert" if tipo == "erro" else "status"}">'
+        f"<span>{ICONES_AVISO[tipo]}</span><span>{escape(mensagem)}</span></div>"
+        for mensagem, tipo in avisos
+    )
+    # Chave nova a cada lote: o navegador recria os avisos e a animação recomeça
+    st.session_state.lote_avisos = st.session_state.get("lote_avisos", 0) + 1
+    with st.container(key=f"avisos_{st.session_state.lote_avisos}"):
+        st.markdown(itens, unsafe_allow_html=True)
 
 
 def _iniciar_estado() -> None:
@@ -731,6 +863,7 @@ def _iniciar_estado() -> None:
     st.session_state.setdefault("decisao_erro", None)
     st.session_state.setdefault("decisao_etapa", None)
     st.session_state.setdefault("decisao_justificativa", "")
+    st.session_state.setdefault("avisos", [])
 
 
 def _ajustar_etapa() -> None:
@@ -857,14 +990,18 @@ def _prosseguir_modelo() -> None:
 def _prosseguir_envio() -> None:
     _confirmar()
     if st.session_state.erro or not st.session_state.get("entrada"):
+        avisar(st.session_state.erro or "Escolha a entrada para continuar.", "erro")
         return
+    avisar(f"Entrada registrada: {st.session_state.entrada['nome_arquivo']}.")
     _ir(3)
 
 
 def _prosseguir_revisao() -> None:
     _gerar_minuta_editada()
     if st.session_state.minuta_erro:
+        avisar("Não foi possível montar a minuta.", "erro")
         return
+    avisar("Minuta montada com os campos revisados.")
     _ir(4)
 
 
@@ -933,7 +1070,7 @@ def _etapa_revisao() -> None:
 
 def _etapa_minuta() -> None:
     registro = st.session_state.extracao_registro or {}
-    minuta = (registro.get("minuta") or "").strip()
+    minuta = _minuta_em_tela(registro)
     com_brasao, texto = preparar_minuta(minuta)
     if com_brasao and BRASAO.is_file():
         st.image(str(BRASAO), width=88)
@@ -947,6 +1084,20 @@ def _etapa_minuta() -> None:
         return
     _acoes_da_minuta()
     _navegacao(None)
+
+
+def _minuta_em_tela(registro: dict) -> str:
+    """A aprovada, depois da aprovação; antes, a montada com a assinatura digitada."""
+    arquivo = st.session_state.get("arquivo_minuta_aprovada")
+    if st.session_state.get("decisao_estado") == "aprovada" and arquivo:
+        caminho = BASE_DIR / arquivo
+        if caminho.is_file():
+            return caminho.read_text(encoding="utf-8").strip()
+    return assinar_minuta(
+        (registro.get("minuta") or "").strip(),
+        st.session_state.get("revisor") or "",
+        st.session_state.get("cargo_setor") or "",
+    )
 
 
 def _botao_baixar_pdf(minuta: str) -> None:
@@ -1001,17 +1152,46 @@ def _acoes_da_minuta() -> None:
         "só entra se a falha foi a extração.</p>",
         unsafe_allow_html=True,
     )
+    registro = st.session_state.extracao_registro or {}
+    if registro.get("alertas_seguranca"):
+        st.markdown(
+            '<div class="alerta-seguranca" role="alert"><p class="titulo-alerta">⚠️ Alerta de segurança</p>'
+            "<p>A solicitação tentou dar instruções ao sistema. Confira a minuta: "
+            "para aprovar, é preciso justificar.</p></div>",
+            unsafe_allow_html=True,
+        )
+    st.markdown('<p class="rotulo">Aprovação</p>', unsafe_allow_html=True)
     st.text_input(
-        "Revisor",
+        "Servidor(a) responsável",
         key="revisor",
-        placeholder="Nome de quem revisa",
+        on_change=_limpar_erro_decisao,
+        placeholder="Quem revisa e assina a minuta",
         persist_state="session",
     )
-    st.checkbox(
-        "Conferi nome, protocolo e datas.",
-        key="conferencia_critica",
+    st.text_input(
+        "Cargo / Setor",
+        key="cargo_setor",
+        on_change=_limpar_erro_decisao,
+        placeholder="Ex.: Secretaria Escolar",
+        persist_state="session",
     )
-    motivos = motivos_da_revisao(st.session_state.extracao_registro or {})
+    if _exige_conferencia_por_dado(registro):
+        _conferencia_por_dado(registro)
+    else:
+        st.checkbox(
+            "Conferi nome, protocolo e datas.",
+            key="conferencia_critica",
+            on_change=_limpar_erro_decisao,
+        )
+    if registro.get("alertas_seguranca"):
+        st.text_area(
+            "Justificativa da aprovação",
+            key="justificativa_aprovacao",
+            on_change=_limpar_erro_decisao,
+            height=76,
+            placeholder="Obrigatória quando há alerta de segurança.",
+        )
+    motivos = motivos_da_revisao(registro)
     if motivos:
         st.markdown(
             f'<p class="orientacao">A aprovação entra como aprovado com revisão: '
@@ -1019,15 +1199,71 @@ def _acoes_da_minuta() -> None:
             unsafe_allow_html=True,
         )
     if st.session_state.decisao_erro:
-        st.markdown(
-            f'<p class="aviso">{escape(st.session_state.decisao_erro)}</p>',
-            unsafe_allow_html=True,
-        )
+        _cartao_erro(st.session_state.decisao_erro)
     aprovar, rejeitar = st.columns(2, gap="small")
     with aprovar:
         st.button("Aprovar", key="aprovar", type="primary", width="stretch", on_click=_aprovar)
     with rejeitar:
         st.button("Rejeitar", key="rejeitar", width="stretch", on_click=_abrir_rejeicao)
+
+
+def _cartao_erro(mensagem: str) -> None:
+    st.markdown(
+        f'<div class="cartao-erro" role="alert"><span>❌</span><span>{escape(mensagem)}</span></div>',
+        unsafe_allow_html=True,
+    )
+
+
+def _limpar_erro_decisao() -> None:
+    """O aviso some quando a pessoa mexe no que faltava; volta se ainda faltar ao clicar."""
+    st.session_state.decisao_erro = None
+
+
+def _exige_conferencia_por_dado(registro: dict) -> bool:
+    modalidade = registro.get("modalidade") or (st.session_state.get("entrada") or {}).get("modalidade")
+    return modalidade in MODALIDADES_COM_CONFERENCIA
+
+
+def _chave_conferencia(registro: dict, campo: str, valor: str) -> str:
+    # O valor entra na chave: se o campo for corrigido, a marcação volta a ficar vazia
+    marca = sha1(f"{registro.get('id_execucao')}|{valor}".encode("utf-8")).hexdigest()[:10]
+    return f"conferido_{campo}_{marca}"
+
+
+def _conferencia_por_dado(registro: dict) -> None:
+    entrada = st.session_state.get("entrada") or {}
+    modalidade = registro.get("modalidade") or entrada.get("modalidade")
+    st.markdown(
+        '<p class="orientacao">A leitura de áudio e imagem pode errar nomes, números e datas. '
+        "Marque cada dado que confere com o original.</p>",
+        unsafe_allow_html=True,
+    )
+    with st.expander("Ouvir o áudio original" if modalidade == "audio" else "Ver a ficha original"):
+        _previsualizar(
+            entrada.get("modalidade") or modalidade,
+            entrada.get("nome_arquivo"),
+            entrada.get("tipo_mime"),
+            entrada.get("conteudo"),
+        )
+    campos = registro.get("campos") or {}
+    for campo, rotulo in DADOS_CRITICOS:
+        valor = str((campos.get(campo) or {}).get("valor") or VALOR_AUSENTE)
+        st.checkbox(
+            f"{rotulo}: {valor}",
+            key=_chave_conferencia(registro, campo, valor),
+            on_change=_limpar_erro_decisao,
+        )
+    st.caption("Se algum estiver errado, clique em Voltar e corrija o campo.")
+
+
+def _dados_conferidos(registro: dict) -> list[str]:
+    campos = registro.get("campos") or {}
+    conferidos = []
+    for campo, _ in DADOS_CRITICOS:
+        valor = str((campos.get(campo) or {}).get("valor") or VALOR_AUSENTE)
+        if st.session_state.get(_chave_conferencia(registro, campo, valor)):
+            conferidos.append(campo)
+    return conferidos
 
 
 def _formulario_rejeicao() -> None:
@@ -1043,22 +1279,21 @@ def _formulario_rejeicao() -> None:
         )
     st.markdown(f'<p class="orientacao">{escape(texto)}</p>', unsafe_allow_html=True)
     st.text_input(
-        "Revisor",
+        "Servidor(a) responsável",
         key="revisor",
-        placeholder="Nome de quem revisa",
+        on_change=_limpar_erro_decisao,
+        placeholder="Quem revisa e assina a minuta",
         persist_state="session",
     )
     st.text_area(
         "Justificativa",
         key="justificativa_rejeicao",
+        on_change=_limpar_erro_decisao,
         height=88,
         placeholder="Ex.: protocolo inventado, pessoa errada, transcrição ilegível.",
     )
     if st.session_state.decisao_erro:
-        st.markdown(
-            f'<p class="aviso">{escape(st.session_state.decisao_erro)}</p>',
-            unsafe_allow_html=True,
-        )
+        _cartao_erro(st.session_state.decisao_erro)
     cancelar, confirmar = st.columns(2, gap="small")
     with cancelar:
         st.button("Cancelar", key="cancelar_rejeicao", width="stretch", on_click=_cancelar_rejeicao)
@@ -1092,10 +1327,7 @@ def _passos_apos_rejeicao() -> None:
         )
     st.markdown(f'<p class="orientacao">{escape(texto)}</p>', unsafe_allow_html=True)
     if st.session_state.decisao_erro:
-        st.markdown(
-            f'<p class="aviso">{escape(st.session_state.decisao_erro)}</p>',
-            unsafe_allow_html=True,
-        )
+        _cartao_erro(st.session_state.decisao_erro)
     st.button(
         "Corrigir campos",
         key="corrigir_campos",
@@ -1161,10 +1393,12 @@ def _rejeitar() -> None:
     justificativa = (st.session_state.get("justificativa_rejeicao") or "").strip()
     if not justificativa:
         st.session_state.decisao_erro = "Informe a justificativa para rejeitar."
+        avisar("Rejeição não registrada: falta a justificativa.", "alerta")
         return
     revisor = _revisor()
     if not revisor:
         st.session_state.decisao_erro = "Informe o nome do revisor."
+        avisar("Rejeição não registrada: falta o nome do servidor responsável.", "alerta")
         return
     registro = st.session_state.get("extracao_registro") or {}
     try:
@@ -1179,38 +1413,61 @@ def _rejeitar() -> None:
         return
     st.session_state.decisao_erro = None
     st.session_state.decisao_justificativa = justificativa
+    avisar("Rejeição registrada. Nenhuma minuta foi gravada.")
     st.session_state.decisao_estado = "rejeitada"
     st.session_state.decisao_etapa = st.session_state.etapa
 
 
 def _aprovar() -> None:
-    revisor = _revisor()
-    if not revisor:
-        st.session_state.decisao_erro = "Informe o nome do revisor."
-        return
-    if not st.session_state.get("conferencia_critica"):
-        st.session_state.decisao_erro = "Confira nome, protocolo e datas antes de aprovar."
-        return
     registro = st.session_state.get("extracao_registro") or {}
+    revisor = _revisor()
+    cargo = (st.session_state.get("cargo_setor") or "").strip()
+    justificativa = (st.session_state.get("justificativa_aprovacao") or "").strip()
+    conferidos = _dados_conferidos(registro) if _exige_conferencia_por_dado(registro) else None
+    if not revisor:
+        pendencia = "Informe o nome do revisor."
+    elif not cargo:
+        pendencia = "Informe o cargo ou setor de quem assina."
+    elif conferidos is None and not st.session_state.get("conferencia_critica"):
+        pendencia = "Confira nome, protocolo e datas antes de aprovar."
+    elif conferidos is not None and len(conferidos) < len(DADOS_CRITICOS):
+        faltam = [rotulo for campo, rotulo in DADOS_CRITICOS if campo not in conferidos]
+        pendencia = "Confira com o original: " + ", ".join(faltam) + "."
+    elif registro.get("alertas_seguranca") and not justificativa:
+        pendencia = "Há alerta de segurança: justifique a aprovação."
+    else:
+        pendencia = None
+    if pendencia:
+        st.session_state.decisao_erro = pendencia
+        avisar("Aprovação não registrada: " + pendencia, "alerta")
+        return
+
     decisao = decisao_de_aprovacao(registro)
+    assinada = {**registro, "minuta": assinar_minuta(registro.get("minuta") or "", revisor, cargo)}
     try:
-        arquivo = salvar_minuta_aprovada(registro)
+        arquivo = salvar_minuta_aprovada(assinada)
     except (OSError, ValueError) as erro:
         st.session_state.decisao_erro = str(erro)
+        avisar("Não foi possível salvar a minuta aprovada.", "erro")
         return
     try:
         registrar_decisao(
             registro.get("id_execucao") or "",
             decisao,
+            justificativa=justificativa,
             revisor=revisor,
             conferencia_dados_criticos=True,
             arquivo_minuta=arquivo,
+            cargo_setor=cargo,
+            dados_conferidos=conferidos,
         )
     except ValueError as erro:
         # Sem decisão no registro, a minuta não pode ficar como aprovada
         descartar_minuta_aprovada(arquivo)
         st.session_state.decisao_erro = str(erro)
+        avisar("A aprovação não foi registrada.", "erro")
         return
+    avisar("Minuta aprovada, assinada e salva.")
     st.session_state.decisao_erro = None
     st.session_state.decisao_tipo = decisao
     st.session_state.decisao_motivos = motivos_da_revisao(registro)
@@ -1220,6 +1477,7 @@ def _aprovar() -> None:
 
 
 def _corrigir_campos() -> None:
+    avisar("Corrija os campos e prossiga de novo.", "alerta")
     st.session_state.decisao_estado = None
     st.session_state.decisao_erro = None
     if st.session_state.etapa != 3:
@@ -1232,6 +1490,7 @@ def _gerar_extracao_de_novo() -> None:
     revisor = _revisor()
     if not revisor:
         st.session_state.decisao_erro = "Informe o nome do revisor."
+        avisar("Falta o nome do servidor responsável.", "alerta")
         return
     try:
         preservado = preservar_extracao(registro)
@@ -1244,9 +1503,11 @@ def _gerar_extracao_de_novo() -> None:
         )
     except (OSError, ValueError) as erro:
         st.session_state.decisao_erro = str(erro)
+        avisar("Não foi possível pedir a nova extração.", "erro")
         return
     st.session_state.decisao_erro = None
     st.session_state.decisao_estado = None
+    st.session_state.gerando_de_novo = True
     st.session_state.id_execucao_anterior = registro.get("id_execucao")
     st.session_state.extracao_registro = None
     st.session_state.extracao_erro = None
@@ -1279,6 +1540,10 @@ def _encerrar_caso() -> None:
     st.session_state.decisao_motivos = None
     st.session_state.arquivo_minuta_aprovada = None
     st.session_state.id_execucao_anterior = None
+    # Outra entrada é outro atendimento: quem revisa e assina informa de novo
+    st.session_state.revisor = ""
+    st.session_state.cargo_setor = ""
+    st.session_state.justificativa_aprovacao = ""
     st.session_state.texto_guardado = ""
     if "rascunho_texto" in st.session_state:
         st.session_state.rascunho_texto = ""
@@ -1382,10 +1647,12 @@ def _ao_trocar_modelo() -> None:
     modelo = obter_modelo(config, st.session_state.modelo_escolhido)
     for nome, valor in parametros_aplicaveis(modelo).items():
         st.session_state[f"cfg_{nome}"] = valor
+    avisar(f"Modelo alterado para {modelo['nome']}.")
 
 
 def _restaurar_padroes() -> None:
     _ao_trocar_modelo()
+    st.session_state.avisos = [("Parâmetros do modelo restaurados.", "sucesso")]
 
 
 def _seletor() -> None:
@@ -1504,6 +1771,7 @@ def _mostrar_extracao(entrada: dict) -> None:
             unsafe_allow_html=True,
         )
         if st.button("Tentar de novo", key="repetir_extracao", width="stretch"):
+            avisar("Tentando a extração de novo.", "alerta")
             st.session_state.extracao_erro = None
             st.session_state.extracao_registro = None
             st.session_state.extracao_forcar = True
@@ -1525,9 +1793,24 @@ def _mostrar_extracao(entrada: dict) -> None:
                 )
             except Exception as erro:
                 st.session_state.extracao_erro = _mensagem_extracao(erro)
+                st.session_state.gerando_de_novo = False
+                avisar("A extração falhou. Veja a mensagem na tela.", "erro")
                 st.rerun()
+        _avisar_extracao(st.session_state.extracao_registro)
 
     _resumo_extracao(st.session_state.extracao_registro)
+
+
+def _avisar_extracao(registro: dict) -> None:
+    if st.session_state.get("gerando_de_novo"):
+        avisar("Nova extração gerada. Revise os campos.")
+    elif registro.get("id_execucao_origem") or "id_execucao_origem" in registro:
+        avisar("Extração reaproveitada, sem nova chamada à API.")
+    else:
+        avisar("Extração concluída. Revise os campos.")
+    st.session_state.gerando_de_novo = False
+    if registro.get("alertas_seguranca"):
+        avisar("Alerta de segurança na solicitação. Revise com atenção.", "alerta")
 
 
 def _resumo_extracao(registro: dict) -> None:
@@ -1536,8 +1819,16 @@ def _resumo_extracao(registro: dict) -> None:
     aviso_alerta = ""
     if alertas:
         itens = "".join(f"<li>{escape(str(item))}</li>" for item in alertas)
-        aviso_alerta = f'<ul class="orientacao">{itens}</ul>'
+        aviso_alerta = (
+            '<div class="alerta-seguranca" role="alert">'
+            '<p class="titulo-alerta">⚠️ Alerta de segurança</p>'
+            "<p>A solicitação tem trechos que tentam dar instruções ao sistema. "
+            "Eles foram tratados como texto e não foram seguidos. "
+            "Confira os campos com atenção: para aprovar, é preciso justificar.</p>"
+            f"<ul>{itens}</ul></div>"
+        )
 
+    st.markdown(f'<p class="origem-dados">{escape(_origem_dos_dados(registro))}</p>', unsafe_allow_html=True)
     st.markdown(
         '<p class="orientacao">Ao prosseguir, a minuta é montada com estes campos.</p>',
         unsafe_allow_html=True,
@@ -1560,8 +1851,34 @@ def _resumo_extracao(registro: dict) -> None:
     ausentes = _ausentes_da_edicao()
     if ausentes:
         st.caption("Campos não localizados: " + ", ".join(ausentes))
+    editados = _editados_na_tela(registro)
+    if editados:
+        st.caption("Editados por você: " + ", ".join(editados))
     _resumo_chamada(registro.get("chamada") or {})
     _guardar_edicao()
+
+
+def _origem_dos_dados(registro: dict) -> str:
+    """De onde vieram os campos (RF09): arquivo de origem e modelo que leu a entrada."""
+    arquivo = registro.get("arquivo_origem") or (st.session_state.get("entrada") or {}).get("caminho_copia") or ""
+    leitura = MODELOS_LEITURA.get(registro.get("modalidade") or "")
+    texto = f"Origem: {arquivo}"
+    if leitura:
+        texto += f" · lido por {leitura}"
+    return texto
+
+
+def _editados_na_tela(registro: dict) -> list[str]:
+    """Campos cujo valor na tela difere do que o modelo extraiu."""
+    extraido = registro.get("extraido") or registro
+    originais = extraido.get("campos") or {}
+    editados = []
+    for nome, rotulo in ROTULOS_CAMPOS:
+        atual = (st.session_state.get(f"edit_{nome}") or "").strip() or VALOR_AUSENTE
+        original = ((originais.get(nome) or {}).get("valor") or "").strip() or VALOR_AUSENTE
+        if atual != original:
+            editados.append(rotulo)
+    return editados
 
 
 def _preparar_edicao(registro: dict) -> None:

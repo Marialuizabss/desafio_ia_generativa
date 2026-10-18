@@ -44,6 +44,17 @@ class TestMontarMinuta(unittest.TestCase):
         self.assertIn("protocolo 2026-000142", minuta)
 
 
+class TestAssinatura(unittest.TestCase):
+    def test_troca_os_colchetes_da_assinatura(self):
+        minuta = "Atenciosamente,\n[NOME DO SERVIDOR RESPONSÁVEL]\n[CARGO / SETOR]"
+        assinada = fluxo.assinar_minuta(minuta, " Ana Beatriz ", "Secretaria Escolar")
+        self.assertEqual(assinada, "Atenciosamente,\nAna Beatriz\nSecretaria Escolar")
+
+    def test_campo_vazio_mantem_o_colchete(self):
+        minuta = "[NOME DO SERVIDOR RESPONSÁVEL]\n[CARGO / SETOR]"
+        self.assertEqual(fluxo.assinar_minuta(minuta, "Ana", ""), "Ana\n[CARGO / SETOR]")
+
+
 class TestAplicarEdicao(unittest.TestCase):
     def setUp(self):
         self.temp = TemporaryDirectory()

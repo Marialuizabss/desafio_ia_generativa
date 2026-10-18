@@ -211,6 +211,34 @@ def salvar_minuta_aprovada(registro: dict) -> str:
     return destino.relative_to(BASE_DIR).as_posix()
 
 
+ASSINATURA = (
+    ("[NOME DO SERVIDOR RESPONSÁVEL]", "servidor"),
+    ("[CARGO / SETOR]", "cargo"),
+)
+
+# Dados que a leitura de áudio e imagem pode errar e que o servidor confere com o original
+DADOS_CRITICOS = (
+    ("solicitante", "Nome do solicitante"),
+    ("protocolo", "Protocolo"),
+    ("data_solicitacao", "Data da solicitação"),
+    ("data_inicio", "Data de início"),
+)
+
+
+def assinar_minuta(minuta: str, servidor: str = "", cargo: str = "") -> str:
+    """Troca os colchetes da assinatura pelo que o servidor informou.
+
+    A IA nunca preenche a assinatura: só a pessoa, na aprovação. Campo vazio
+    mantém o colchete do modelo.
+    """
+    valores = {"servidor": (servidor or "").strip(), "cargo": (cargo or "").strip()}
+    texto = minuta or ""
+    for marcador, campo in ASSINATURA:
+        if valores[campo]:
+            texto = texto.replace(marcador, valores[campo])
+    return texto
+
+
 def descartar_minuta_aprovada(caminho: str) -> None:
     """Apaga a minuta gravada quando a decisão não chegou ao registro."""
     if caminho:
