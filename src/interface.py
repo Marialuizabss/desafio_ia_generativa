@@ -39,6 +39,10 @@ except ImportError:
 BASE_DIR = Path(__file__).resolve().parent.parent
 PASTA_ORIGINAIS = BASE_DIR / "dados" / "originais"
 
+# Marcador que o modelo copia do modelo de minuta; a interface troca pela imagem
+MARCADOR_BRASAO = "[CABEÇALHO COM BRASÃO — dados/originais/brasao.png]"
+BRASAO = PASTA_ORIGINAIS / "brasao.png"
+
 MODALIDADES = (
     ("texto", "Texto", "Cole o pedido ou envie um .txt", ":material/edit_note:"),
     ("audio", "Áudio", "Envie o arquivo de voz", ":material/graphic_eq:"),
@@ -906,7 +910,23 @@ def _resumo_extracao(registro: dict) -> None:
     minuta = (registro.get("minuta") or "").strip()
     if minuta:
         with st.expander("Minuta"):
-            st.markdown(minuta)
+            com_brasao, texto = preparar_minuta(minuta)
+            if com_brasao and BRASAO.is_file():
+                st.image(str(BRASAO), width=110)
+            st.markdown(texto)
+
+
+def preparar_minuta(minuta: str) -> tuple[bool, str]:
+    """Separa o marcador do brasão e mantém as quebras de linha no Markdown.
+
+    O Markdown junta linhas separadas por uma única quebra; terminar a linha
+    com dois espaços faz cada quebra da minuta aparecer na tela.
+    """
+    texto = (minuta or "").strip()
+    com_brasao = texto.startswith(MARCADOR_BRASAO)
+    if com_brasao:
+        texto = texto.removeprefix(MARCADOR_BRASAO).lstrip()
+    return com_brasao, texto.replace("\n", "  \n")
 
 
 def _resumo_chamada(chamada: dict) -> None:
