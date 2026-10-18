@@ -1,0 +1,72 @@
+{
+  "requisito": "RF10",
+  "descricao": "Versões da ilustração da peça de orientação; a aprovada mais recente é a vigente.",
+  "versoes": [
+    {
+      "versao": 1,
+      "arquivo": "resultados/imagens/orientacao/ilustracao_v01.png",
+      "modelo": "gpt-image-1",
+      "tamanho": "1536x1024",
+      "qualidade": "medium",
+      "prompt": "Sujeito: balcão de atendimento de uma secretaria de escola técnica, com uma pasta de\ndocumentos, um formulário de matrícula em branco, um calendário de mesa e um vaso de\nplanta; ao fundo, a fachada estilizada de um prédio escolar.\nComposição: horizontal, objetos centralizados no terço inferior, fundo limpo com espaço\nvazio nas laterais; sem pessoas.\nEstilo: ilustração vetorial plana, institucional e sóbria; paleta verde (#165C3F),\namarelo-dourado discreto e branco; contornos suaves.\nIluminação: luz difusa e uniforme, de dia, sem sombras duras nem reflexos.\nProporção: 3:2 (1536 x 1024).\nRestrições: nenhuma letra, número, palavra, logotipo ou brasão; nenhuma pessoa, rosto ou\nmão; nada que pareça documento oficial preenchido; sem dados pessoais.",
+      "data_geracao": "2026-10-18T18:12:25-04:00",
+      "tempo_geracao_segundos": 21.46,
+      "custo_estimado_usd": 0.063,
+      "revisao_humana": "reprovada",
+      "revisor": "Ana Beatriz",
+      "data_revisao": "2026-10-18T18:16:17-04:00",
+      "checklist": {
+        "sem_texto": true,
+        "sem_simbolos": true,
+        "objetos_coerentes": true,
+        "sem_pessoas": true
+      },
+      "nota_revisao": "Não orienta nada"
+    },
+    {
+      "versao": 2,
+      "arquivo": "resultados/imagens/orientacao/ilustracao_v02.png",
+      "modelo": "gpt-image-1",
+      "tamanho": "1536x1024",
+      "qualidade": "medium",
+      "prompt": "Sujeito: balcão de atendimento de uma secretaria de escola técnica, com uma pasta de\ndocumentos, um formulário de matrícula em branco, um calendário de mesa e um vaso de\nplanta; ao fundo, a fachada estilizada de um prédio escolar, sem placa, letreiro ou\nqualquer escrita.\nComposição: horizontal, objetos centralizados no terço inferior, fundo limpo com espaço\nvazio nas laterais; sem pessoas.\nEstilo: ilustração vetorial plana, institucional e sóbria; paleta verde (#165C3F),\namarelo-dourado discreto e branco; contornos suaves.\nIluminação: luz difusa e uniforme, de dia, sem sombras duras nem reflexos.\nProporção: 3:2 (1536 x 1024).\nRestrições: nenhuma letra, número, palavra, placa, letreiro, logotipo ou brasão em\nnenhum lugar da imagem; nenhuma pessoa, rosto ou mão; nada que pareça documento oficial\npreenchido; sem dados pessoais.",
+      "data_geracao": "2026-10-18T18:25:50-04:00",
+      "tempo_geracao_segundos": 23.42,
+      "custo_estimado_usd": 0.063,
+      "revisao_humana": "revogada",
+      "revisor": "ANA BEATRIZ",
+      "data_revisao": "2026-10-18T18:27:41-04:00",
+      "checklist": {
+        "sem_texto": true,
+        "sem_simbolos": true,
+        "objetos_coerentes": true,
+        "sem_pessoas": true
+      },
+      "nota_revisao": "",
+      "revogada_por": "Ana Beatriz Schuindt",
+      "data_revogacao": "2026-10-18T18:36:49-04:00",
+      "motivo_revogacao": "Texto 'ENTULATION' no formulário, percebido depois da aprovação."
+    },
+    {
+      "versao": 3,
+      "arquivo": "resultados/imagens/orientacao/ilustracao_v03.png",
+      "modelo": "gpt-image-1",
+      "tamanho": "1536x1024",
+      "qualidade": "medium",
+      "prompt": "Sujeito: balcão de atendimento de uma secretaria escolar com uma pasta fechada, um\ncalendário de mesa com a grade vazia (sem números), um porta-lápis e um vaso de planta;\nao fundo, a fachada estilizada de um prédio escolar, lisa, sem placa, faixa de letreiro\nou qualquer escrita.\nComposição: panorâmica; todos os elementos dentro de uma faixa horizontal central que\nocupa só o terço do meio da altura da imagem; acima e abaixo dessa faixa, apenas fundo\nliso de cor sólida, porque a imagem será recortada como faixa panorâmica (cerca de 2,5:1);\nsem pessoas.\nEstilo: ilustração vetorial plana, institucional e sóbria, sem nenhum elemento\ntipográfico; paleta verde (#165C3F), amarelo-dourado discreto e branco; contornos suaves.\nIluminação: luz difusa e uniforme, de dia, sem sombras duras nem reflexos.\nProporção: 3:2 (1536 x 1024), com o conteúdo concentrado na faixa central.\nRestrições: nenhuma letra, número, palavra, placa, letreiro, logotipo ou brasão em\nnenhum lugar da imagem; nenhum papel com título ou cabeçalho; nenhuma pessoa, rosto ou\nmão; nada que pareça documento oficial preenchido; sem dados pessoais.",
+      "data_geracao": "2026-10-18T18:34:24-04:00",
+      "tempo_geracao_segundos": 23.98,
+      "custo_estimado_usd": 0.063,
+      "revisao_humana": "aprovada",
+      "revisor": "Ana Beatriz Schuindt",
+      "data_revisao": "2026-10-18T18:34:37-04:00",
+      "checklist": {
+        "sem_texto": true,
+        "sem_simbolos": true,
+        "objetos_coerentes": true,
+        "sem_pessoas": true
+      },
+      "nota_revisao": ""
+    }
+  ]
+}

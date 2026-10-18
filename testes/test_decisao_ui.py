@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 from streamlit.testing.v1 import AppTest
 
-from src import audit, fluxo
+from src import audit, fluxo, peca_orientacao
 from src.extracao import CAMPOS, VALOR_AUSENTE
 
 
@@ -73,6 +73,7 @@ class TestDecisaoInterface(unittest.TestCase):
             patch("src.interface.guardar_copia", side_effect=copia_falsa),
             patch.object(fluxo, "BASE_DIR", self.base),
             patch.object(audit, "ARQUIVO_REGISTRO", self.log),
+            patch.object(peca_orientacao, "BASE_DIR", self.base),
             patch("src.audio.gerar_audio"),
         ]
         iniciados = []
@@ -536,3 +537,45 @@ class TestDecisaoInterface(unittest.TestCase):
         chaves = [botao.key for botao in tela.button]
         self.assertIn("voltar", chaves)
         self.assertIn("corrigir_campos", chaves)
+
+    # ---- B4: peça de orientação (RF10)
+
+    def _gerar_ilustracao_falsa(self, tela):
+        from testes.test_peca_orientacao import cliente_de_imagem, png_base64
+
+        (self.base / "dados" / "originais" / "brasao.png").write_bytes(
+            (Path(__file__).resolve().parent.parent / "dados" / "originais" / "brasao.png").read_bytes()
+        )
+        with patch.object(peca_orientacao, "OpenAI", return_value=cliente_de_imagem(png_base64())):
+            tela.button(key="gerar_ilustracao").click().run()
+        return tela
+
+    def test_peca_gerada_revisada_na_tela_e_mostrada(self):
+        tela = self._aprovar_texto(self._ate_minuta())
+        self.assertIn("Ainda não há ilustração aprovada", "\n".join(c.value for c in tela.caption))
+        tela = self._gerar_ilustracao_falsa(tela)
+
+        caixas = [caixa for caixa in tela.checkbox if caixa.key.startswith("ilustracao_")]
+        self.assertEqual(len(caixas), 4)
+        self.assertIn("Prévia da peça com esta ilustração", _texto(tela))
+        self.assertIn("Ver a ilustração gerada inteira", [item.label for item in tela.expander])
+        tela.button(key="aprovar_ilustracao").click().run()
+        self.assertIn("Para aprovar, confira", _texto(tela))
+
+        for caixa in [caixa for caixa in tela.checkbox if caixa.key.startswith("ilustracao_")]:
+            caixa.check()
+        tela.run()
+        tela.button(key="aprovar_ilustracao").click().run()
+        self.assertFalse(tela.exception)
+        self.assertEqual(peca_orientacao.versao_vigente()["revisor"], "Ana Beatriz")
+        self.assertIn("baixar_peca", [botao.key for botao in tela.get("download_button")])
+        self.assertIn("Ilustração v01 gerada por IA", "\n".join(c.value for c in tela.caption))
+
+    def test_reprovar_ilustracao_exige_observacao(self):
+        tela = self._gerar_ilustracao_falsa(self._aprovar_texto(self._ate_minuta()))
+        tela.button(key="reprovar_ilustracao").click().run()
+        self.assertIn("Informe o motivo da reprovação.", _texto(tela))
+        tela.text_area(key="ilustracao_nota_1").set_value("Apareceram letras.").run()
+        tela.button(key="reprovar_ilustracao").click().run()
+        self.assertIsNone(peca_orientacao.versao_vigente())
+        self.assertEqual(peca_orientacao.carregar_versoes()[0]["revisao_humana"], "reprovada")

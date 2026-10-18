@@ -21,6 +21,7 @@ A escolha do modelo fica em ``st.session_state["configuracao_modelo"]``:
   a esse modelo, já com o que o usuário alterou
 """
 
+from datetime import datetime
 from hashlib import sha1
 from html import escape
 from pathlib import Path
@@ -43,6 +44,11 @@ except ImportError:
         nome_do_pdf, preservar_extracao, processar_entrada, rodape_da_minuta, salvar_minuta_aprovada,
         salvar_pdf_aprovado,
     )
+
+try:
+    import peca_orientacao
+except ImportError:
+    from src import peca_orientacao
 
 try:
     from src.configuracao import carregar_modelos, obter_modelo, parametros_aplicaveis, rotulo_da_opcao
@@ -1415,6 +1421,7 @@ def _passo_apos_aprovacao() -> None:
     st.caption("Atendimento encerrado. Para alterar algo, envie a solicitação de novo: ela vira uma nova execução.")
     _botao_baixar_pdf()
     _secao_audio()
+    _secao_peca()
     st.button(
         "Escolher outra entrada",
         key="encerrar_caso",
@@ -1459,6 +1466,113 @@ def _secao_audio() -> None:
     else:
         avisar("Áudio gerado com o modelo alternativo, sem instruções de entonação.", "alerta")
     st.rerun()
+
+
+def _secao_peca() -> None:
+    """Peça de orientação (RF10): a vigente vale para todos; o servidor pode gerar outra."""
+    registro = st.session_state.get("extracao_registro") or {}
+    with st.expander("Peça de orientação (RF10)", expanded=True):
+        pendente = peca_orientacao.versao_pendente()
+        if pendente:
+            _revisao_da_ilustracao(pendente)
+            return
+        peca = peca_orientacao.peca_do_atendimento(registro)
+        if peca:
+            arquivo = peca_orientacao.caminho(peca["arquivo"])
+            versao = peca["versao"]
+            st.image(str(arquivo), width="stretch")
+            st.caption(
+                f"Ilustração v{versao['versao']:02d} gerada por IA ({versao['modelo']}), diagramada pela "
+                f"equipe e revisada por {versao.get('revisor', '')} em "
+                f"{formatar_data(versao.get('data_revisao'))}. Sem dados pessoais."
+            )
+            st.download_button(
+                "Baixar imagem",
+                data=arquivo.read_bytes(),
+                file_name=nome_do_pdf(registro).replace("minuta_", "orientacao_").replace(".pdf", ".png"),
+                mime="image/png",
+                key="baixar_peca",
+                icon=":material/download:",
+                width="stretch",
+            )
+            rotulo = "Gerar nova ilustração"
+        else:
+            st.caption("Ainda não há ilustração aprovada para a peça de orientação.")
+            rotulo = "Gerar ilustração"
+        if st.button(rotulo, key="gerar_ilustracao", icon=":material/image:", width="stretch"):
+            with st.spinner("Gerando a ilustração...", show_time=True):
+                try:
+                    peca_orientacao.gerar_ilustracao()
+                except Exception as erro:
+                    avisar("Não foi possível gerar a ilustração: " + _mensagem_extracao(erro), "erro")
+                    st.rerun()
+            avisar("Ilustração gerada. Revise antes de usar.", "alerta")
+            st.rerun()
+
+
+def _revisao_da_ilustracao(pendente: dict) -> None:
+    numero = pendente["versao"]
+    st.markdown(
+        f'<p class="orientacao">Ilustração v{numero:02d} gerada por IA, aguardando revisão. '
+        "Ela só entra na peça depois de aprovada.</p>",
+        unsafe_allow_html=True,
+    )
+    ilustracao = peca_orientacao.caminho(pendente["arquivo"])
+    st.markdown('<p class="rotulo">Prévia da peça com esta ilustração</p>', unsafe_allow_html=True)
+    st.image(peca_orientacao.previa_da_peca(ilustracao, st.session_state.get("extracao_registro") or {}),
+             width="stretch")
+    with st.expander("Ver a ilustração gerada inteira"):
+        st.image(str(ilustracao), width="stretch")
+    st.caption("O checklist vale para a ilustração, que é a parte gerada por IA.")
+    for chave, rotulo in peca_orientacao.CHECKLIST:
+        st.checkbox(rotulo, key=f"ilustracao_{chave}_{numero}", on_change=_limpar_erro_ilustracao)
+    st.text_area(
+        "Observação da revisão",
+        key=f"ilustracao_nota_{numero}",
+        height=70,
+        placeholder="Obrigatória para reprovar.",
+        on_change=_limpar_erro_ilustracao,
+    )
+    if st.session_state.get("ilustracao_erro"):
+        _cartao_erro(st.session_state.ilustracao_erro)
+    aprovar, reprovar = st.columns(2, gap="small")
+    with aprovar:
+        st.button("Aprovar ilustração", key="aprovar_ilustracao", type="primary", width="stretch",
+                  on_click=_revisar_ilustracao, args=(numero, "aprovada"))
+    with reprovar:
+        st.button("Reprovar", key="reprovar_ilustracao", width="stretch",
+                  on_click=_revisar_ilustracao, args=(numero, "reprovada"))
+
+
+def _limpar_erro_ilustracao() -> None:
+    st.session_state.ilustracao_erro = None
+
+
+def _revisar_ilustracao(numero: int, decisao: str) -> None:
+    checklist = {
+        chave: bool(st.session_state.get(f"ilustracao_{chave}_{numero}"))
+        for chave, _ in peca_orientacao.CHECKLIST
+    }
+    try:
+        peca_orientacao.revisar_ilustracao(
+            numero, decisao, _revisor(), checklist, st.session_state.get(f"ilustracao_nota_{numero}") or "",
+        )
+    except ValueError as erro:
+        st.session_state.ilustracao_erro = str(erro)
+        avisar("Revisão da ilustração não registrada: " + str(erro), "alerta")
+        return
+    st.session_state.ilustracao_erro = None
+    if decisao == "aprovada":
+        avisar("Ilustração aprovada. Ela passa a valer para as peças de orientação.")
+    else:
+        avisar("Ilustração reprovada e arquivada. A versão anterior continua valendo.", "alerta")
+
+
+def formatar_data(valor: str | None) -> str:
+    try:
+        return datetime.fromisoformat(valor or "").strftime("%d/%m/%Y")
+    except ValueError:
+        return "data não registrada"
 
 
 def _abrir_rejeicao() -> None:

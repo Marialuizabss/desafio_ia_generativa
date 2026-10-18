@@ -134,6 +134,11 @@ def registrar_revisao(
     return _gravar(evento)
 
 
+def registrar_evento(evento: str, dados: dict) -> dict:
+    """Grava um evento avulso (por exemplo, a geração e a revisão da peça do RF10)."""
+    return _gravar({"evento": evento, "data_hora": _agora(), **dados})
+
+
 def registrar_audio_minuta(id_execucao: str, dados: dict) -> dict:
     """Grava a geração do áudio da minuta aprovada (RF07), com sucesso ou erro."""
     if not id_execucao:
