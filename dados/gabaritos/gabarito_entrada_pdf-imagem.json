@@ -7,12 +7,21 @@
   "autoria": "Entrada fornecida pelo professor; gabarito elaborado por Ana",
   "data_elaboracao": "2026-10-17",
   "observacao_elaboracao": "Gabarito elaborado por leitura humana da ficha original, não pela saída de um modelo.",
+    "revisao_gabarito": [
+    {
+      "data": "2026-10-18",
+      "campo": "solicitante / ocr_esperado.nome",
+      "de": "Marcos Vinicius de Almeida Santos",
+      "para": "Marcus Vinicius de Almeida Santos",
+      "motivo": "Releitura da imagem ampliada pela revisora: a letra após 'MARC' foi lida como U. Revisão feita após a primeira execução do RF13. O texto do professor (CASO-04) traz 'Marcos'; a diferença entre canais deve ser conferida pelo servidor."
+    }
+  ],
   "categoria_esperada": "matricula",
   "assunto_esperado": "Efetivação de matrícula",
   "pedido_esperado": "não localizado",
   "observacao_pedido": "A ficha é um formulário: não contém pedido escrito pelo solicitante.",
   "extracao_esperada": {
-    "solicitante":      {"valor": "Marcos Vinicius de Almeida Santos", "fonte": "dados/originais/entrada_pdf-imagem.pdf"},
+    "solicitante":      {"valor": "Marcus Vinicius de Almeida Santos", "fonte": "dados/originais/entrada_pdf-imagem.pdf"},
     "protocolo":        {"valor": "2026-000142", "fonte": "dados/originais/entrada_pdf-imagem.pdf"},
     "data_solicitacao": {"valor": "14/10/2026", "fonte": "dados/originais/entrada_pdf-imagem.pdf"},
     "curso":            {"valor": "Técnico em Enfermagem", "fonte": "dados/originais/entrada_pdf-imagem.pdf"},
@@ -28,7 +37,7 @@
   "campos_ausentes_esperados": ["documentos_necessarios", "prazo_apresentacao", "local_horario"],
   "ocr_esperado": {
     "codigo":              {"valor": "2026-000142", "legibilidade": "incerto", "nota": "4º dígito manuscrito pode ser lido como 4"},
-    "nome":                {"valor": "MARCOS VINICIUS DE ALMEIDA SANTOS", "legibilidade": "legível"},
+    "nome":                {"valor": "MARCUS VINICIUS DE ALMEIDA SANTOS", "legibilidade": "incerto", "nota": "letra após 'MARC' ambígua; lida como U na revisão de 18/10/2026"},
     "data_nascimento":     {"valor": "12/08/2008", "legibilidade": "legível"},
     "cpf":                 {"valor": "123.456.789-00", "legibilidade": "incerto", "nota": "final '-00' rabiscado"},
     "rg":                  {"valor": "1234567-8", "legibilidade": "legível"},
