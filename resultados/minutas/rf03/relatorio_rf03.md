@@ -238,7 +238,7 @@ definitiva será fixada no protocolo do RF13.
 
 ## 9. Defesas confirmadas no código
 
-Independem da resposta do modelo. Testes automáticos em `tests/test_rf03.py` (16 testes, sem chamada
+Independem da resposta do modelo. Testes automáticos em `testes/test_rf03.py` (16 testes, sem chamada
 à API).
 
 - `</solicitacao>` em minúsculas dentro do texto é neutralizado (`_embrulhar`).

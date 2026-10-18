@@ -100,7 +100,7 @@ seguinte); não reprocessa marcadores já inseridos; mantém intactos textos sem
 "os documentos são RG, CPF e comprovante" ou "Canal: E-mail"; extrações antigas, feitas sem
 minimização, são refeitas na próxima vez que a entrada for processada.
 
-**Testes:** `tests/test_rf12.py`, 11 testes sem chamada à API — remoção de cada dado em cada forma;
+**Testes:** `testes/test_rf12.py`, 11 testes sem chamada à API — remoção de cada dado em cada forma;
 preservação de todos os campos do gabarito nos 5 casos de texto; integração com o `fluxo.py`
 (o modelo recebe o texto minimizado e o registro guarda `dados_removidos`). Suíte completa do
 projeto: 48 testes.
@@ -187,7 +187,7 @@ neles são fictícios.
 | `dados/processados/extracao_rf08*.json` | Leituras da ficha no formato anterior à padronização do RF08 |
 | `dados/processados/extracao_caso2_solicitacao_incompleta.json` | Extração anterior à minimização; será refeita na próxima vez que a entrada for processada |
 | `resultados/minutas/rf02/*/entrada_prompt_*.txt`, `resultados/minutas/rf03/*/CASO-*_prompt_A_entrada.txt` e `registro_rf03.json` | Entradas enviadas nos experimentos de prompt, executados antes da minimização |
-| `src/privacidade.py`, `tests/test_rf12.py`, `src/experimento_rf03.py`, `resultados/logs/varredura_rf12.md` | Exemplos e padrões usados para testar e verificar a minimização |
+| `src/privacidade.py`, `testes/test_rf12.py`, `src/experimento_rf03.py`, `resultados/logs/varredura_rf12.md` | Exemplos e padrões usados para testar e verificar a minimização |
 
 ## 8. Cenário real
 
