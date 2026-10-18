@@ -49,8 +49,8 @@ class TestDecisaoInterface(unittest.TestCase):
         }
         self.chamadas = []
 
-        def processar(entrada, forcar=False, configuracao=None):
-            self.chamadas.append(forcar)
+        def processar(entrada, forcar=False, configuracao=None, id_execucao_anterior=None):
+            self.chamadas.append({"forcar": forcar, "anterior": id_execucao_anterior})
             if not forcar:
                 return self.registro
             novo = json.loads(json.dumps(self.registro))
@@ -117,6 +117,7 @@ class TestDecisaoInterface(unittest.TestCase):
         tela = self._ate_revisao()
         antes = list(self.chamadas)
         tela.button(key="rejeitar").click().run()
+        tela.text_input(key="revisor").set_value("Ana").run()
         tela.text_area(key="justificativa_rejeicao").set_value("Protocolo inventado.").run()
         tela.button(key="confirmar_rejeicao").click().run()
 
@@ -130,16 +131,21 @@ class TestDecisaoInterface(unittest.TestCase):
         self.assertEqual(eventos[0]["decisao"], "rejeitado")
         self.assertEqual(eventos[0]["id_execucao"], "teste-edicao")
         self.assertEqual(eventos[0]["justificativa"], "Protocolo inventado.")
+        self.assertEqual(eventos[0]["revisor"], "Ana")
         self.audio.assert_not_called()
 
         tela.button(key="gerar_de_novo").click().run()
         self.assertFalse(tela.exception)
         self.assertIn("Avaliação humana", _texto(tela))
         self.assertEqual(tela.text_input(key="edit_solicitante").value, "Nova Pessoa")
-        self.assertEqual(self.chamadas[-1], True)
-        decisoes = [evento["decisao"] for evento in self._eventos()]
-        self.assertEqual(decisoes, ["rejeitado", "nova_geracao"])
-        self.assertTrue(all(evento["id_execucao"] == "teste-edicao" for evento in self._eventos()))
+        self.assertEqual(self.chamadas[-1]["forcar"], True)
+        self.assertEqual(self.chamadas[-1]["anterior"], "teste-edicao")
+        eventos = self._eventos()
+        self.assertEqual([evento["decisao"] for evento in eventos], ["rejeitado", "nova_geracao"])
+        self.assertTrue(all(evento["id_execucao"] == "teste-edicao" for evento in eventos))
+        preservado = self.base / eventos[1]["arquivo_preservado"]
+        self.assertEqual(preservado.read_text(encoding="utf-8"), '{"evidencia": true}\n')
+        self.assertEqual(self.extracao.read_text(encoding="utf-8"), '{"evidencia": true}\n')
 
     def test_rejeicao_na_etapa_4_volta_para_corrigir_os_campos(self):
         tela = self._ate_revisao()
@@ -149,6 +155,7 @@ class TestDecisaoInterface(unittest.TestCase):
         gravado = self.extracao.read_text(encoding="utf-8")
 
         tela.button(key="rejeitar").click().run()
+        tela.text_input(key="revisor").set_value("Ana").run()
         tela.text_area(key="justificativa_rejeicao").set_value("Nome do solicitante errado.").run()
         tela.button(key="confirmar_rejeicao").click().run()
 
@@ -169,15 +176,25 @@ class TestDecisaoInterface(unittest.TestCase):
     def test_aprovacao_na_etapa_4_grava_sem_gerar_audio(self):
         tela = self._ate_revisao()
         tela.button(key="prosseguir").click().run()
+        tela.button(key="aprovar").click().run()
+        self.assertIn("Informe o nome do revisor.", _texto(tela))
+        self.assertEqual(self._eventos(), [])
+
+        tela.text_input(key="revisor").set_value("Ana").run()
+        tela.button(key="aprovar").click().run()
+        self.assertIn("Confira nome, protocolo e datas antes de aprovar.", _texto(tela))
+        self.assertEqual(self._eventos(), [])
+
         tela.checkbox(key="conferencia_critica").set_value(True).run()
         tela.button(key="aprovar").click().run()
 
         self.assertFalse(tela.exception)
-        self.assertIn("A aprovação ficou no registro", _texto(tela))
+        self.assertIn("aprovado com revisão", _texto(tela))
         eventos = self._eventos()
         self.assertEqual(len(eventos), 1)
-        self.assertEqual(eventos[0]["decisao"], "aprovado")
+        self.assertEqual(eventos[0]["decisao"], "aprovado_com_revisao")
         self.assertEqual(eventos[0]["id_execucao"], "teste-edicao")
+        self.assertEqual(eventos[0]["revisor"], "Ana")
         self.assertEqual(eventos[0]["justificativa"], "")
         self.assertTrue(eventos[0]["conferencia_dados_criticos"])
         self.audio.assert_not_called()

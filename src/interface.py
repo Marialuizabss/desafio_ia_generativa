@@ -28,10 +28,10 @@ import streamlit as st
 
 try:
     from audit import registrar_decisao
-    from fluxo import aplicar_edicao, processar_entrada
+    from fluxo import aplicar_edicao, decisao_de_aprovacao, preservar_extracao, processar_entrada
 except ImportError:
     from src.audit import registrar_decisao
-    from src.fluxo import aplicar_edicao, processar_entrada
+    from src.fluxo import aplicar_edicao, decisao_de_aprovacao, preservar_extracao, processar_entrada
 
 try:
     from src.configuracao import carregar_modelos, obter_modelo, parametros_aplicaveis, rotulo_da_opcao
@@ -995,10 +995,27 @@ def _acoes_da_minuta() -> None:
         "só entra se a falha foi a extração.</p>",
         unsafe_allow_html=True,
     )
+    st.text_input(
+        "Revisor",
+        key="revisor",
+        placeholder="Nome de quem revisa",
+        persist_state="session",
+    )
     st.checkbox(
         "Conferi nome, protocolo e datas.",
         key="conferencia_critica",
     )
+    if decisao_de_aprovacao(st.session_state.extracao_registro or {}) == "aprovado_com_revisao":
+        st.markdown(
+            "<p class=\"orientacao\">Há campos não localizados. "
+            "A aprovação entra como aprovado com revisão.</p>",
+            unsafe_allow_html=True,
+        )
+    if st.session_state.decisao_erro:
+        st.markdown(
+            f'<p class="aviso">{escape(st.session_state.decisao_erro)}</p>',
+            unsafe_allow_html=True,
+        )
     aprovar, rejeitar = st.columns(2, gap="small")
     with aprovar:
         st.button("Aprovar", key="aprovar", type="primary", width="stretch", on_click=_aprovar)
@@ -1018,6 +1035,12 @@ def _formulario_rejeicao() -> None:
             "A minuta não será montada e nenhum áudio será gerado."
         )
     st.markdown(f'<p class="orientacao">{escape(texto)}</p>', unsafe_allow_html=True)
+    st.text_input(
+        "Revisor",
+        key="revisor",
+        placeholder="Nome de quem revisa",
+        persist_state="session",
+    )
     st.text_area(
         "Justificativa",
         key="justificativa_rejeicao",
@@ -1061,6 +1084,11 @@ def _passos_apos_rejeicao() -> None:
             "Gerar de novo chama o modelo outra vez."
         )
     st.markdown(f'<p class="orientacao">{escape(texto)}</p>', unsafe_allow_html=True)
+    if st.session_state.decisao_erro:
+        st.markdown(
+            f'<p class="aviso">{escape(st.session_state.decisao_erro)}</p>',
+            unsafe_allow_html=True,
+        )
     st.button(
         "Corrigir campos",
         key="corrigir_campos",
@@ -1084,11 +1112,17 @@ def _passos_apos_rejeicao() -> None:
 
 
 def _passo_apos_aprovacao() -> None:
-    st.markdown(
-        "<p class=\"orientacao\">A aprovação ficou no registro, ligada a esta execução. "
-        "Nenhum áudio foi gerado.</p>",
-        unsafe_allow_html=True,
-    )
+    if st.session_state.get("decisao_tipo") == "aprovado_com_revisao":
+        texto = (
+            "A decisão ficou como aprovado com revisão, porque há campos não localizados. "
+            "Complete esses dados antes de usar a minuta. Nenhum áudio foi gerado."
+        )
+    else:
+        texto = (
+            "A aprovação ficou no registro, ligada a esta execução. "
+            "Nenhum áudio foi gerado."
+        )
+    st.markdown(f'<p class="orientacao">{escape(texto)}</p>', unsafe_allow_html=True)
     st.button(
         "Escolher outra entrada",
         key="encerrar_caso",
@@ -1108,10 +1142,18 @@ def _cancelar_rejeicao() -> None:
     st.session_state.decisao_erro = None
 
 
+def _revisor() -> str:
+    return (st.session_state.get("revisor") or "").strip()
+
+
 def _rejeitar() -> None:
     justificativa = (st.session_state.get("justificativa_rejeicao") or "").strip()
     if not justificativa:
         st.session_state.decisao_erro = "Informe a justificativa para rejeitar."
+        return
+    revisor = _revisor()
+    if not revisor:
+        st.session_state.decisao_erro = "Informe o nome do revisor."
         return
     registro = st.session_state.get("extracao_registro") or {}
     try:
@@ -1119,6 +1161,7 @@ def _rejeitar() -> None:
             registro.get("id_execucao") or "",
             "rejeitado",
             justificativa=justificativa,
+            revisor=revisor,
         )
     except ValueError as erro:
         st.session_state.decisao_erro = str(erro)
@@ -1130,17 +1173,27 @@ def _rejeitar() -> None:
 
 
 def _aprovar() -> None:
+    revisor = _revisor()
+    if not revisor:
+        st.session_state.decisao_erro = "Informe o nome do revisor."
+        return
+    if not st.session_state.get("conferencia_critica"):
+        st.session_state.decisao_erro = "Confira nome, protocolo e datas antes de aprovar."
+        return
     registro = st.session_state.get("extracao_registro") or {}
+    decisao = decisao_de_aprovacao(registro)
     try:
         registrar_decisao(
             registro.get("id_execucao") or "",
-            "aprovado",
-            conferencia_dados_criticos=bool(st.session_state.get("conferencia_critica")),
+            decisao,
+            revisor=revisor,
+            conferencia_dados_criticos=True,
         )
     except ValueError as erro:
         st.session_state.decisao_erro = str(erro)
         return
     st.session_state.decisao_erro = None
+    st.session_state.decisao_tipo = decisao
     st.session_state.decisao_estado = "aprovada"
     st.session_state.decisao_etapa = st.session_state.etapa
 
@@ -1155,17 +1208,25 @@ def _corrigir_campos() -> None:
 def _gerar_extracao_de_novo() -> None:
     registro = st.session_state.get("extracao_registro") or {}
     justificativa = (st.session_state.get("decisao_justificativa") or "").strip()
+    revisor = _revisor()
+    if not revisor:
+        st.session_state.decisao_erro = "Informe o nome do revisor."
+        return
     try:
+        preservado = preservar_extracao(registro)
         registrar_decisao(
             registro.get("id_execucao") or "",
             "nova_geracao",
             justificativa=justificativa,
+            revisor=revisor,
+            arquivo_preservado=preservado,
         )
-    except ValueError as erro:
+    except (OSError, ValueError) as erro:
         st.session_state.decisao_erro = str(erro)
         return
     st.session_state.decisao_erro = None
     st.session_state.decisao_estado = None
+    st.session_state.id_execucao_anterior = registro.get("id_execucao")
     st.session_state.extracao_registro = None
     st.session_state.extracao_erro = None
     st.session_state.extracao_forcar = True
@@ -1193,6 +1254,8 @@ def _encerrar_caso() -> None:
     st.session_state.decisao_erro = None
     st.session_state.decisao_etapa = None
     st.session_state.decisao_justificativa = ""
+    st.session_state.decisao_tipo = None
+    st.session_state.id_execucao_anterior = None
     st.session_state.texto_guardado = ""
     if "rascunho_texto" in st.session_state:
         st.session_state.rascunho_texto = ""
@@ -1429,10 +1492,13 @@ def _mostrar_extracao(entrada: dict) -> None:
             try:
                 forcar = st.session_state.extracao_forcar
                 st.session_state.extracao_forcar = False
+                anterior = st.session_state.get("id_execucao_anterior") if forcar else None
+                st.session_state.id_execucao_anterior = None
                 st.session_state.extracao_registro = processar_entrada(
                     entrada,
                     forcar=forcar,
                     configuracao=st.session_state.get("configuracao_modelo"),
+                    id_execucao_anterior=anterior,
                 )
             except Exception as erro:
                 st.session_state.extracao_erro = _mensagem_extracao(erro)

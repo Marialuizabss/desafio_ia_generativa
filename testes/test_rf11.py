@@ -89,11 +89,38 @@ class TestRF11Decisao(BaseRegistro):
         with self.assertRaises(ValueError):
             audit.registrar_decisao("", "aprovado")
 
+    def test_aprovacao_exige_revisor_e_conferencia(self):
+        id_execucao = audit.registrar_execucao({"resultado": "sucesso"})
+        with self.assertRaises(ValueError):
+            audit.registrar_decisao(id_execucao, "aprovado", revisor="  ", conferencia_dados_criticos=True)
+        with self.assertRaises(ValueError):
+            audit.registrar_decisao(id_execucao, "aprovado", revisor="Ana", conferencia_dados_criticos=False)
+        self.assertEqual(len(self.linhas()), 1)
+
+        decisao = audit.registrar_decisao(
+            id_execucao, "aprovado_com_revisao", revisor="Ana", conferencia_dados_criticos=True,
+        )
+        self.assertEqual(decisao["decisao"], "aprovado_com_revisao")
+        self.assertEqual(decisao["revisor"], "Ana")
+        self.assertEqual(decisao["justificativa"], "")
+
+    def test_campo_nao_localizado_vira_aprovado_com_revisao(self):
+        from src.extracao import CAMPOS, VALOR_AUSENTE
+
+        registro = {"campos": {nome: {"valor": "ok"} for nome in CAMPOS}}
+        self.assertEqual(fluxo.decisao_de_aprovacao(registro), "aprovado")
+        registro["campos"]["protocolo"] = {"valor": VALOR_AUSENTE}
+        self.assertEqual(fluxo.decisao_de_aprovacao(registro), "aprovado_com_revisao")
+
     def test_historico_reune_execucao_e_decisoes(self):
         id_execucao = audit.registrar_execucao({"resultado": "sucesso"})
         audit.registrar_execucao({"resultado": "sucesso"})
-        audit.registrar_decisao(id_execucao, "nova_geracao", justificativa="Data de início errada.")
-        audit.registrar_decisao(id_execucao, "aprovado")
+        audit.registrar_decisao(
+            id_execucao, "nova_geracao", justificativa="Data de início errada.", revisor="Ana",
+        )
+        audit.registrar_decisao(
+            id_execucao, "aprovado", revisor="Ana", conferencia_dados_criticos=True,
+        )
 
         historico = audit.historico(id_execucao)
         self.assertEqual(historico["execucao"]["id_execucao"], id_execucao)
@@ -151,7 +178,8 @@ class TestRF11Fluxo(BaseRegistro):
     def extrair_simulado(texto, arquivo, **_):
         resultado = resultado_de_dict({"categoria": "matricula", "minuta": "Minuta"}, arquivo)
         return resultado, {
-            "modelo": "gpt-6-luna", "provedor": "OpenAI", "versao_prompt": "f3b898dff42f",
+            "modelo": "gpt-6-luna", "provedor": "OpenAI",
+            "versao_prompt": llm_client.versao_do_prompt(None),
             "parametros": {"reasoning": {"effort": "low"}, "store": False},
             "tokens_entrada": 100, "tokens_saida": 50, "custo_estimado_usd": 0.0001,
             "tempo_resposta_segundos": 1.5,
@@ -164,7 +192,7 @@ class TestRF11Fluxo(BaseRegistro):
         evento = self.linhas()[0]
         self.assertEqual(evento["id_execucao"], registro["id_execucao"])
         self.assertEqual(evento["resultado"], "sucesso")
-        self.assertEqual(evento["versao_prompt"], "f3b898dff42f")
+        self.assertEqual(evento["versao_prompt"], llm_client.versao_do_prompt(None))
         self.assertEqual(evento["provedor"], "OpenAI")
         self.assertEqual(evento["categoria"], "matricula")
         self.assertEqual(evento["dados_removidos"], {"cpf": 1})
@@ -214,6 +242,43 @@ class TestRF11Fluxo(BaseRegistro):
         self.assertEqual(evento["resultado"], "reaproveitada")
         self.assertEqual(registro["id_execucao"], evento["id_execucao"])
         self.assertNotIn("id_execucao", json.loads(saida.read_text(encoding="utf-8")))
+
+    def test_rejeitada_nao_e_reaproveitada_e_o_json_fica_arquivado(self):
+        self.simular(side_effect=self.extrair_simulado)
+        primeira = fluxo.processar_entrada(self.entrada)
+        audit.registrar_decisao(
+            primeira["id_execucao"], "rejeitado", justificativa="Pessoa errada.", revisor="Ana",
+        )
+        saida = self.processados / "extracao_pedido.json"
+        saida.write_text(saida.read_text(encoding="utf-8").replace("Minuta", "MINUTA_REJEITADA"), encoding="utf-8")
+
+        segunda = fluxo.processar_entrada(self.entrada)
+
+        self.assertNotEqual(primeira["id_execucao"], segunda["id_execucao"])
+        self.assertEqual(segunda["id_execucao_anterior"], primeira["id_execucao"])
+        arquivo = self.base / segunda["arquivo_extracao_anterior"]
+        self.assertIn("MINUTA_REJEITADA", arquivo.read_text(encoding="utf-8"))
+        self.assertIn("Minuta", saida.read_text(encoding="utf-8"))
+        self.assertNotIn("MINUTA_REJEITADA", saida.read_text(encoding="utf-8"))
+        evento = next(linha for linha in self.linhas() if linha["id_execucao"] == segunda["id_execucao"])
+        self.assertEqual(evento["id_execucao_anterior"], primeira["id_execucao"])
+        self.assertEqual(evento["arquivo_extracao_anterior"], segunda["arquivo_extracao_anterior"])
+
+    def test_versao_diferente_do_prompt_nao_reaproveita(self):
+        self.simular(side_effect=self.extrair_simulado)
+        fluxo.processar_entrada(self.entrada)
+        saida = self.processados / "extracao_pedido.json"
+        antigo = json.loads(saida.read_text(encoding="utf-8"))
+        antigo["chamada"]["versao_prompt"] = "0" * 12
+        antigo["minuta"] = "MINUTA_ANTIGA"
+        saida.write_text(json.dumps(antigo), encoding="utf-8")
+
+        novo = fluxo.processar_entrada(self.entrada)
+
+        self.assertEqual(novo["id_execucao_anterior"], antigo["id_execucao"])
+        preservado = (self.base / novo["arquivo_extracao_anterior"]).read_text(encoding="utf-8")
+        self.assertIn("MINUTA_ANTIGA", preservado)
+        self.assertNotIn("MINUTA_ANTIGA", saida.read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":

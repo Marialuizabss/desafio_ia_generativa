@@ -17,7 +17,8 @@ from uuid import uuid4
 BASE_DIR = Path(__file__).resolve().parent.parent
 ARQUIVO_REGISTRO = BASE_DIR / "resultados" / "logs" / "execucoes.jsonl"
 
-DECISOES = ("aprovado", "rejeitado", "nova_geracao")
+DECISOES = ("aprovado", "aprovado_com_revisao", "rejeitado", "nova_geracao")
+APROVACOES = ("aprovado", "aprovado_com_revisao")
 
 _CHAVE_API = re.compile(r"sk-[A-Za-z0-9_-]{8,}")
 _NOME_SECRETO = re.compile(r"api_?key|secret|senha|password|authorization", re.IGNORECASE)
@@ -62,6 +63,7 @@ def registrar_decisao(
     justificativa: str = "",
     revisor: str = "",
     conferencia_dados_criticos: bool | None = None,
+    arquivo_preservado: str = "",
 ) -> dict:
     """Grava a decisão humana sobre uma execução já registrada."""
     if not id_execucao:
@@ -69,18 +71,27 @@ def registrar_decisao(
     if decisao not in DECISOES:
         raise ValueError(f"Decisão desconhecida: {decisao}")
     justificativa = (justificativa or "").strip()
-    if decisao != "aprovado" and not justificativa:
+    if decisao not in APROVACOES and not justificativa:
         raise ValueError("Informe a justificativa para rejeitar ou gerar de novo.")
+    revisor = (revisor or "").strip()
+    if not revisor:
+        raise ValueError("Informe o nome do revisor.")
+    if decisao in APROVACOES and conferencia_dados_criticos is not True:
+        raise ValueError("Confira nome, protocolo e datas antes de aprovar.")
 
-    return _gravar({
+    evento = {
         "evento": "decisao",
         "id_execucao": id_execucao,
         "data_hora": _agora(),
         "decisao": decisao,
         "justificativa": justificativa,
-        "revisor": (revisor or "").strip(),
+        "revisor": revisor,
         "conferencia_dados_criticos": conferencia_dados_criticos,
-    })
+    }
+    preservado = (arquivo_preservado or "").strip()
+    if preservado:
+        evento["arquivo_preservado"] = preservado
+    return _gravar(evento)
 
 
 def ler_registro() -> list[dict]:

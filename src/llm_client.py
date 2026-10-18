@@ -261,7 +261,7 @@ def extrair_campos(
     chamada = _registrar_chamada(resposta, modelo_id, temperatura_enviada, idioma, duracao)
     chamada.update({
         "provedor": "OpenAI",
-        "versao_prompt": hashlib.sha256(consulta["instructions"].encode("utf-8")).hexdigest()[:12],
+        "versao_prompt": versao_do_prompt(idioma),
         "parametros": {
             chave: consulta[chave] for chave in ("temperature", "reasoning", "store") if chave in consulta
         },
@@ -292,6 +292,11 @@ def montar_minuta(valores: dict) -> str:
     }
     marcadores = "|".join(re.escape(marcador) for marcador in substitutos)
     return re.sub(marcadores, lambda encontrado: substitutos[encontrado.group(0)], texto)
+
+
+def versao_do_prompt(idioma: str | None = None) -> str:
+    """Identificador curto do prompt usado na extração, incluindo o idioma."""
+    return hashlib.sha256(_prompt_sistema(idioma).encode("utf-8")).hexdigest()[:12]
 
 
 def _prompt_sistema(idioma: str | None = None) -> str:

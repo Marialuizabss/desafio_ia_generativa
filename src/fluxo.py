@@ -7,9 +7,10 @@ a interface deixa os campos editáveis e só monta a minuta quando o usuário pe
 import json
 from pathlib import Path
 from time import perf_counter
+from uuid import uuid4
 
 try:
-    from audit import registrar_execucao
+    from audit import historico, registrar_execucao
     from audio import MODELO as MODELO_TRANSCRICAO
     from audio import transcrever_audio
     from extracao import CAMPOS, CATEGORIAS, FONTE_AUSENTE, VALOR_AUSENTE
@@ -17,7 +18,7 @@ try:
     from privacidade import contar_remocoes, minimizar_texto
     from vision import ler_texto_visual
 except ImportError:
-    from src.audit import registrar_execucao
+    from src.audit import historico, registrar_execucao
     from src.audio import MODELO as MODELO_TRANSCRICAO
     from src.audio import transcrever_audio
     from src.extracao import CAMPOS, CATEGORIAS, FONTE_AUSENTE, VALOR_AUSENTE
@@ -36,7 +37,12 @@ MODELOS_ANALISE = {"gpt-5.6-luna", "gpt-5.6-terra", "o4-mini", "gpt-4o-mini"}
 MODELOS_LEITURA = {"audio": MODELO_TRANSCRICAO, "imagem": "gpt-4o"}
 
 
-def processar_entrada(entrada: dict, forcar: bool = False, configuracao: dict | None = None) -> dict:
+def processar_entrada(
+    entrada: dict,
+    forcar: bool = False,
+    configuracao: dict | None = None,
+    id_execucao_anterior: str | None = None,
+) -> dict:
     """Extrai o texto da entrada, monta o objeto e salva o JSON.
 
     ``entrada`` é o material confirmado na interface, com ``modalidade``,
@@ -59,14 +65,7 @@ def processar_entrada(entrada: dict, forcar: bool = False, configuracao: dict | 
     modelo_id, temperatura, idioma = _configuracao(configuracao)
     if saida.is_file() and not forcar:
         registro = json.loads(saida.read_text(encoding="utf-8"))
-        chamada = registro.get("chamada") or {}
-        if (
-            registro.get("arquivo_origem") == arquivo
-            and registro.get("modelo") == modelo_id
-            and chamada.get("temperatura") == temperatura
-            and chamada.get("idioma") == idioma
-            and "dados_removidos" in registro
-        ):
+        if _pode_reaproveitar(registro, arquivo, modelo_id, temperatura, idioma):
             registro["arquivo_extracao"] = saida.relative_to(BASE_DIR).as_posix()
             if not registro.get("id_execucao"):
                 # Extração anterior ao registro (RF11): a reutilização ganha um identificador
@@ -77,8 +76,17 @@ def processar_entrada(entrada: dict, forcar: bool = False, configuracao: dict | 
                     "arquivo_extracao": registro["arquivo_extracao"],
                     "modelo": modelo_id,
                     "resultado": "reaproveitada",
+                    "versao_prompt": (registro.get("chamada") or {}).get("versao_prompt"),
                 })
             return registro
+
+    anterior_id = (id_execucao_anterior or "").strip() or None
+    arquivo_anterior = None
+    if saida.is_file():
+        antigo = json.loads(saida.read_text(encoding="utf-8"))
+        arquivo_anterior = _arquivar_extracao(saida, antigo.get("id_execucao"))
+        if not anterior_id:
+            anterior_id = (antigo.get("id_execucao") or "").strip() or None
 
     base_registro = {
         "tipo": "extracao_e_minuta",
@@ -87,6 +95,10 @@ def processar_entrada(entrada: dict, forcar: bool = False, configuracao: dict | 
         "modelo": modelo_id,
         "modelo_leitura": MODELOS_LEITURA.get(modalidade),
     }
+    if anterior_id:
+        base_registro["id_execucao_anterior"] = anterior_id
+    if arquivo_anterior:
+        base_registro["arquivo_extracao_anterior"] = arquivo_anterior
     inicio = perf_counter()
     try:
         texto = minimizar_texto(_extrair_texto(modalidade, caminho, entrada, idioma))
@@ -110,6 +122,10 @@ def processar_entrada(entrada: dict, forcar: bool = False, configuracao: dict | 
     registro["modalidade"] = modalidade
     registro["arquivo_origem"] = arquivo
     registro["modelo"] = modelo_id
+    if anterior_id:
+        registro["id_execucao_anterior"] = anterior_id
+    if arquivo_anterior:
+        registro["arquivo_extracao_anterior"] = arquivo_anterior
     registro["texto_extraido"] = texto
     registro["dados_removidos"] = contar_remocoes(texto)
     registro["chamada"] = chamada
@@ -138,6 +154,66 @@ def processar_entrada(entrada: dict, forcar: bool = False, configuracao: dict | 
     )
     registro["arquivo_extracao"] = saida.relative_to(BASE_DIR).as_posix()
     return registro
+
+
+def decisao_de_aprovacao(registro: dict) -> str:
+    """Aprovado com revisão quando algum campo da minuta ficou não localizado."""
+    campos = (registro or {}).get("campos") or {}
+    for nome in CAMPOS:
+        item = campos.get(nome) or {}
+        valor = (item.get("valor") if isinstance(item, dict) else "") or ""
+        if not valor.strip() or valor.strip() == VALOR_AUSENTE:
+            return "aprovado_com_revisao"
+    return "aprovado"
+
+
+def preservar_extracao(registro: dict) -> str:
+    """Copia o JSON atual para um arquivo que a geração seguinte não sobrescreve."""
+    caminho = (registro.get("arquivo_extracao") or "").strip()
+    if not caminho:
+        raise ValueError("A extração rejeitada não tem arquivo.")
+    origem = BASE_DIR / caminho
+    if not origem.is_file():
+        raise FileNotFoundError(f"Arquivo não encontrado: {origem}")
+    return _arquivar_extracao(origem, registro.get("id_execucao"))
+
+
+def _arquivar_extracao(origem: Path, id_execucao: str | None) -> str:
+    marca = (id_execucao or "").strip() or uuid4().hex
+    destino = origem.with_name(f"{origem.stem}__{marca}{origem.suffix}")
+    if not destino.exists():
+        destino.write_bytes(origem.read_bytes())
+    return destino.relative_to(BASE_DIR).as_posix()
+
+
+def _pode_reaproveitar(registro: dict, arquivo: str, modelo_id: str, temperatura, idioma) -> bool:
+    chamada = registro.get("chamada") or {}
+    return (
+        registro.get("arquivo_origem") == arquivo
+        and registro.get("modelo") == modelo_id
+        and chamada.get("temperatura") == temperatura
+        and chamada.get("idioma") == idioma
+        and "dados_removidos" in registro
+        and chamada.get("versao_prompt") == _versao_prompt(idioma)
+        and not _decisao_impede_reuso(registro.get("id_execucao"))
+    )
+
+
+def _decisao_impede_reuso(id_execucao: str | None) -> bool:
+    if not id_execucao:
+        return False
+    decisoes = historico(id_execucao)["decisoes"]
+    if not decisoes:
+        return False
+    return decisoes[-1].get("decisao") in {"rejeitado", "nova_geracao"}
+
+
+def _versao_prompt(idioma: str | None) -> str:
+    try:
+        from src import llm_client as cliente
+    except ImportError:
+        import llm_client as cliente
+    return cliente.versao_do_prompt(idioma)
 
 
 def aplicar_edicao(registro: dict, edicao: dict) -> dict:

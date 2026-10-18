@@ -4,7 +4,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
-from src import audit, fluxo
+from src import audit, fluxo, llm_client
 from src.extracao import resultado_de_dict
 from src.privacidade import MARCADORES, contar_remocoes, minimizar_texto
 
@@ -198,7 +198,12 @@ class TestRF12Fluxo(unittest.TestCase):
         def extrair_simulado(texto, arquivo, **_):
             self.enviados.append(texto)
             resultado = resultado_de_dict({"categoria": "matricula", "minuta": "Minuta"}, arquivo)
-            return resultado, {"modelo": "gpt-6-luna", "temperatura": None, "idioma": None}
+            return resultado, {
+                "modelo": "gpt-6-luna",
+                "temperatura": None,
+                "idioma": None,
+                "versao_prompt": llm_client.versao_do_prompt(None),
+            }
 
         patcher = patch.object(fluxo, "extrair_campos", side_effect=extrair_simulado)
         patcher.start()
