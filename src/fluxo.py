@@ -6,10 +6,12 @@ from pathlib import Path
 try:
     from audio import transcrever_audio
     from llm_client import extrair_campos
+    from privacidade import contar_remocoes, minimizar_texto
     from vision import ler_texto_visual
 except ImportError:
     from src.audio import transcrever_audio
     from src.llm_client import extrair_campos
+    from src.privacidade import contar_remocoes, minimizar_texto
     from src.vision import ler_texto_visual
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -48,11 +50,12 @@ def processar_entrada(entrada: dict, forcar: bool = False, configuracao: dict | 
             and registro.get("modelo") == modelo_id
             and chamada.get("temperatura") == temperatura
             and chamada.get("idioma") == idioma
+            and "dados_removidos" in registro
         ):
             registro["arquivo_extracao"] = saida.relative_to(BASE_DIR).as_posix()
             return registro
 
-    texto = _extrair_texto(modalidade, caminho, entrada, idioma)
+    texto = minimizar_texto(_extrair_texto(modalidade, caminho, entrada, idioma))
     resultado, chamada = extrair_campos(
         texto,
         arquivo,
@@ -65,6 +68,7 @@ def processar_entrada(entrada: dict, forcar: bool = False, configuracao: dict | 
     registro["arquivo_origem"] = arquivo
     registro["modelo"] = modelo_id
     registro["texto_extraido"] = texto
+    registro["dados_removidos"] = contar_remocoes(texto)
     registro["chamada"] = chamada
 
     saida.write_text(
