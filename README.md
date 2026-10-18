@@ -1,246 +1,245 @@
-# 🧠 Central Inteligente de Atendimento e Comunicação Institucional
+# Central Inteligente de Atendimento e Comunicação Institucional
 
-**Desafio Prático 01 — Inteligência Artificial Generativa | FIC_DEV 2026**
+**Desafio Prático 1 — Inteligência Artificial Generativa · FIC_DEV 2026**
 
-Protótipo multimodal para apoiar o atendimento institucional por meio de inteligência artificial generativa, com foco em automação assistida, acessibilidade, segurança, rastreabilidade e revisão humana.
+Protótipo que recebe solicitações fictícias de matrícula por texto, áudio ou ficha digitalizada,
+extrai os dados, monta uma minuta de resposta institucional e, depois da aprovação de um servidor,
+entrega a minuta em PDF, uma versão em áudio e uma peça visual de orientação.
 
-**Status:** Em desenvolvimento
+> **Nenhuma resposta é enviada automaticamente ao cidadão.** A decisão final é sempre do servidor
+> responsável, e toda execução fica registrada.
 
-## 📌 Sobre o projeto
+Documentação completa e onde está cada requisito: [`documentacao/00_indice.md`](documentacao/00_indice.md).
 
-O projeto propõe uma central capaz de processar solicitações fictícias em diferentes formatos e apoiar a elaboração de respostas institucionais.
+## 1. O que o sistema faz
 
-As funcionalidades previstas incluem:
+```
+ 1 Modelo        2 Envio                3 Revisão                      4 Minuta
+ ───────────     ──────────────────     ───────────────────────────    ────────────────────────────
+ escolhe o       texto, .txt, áudio     campos extraídos pela IA,      minuta montada com os campos;
+ modelo e o      ou ficha (imagem       editáveis; em áudio e imagem,  servidor e cargo assinam;
+ idioma          ou PDF), validados     conferência de nome,           Aprovar ou Rejeitar
+                                        protocolo e datas com o
+                                        original
+                                                                       depois de aprovar:
+                                                                       • PDF da minuta
+                                                                       • áudio da minuta
+                                                                       • peça "Passo a passo da matrícula"
+```
 
-- Processamento e classificação de solicitações textuais.
-- Transcrição de mensagens de áudio.
-- Extração de informações de documentos por visão computacional.
-- Geração de minutas de respostas institucionais.
-- Síntese de voz para acessibilidade.
-- Geração e edição de imagens.
-- Revisão e aprovação humana.
-- Registro de execuções e proteção de dados.
+Por trás das etapas: dados pessoais desnecessários (CPF, RG, e-mail, telefone, nascimento,
+naturalidade e filiação) são removidos **antes** do envio ao provedor; o conteúdo do cidadão vai
+delimitado e tratado como dado, não como instrução; e cada execução, revisão e decisão é gravada em
+`resultados/logs/execucoes.jsonl`.
 
-**Importante:** o sistema não deve enviar respostas automaticamente aos cidadãos. As informações geradas precisam ser verificadas antes de sua utilização.
+## 2. Stack de tecnologias
 
-## 🛠️ Tecnologias
+| Camada | Tecnologia | Versão | Para quê |
+|---|---|---|---|
+| Linguagem | Python | 3.13 | Todo o sistema |
+| Interface | Streamlit | 1.66.0 | Tela em 4 etapas, revisão humana e downloads |
+| IA (SDK) | OpenAI Python SDK (`openai`) | 3.33.0 | Todas as chamadas aos modelos |
+| IA — texto | Responses API, `gpt-5.6-luna` | — | Extração dos campos com saída JSON estrita (`json_schema`) e `store: false` |
+| IA — áudio | Audio API, `gpt-4o-transcribe` e `gpt-4o-mini-tts` | — | Transcrição da solicitação e voz da minuta aprovada |
+| IA — visão | Chat Completions com imagem, `gpt-4o` | — | Leitura da ficha digitalizada |
+| IA — imagem | Images API, `gpt-image-1` | — | Ilustração da peça de orientação |
+| PDF | PyMuPDF | 1.28.2 | Leitura local de PDF com texto e geração do PDF da minuta |
+| Imagem | Pillow | 12.3.0 | Montagem da peça com brasão e textos |
+| Áudio | mutagen | 1.48.1 | Duração do áudio, sem chamar a API |
+| Configuração | python-dotenv, JSON | 1.2.4 | Chave no `.env`; caminhos, modelos e parâmetros no `config.json` |
+| Registro | JSON Lines | — | `resultados/logs/execucoes.jsonl`, uma linha por evento |
+| Testes | unittest e `streamlit.testing` (AppTest) | — | Testes de regras, fluxo e cliques na interface, com a API simulada |
+| Versionamento | Git e GitHub | — | Branches por integrante e entrega por `git archive` |
+| Documentação | Markdown | — | README e `documentacao/` |
 
-| Tecnologia | Finalidade |
-|---|---|
-| Python | Implementação da aplicação |
-| Git e GitHub | Versionamento e colaboração |
-| JSON | Configurações, extrações e metadados |
-| OpenAI API | Integração com modelos de inteligência artificial |
-| python-dotenv | Carregamento de variáveis de ambiente |
-| unittest | Testes automatizados |
-| Markdown | Documentação técnica |
+## 3. Requisitos
 
-Os modelos utilizados nas funcionalidades de áudio, visão e geração de imagens estão definidos nos respectivos módulos do projeto.
-
-## 🏗️ Arquitetura
-
-O fluxo geral previsto é:
-
-1. Recebimento de uma entrada textual, sonora ou visual.
-2. Validação da entrada e identificação de arquivos ausentes.
-3. Extração e processamento das informações.
-4. Análise da solicitação e preparação da resposta.
-5. Geração da minuta institucional.
-6. Revisão humana.
-7. Produção de recursos acessíveis, quando aplicável.
-8. Registro dos resultados e metadados da execução.
-
-A implementação é organizada em módulos Python independentes.
-
-## 📋 Requisitos funcionais
-
-O projeto contempla 13 requisitos funcionais. O quadro abaixo distingue as funcionalidades já verificadas daquelas que ainda precisam de validação.
-
-| Requisito | Descrição | Situação |
+| RF | O que entrega | Onde ver |
 |---|---|---|
-| RF01 | Inicialização e configuração | A validar |
-| RF02 | Experimento de engenharia de prompts | A validar |
-| RF03 | Prompt seguro e conteúdo não confiável | A validar |
-| RF04 | Chamada de API e tratamento de falhas | A validar |
-| RF05 | Entrada textual e extração estruturada | A validar |
-| RF06 | Transcrição de áudio | Testes aprovados |
-| RF07 | Síntese de voz e acessibilidade | Testes aprovados |
-| RF08 | Visão e OCR | Testes aprovados |
-| RF09 | Geração da minuta institucional | A validar |
-| RF10 | Geração ou edição de imagem | Testes aprovados |
-| RF11 | Registro e rastreabilidade | A validar |
-| RF12 | LGPD, privacidade e minimização | A validar |
-| RF13 | Avaliação de qualidade e revisão humana | Casos de teste e gabaritos adicionados; validação integral pendente |
+| RF01 | `python -m src.main`, `config.json`, `.env` fora do git, versões registradas | Este README; `python -m src.versoes` |
+| RF02 | Experimento com os prompts A, B e C; prompt B escolhido | `documentacao/rf02_engenharia_de_prompts.md` |
+| RF03 | Prompt seguro, delimitação e testes de injection | `documentacao/rf03_prompt_seguro.md` |
+| RF04 | Chamada à API com timeout, tratamento de falhas, tempo, tokens e custo | `src/llm_client.py` |
+| RF05 | Extração estruturada em JSON com campos ausentes sinalizados | `src/extracao.py`, `dados/processados/` |
+| RF06 | Transcrição com duração, idioma e modelo; conferência antes da minuta | `documentacao/rf06_transcricao.md` |
+| RF07 | Áudio da minuta aprovada com instruções de entonação | `documentacao/rf07_voz_acessibilidade.md` |
+| RF08 | Leitura da ficha por visão; confirmação humana dos dados críticos | `documentacao/rf08_visao_ocr.md` |
+| RF09 | Minuta no modelo institucional, com origem e sem envio automático | `prompts/modelo_minuta.md`, `src/minuta_pdf.py` |
+| RF10 | Peça de orientação com ilustração gerada por IA e revisada | `documentacao/rf10_imagem.md` |
+| RF11 | Registro estruturado de execuções e decisões | `src/audit.py`, `resultados/logs/execucoes.jsonl` |
+| RF12 | Minimização, inventário de dados pessoais e varredura da entrega | `documentacao/rf12_lgpd_privacidade.md` |
+| RF13 | Protocolo de avaliação e avaliação dos 7 casos: 86% aprovados, 100% após correção | `documentacao/rf13_avaliacao_qualidade.md` |
 
-A situação de cada requisito deve ser atualizada conforme a implementação, os testes e as evidências forem revisados.
+## 4. Instalação
 
-## 📂 Estrutura do projeto
+**Pré-requisitos:** Python 3.13, git e uma chave da API da OpenAI.
 
-```text
-desafio_ia_generativa/
-├── README.md
-├── requirements.txt
-├── .env.example
-├── .gitignore
-├── config.json
-├── dados/
-│   ├── originais/
-│   ├── gabaritos/
-│   └── processados/
-├── src/
-│   ├── main.py
-│   ├── llm_client.py
-│   ├── prompts.py
-│   ├── audio.py
-│   ├── vision.py
-│   ├── image_generation.py
-│   ├── layout_rf10.py
-│   └── audit.py
-├── tests/
-│   ├── test_audio.py
-│   ├── test_image_generation.py
-│   └── test_vision.py
-├── prompts/
-├── resultados/
-│   ├── minutas/
-│   ├── audios/
-│   ├── imagens/
-│   └── logs/
-└── documentacao/
-```
+| Passo | Linux / macOS | Windows (PowerShell) |
+|---|---|---|
+| Baixar o projeto | `git clone https://github.com/Marialuizabss/desafio_ia_generativa.git`<br>`cd desafio_ia_generativa` | o mesmo |
+| Criar o ambiente | `python3.13 -m venv .venv` | `py -3.13 -m venv .venv` |
+| Ativar o ambiente | `source .venv/bin/activate` | `.\.venv\Scripts\Activate.ps1` |
+| Instalar as dependências | `pip install -r requirements.txt` | o mesmo |
+| Criar o `.env` | `cp .env.example .env` | `Copy-Item .env.example .env` |
+| Conferir as versões | `python -m src.versoes` | o mesmo |
 
-## ⚙️ Instalação e configuração
+Depois de criar o `.env`, abra o arquivo e preencha `OPENAI_API_KEY=` com a sua chave. O `.env` é
+ignorado pelo git e **nunca** deve ser versionado nem mostrado.
 
-### Pré-requisitos
+No Windows, se a ativação for bloqueada, rode antes
+`Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned`.
 
-- Python compatível com as dependências do projeto.
-- Git.
-- Chave de API válida para os serviços utilizados.
-- Conexão com a internet para chamadas aos serviços externos.
+O `python -m src.versoes` deve mostrar ✓ para o Python 3.13 e para cada biblioteca do
+`requirements.txt` (versões na seção 2).
 
-### 1. Criar e ativar o ambiente virtual
+## 5. Configuração
 
-No Windows PowerShell:
+| Arquivo | O que define | Versionado? |
+|---|---|---|
+| `.env` | Só a chave `OPENAI_API_KEY` | **Não** |
+| `config.json` | Caminhos das pastas, modelos de transcrição, leitura, voz e imagem, idioma, timeout, voz e instruções de entonação, limites de upload e custos estimados. Item ausente usa o valor padrão | Sim |
+| `config/modelos.json` | Modelos de análise oferecidos na tela (padrão `gpt-5.6-luna`), com os parâmetros que cada um aceita | Sim |
+| `prompts/modelo_minuta.md` | Modelo institucional da minuta | Sim |
 
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-```
+## 6. Como usar
 
-### 2. Instalar as dependências
-
-```powershell
-python -m pip install -r requirements.txt
-```
-
-### 3. Configurar as credenciais
-
-Crie o arquivo `.env` a partir do modelo:
-
-```powershell
-Copy-Item .env.example .env
-```
-
-Preencha a variável de ambiente correspondente à chave de API, conforme indicado no `.env.example`.
-
-**Segurança:** não compartilhe o arquivo `.env` e não envie chaves ou credenciais para o repositório.
-
-## ▶️ Execução
-
-O ponto de entrada previsto para a aplicação é:
-
-```powershell
+```bash
 python -m src.main
 ```
 
-A execução integrada deve ser validada para confirmar o funcionamento do fluxo completo.
+O navegador abre em `http://localhost:8501`. Para experimentar, use os arquivos de
+`dados/originais/`:
 
-As funcionalidades individuais estão organizadas em seus respectivos módulos dentro de `src/`.
+| Arquivo | O que mostra |
+|---|---|
+| `entrada_texto.txt` | Caso completo do professor: 6 dados pessoais removidos, 12/12 campos |
+| `entrada_audio.mp3` | Transcrição, duração e conferência dos dados com o áudio original |
+| `entrada_pdf-imagem.pdf` | Ficha manuscrita: a leitura erra o protocolo e a data, e o servidor corrige na conferência |
+| `caso3_solicitacao_prompt_injection.txt` | Alerta de segurança; o ataque não entra na minuta |
+| `caso2_solicitacao_incompleta.txt` | Campos ausentes marcados como "não localizado" |
 
-### Arquivos de entrada e saída
+Fluxo: escolha o modelo → envie o arquivo → revise os campos (e, em áudio ou imagem, confira os
+quatro dados críticos) → preencha servidor e cargo → **Aprovar** ou **Rejeitar**. Depois de aprovar:
+**Baixar PDF**, **Gerar áudio da minuta** e a **peça de orientação**.
 
-- **RF06:** recebe `dados/originais/entrada_audio.mp3` e produz a transcrição em `dados/processados/`, com metadados em `resultados/logs/`.
-- **RF07:** utiliza `resultados/minutas/texto_rf07.txt` e gera `resultados/audios/audio_rf07.mp3`.
-- **RF08:** utiliza a imagem `dados/processados/entrada_rf08_pagina1.png` e grava a extração estruturada em `dados/processados/extracao_rf08.json`. O PDF original deve ser convertido ou preparado como imagem antes dessa execução.
-- **RF10:** gera ou edita imagens e registra os resultados e metadados em `resultados/`.
+As saídas ficam em `resultados/minutas/aprovadas/` (minuta e PDF), `resultados/audios/`,
+`resultados/imagens/orientacao/` e `resultados/logs/execucoes.jsonl`.
 
-Os arquivos de entrada necessários devem estar presentes nos caminhos esperados pelos respectivos módulos.
+## 7. Testes e verificações
 
-## 🧪 Testes e avaliação
+| O quê | Comando | Chama a API? |
+|---|---|---|
+| Todos os testes (164) | `python -m unittest discover -s testes -t .` | Não |
+| Versões do Python e das bibliotecas | `python -m src.versoes` | Não |
+| Varredura de credenciais e dados pessoais (RF12) | `python -m src.varredura_rf12` | Não |
+| Avaliação dos 7 casos (RF13) | `python -m src.avaliacao_rf13 --todos` | Sim, ~US$ 0,03 |
+| Nova ilustração da peça (RF10) | `python -m src.peca_orientacao gerar` | Sim, ~US$ 0,06 |
+| Experimentos de prompt (RF02 e RF03) | `python -m src.experimento_rf02` · `python -m src.experimento_rf03` | Sim |
 
-Os testes automatizados são implementados com `unittest`.
+Os testes usam respostas simuladas e pastas temporárias: não gastam créditos nem alteram os
+resultados do projeto.
 
-Para executar toda a suíte:
+## 8. Modelos e custos
 
-```powershell
-python -m unittest discover -s tests -v
+| Etapa | Modelo | Custo observado | Tempo observado |
+|---|---|---|---|
+| Extração dos campos | `gpt-5.6-luna` (padrão) | US$ 0,0011 a 0,0017 por solicitação | 5,6 a 9,0 s |
+| Transcrição do áudio | `gpt-4o-transcribe` | não registrado pelo sistema | 4,3 s para 89 s de áudio |
+| Leitura da ficha | `gpt-4o` | não registrado pelo sistema | — |
+| Voz da minuta | `gpt-4o-mini-tts` (alternativa `tts-1-hd`) | ~US$ 0,021 para 84,5 s de áudio | 14 s |
+| Ilustração da peça | `gpt-image-1` | ~US$ 0,06 por versão, gerada uma vez | 21 a 24 s |
+
+Os custos são estimativas calculadas com a tabela de preços em `src/llm_client.py` e no
+`config.json`, a conferir com o provedor. Um atendimento completo por texto (extração, PDF e áudio)
+custa cerca de **US$ 0,02**; o PDF e a peça de orientação não chamam a API.
+
+## 9. Estrutura do projeto
+
+```
+desafio_ia_generativa/
+├── README.md, requirements.txt, .python-version, .env.example, .gitignore
+├── config.json                 caminhos, modelos e parâmetros (RF01)
+├── config/modelos.json         modelos de análise da interface
+├── dados/
+│   ├── originais/              entradas fictícias e brasão (nunca alteradas)
+│   ├── gabaritos/              resultados esperados de cada caso
+│   └── processados/            transcrições, leituras e extrações
+├── prompts/                    modelo da minuta e prompts do RF02
+├── src/
+│   ├── main.py, interface.py   ponto de entrada e interface
+│   ├── fluxo.py                entrada → extração → revisão → minuta → aprovação
+│   ├── llm_client.py           prompt de produção, chamada à API e montagem da minuta
+│   ├── audio.py, vision.py     transcrição, voz e leitura de documentos
+│   ├── peca_orientacao.py      peça de orientação (RF10)
+│   ├── minuta_pdf.py           PDF da minuta
+│   ├── privacidade.py          minimização de dados pessoais (RF12)
+│   ├── audit.py                registro das execuções (RF11)
+│   ├── configuracao.py, versoes.py
+│   └── experimento_*, avaliacao_rf13.py, varredura_rf12.py   experimentos e verificações
+├── resultados/                 minutas, áudios, imagens, avaliações e logs
+├── testes/                     testes automatizados (unittest)
+└── documentacao/               índice, relatório técnico, registro de uso de IA e um documento por requisito
 ```
 
-Para testar somente o RF08:
+## 10. Decisões
 
-```powershell
-python -m unittest tests.test_vision -v
-```
+- **Prompt B no sistema (RF02):** foi o único fiel ao contexto, sem dados inventados e no formato
+  institucional em todas as repetições, com dois modelos.
+- **A minuta é montada pelo código, não escrita pela IA:** a IA extrai os campos e o código preenche
+  o modelo institucional. O texto fixo nunca é alterado e um ataque de injection não consegue
+  reescrever a resposta.
+- **Dados pessoais saem antes do envio (RF12):** a minimização roda localmente; o modelo só recebe o
+  que a minuta usa.
+- **Conferência obrigatória em áudio e imagem:** transcrição e leitura erram nomes, números e datas;
+  o servidor confere os quatro dados críticos com o original antes de a minuta ser montada.
+- **A IA não escreve texto na peça visual (RF10):** ela gera só a ilustração; brasão e textos são do
+  código. As tentativas com texto gerado saíram com palavras distorcidas.
+- **Cada envio é uma execução nova (RF11):** mesmo quando a extração é reaproveitada, para que cada
+  atendimento tenha a sua revisão e a sua decisão no registro.
+- **Reaproveitamento só com a mesma versão do prompt:** evita entregar uma extração feita com um
+  prompt antigo.
+- **`gpt-5.6-luna` como padrão:** modelo de raciocínio de baixo custo, escolhido na integração e
+  avaliado nos 7 casos do RF13 (86% aprovados, 100% após correção). Os experimentos do RF02 e do RF03
+  foram feitos com o `gpt-6-luna` e continuam documentados com ele.
 
-Para testar somente os requisitos de áudio:
+## 11. Limitações
 
-```powershell
-python -m unittest tests.test_audio -v
-```
+- **Letra manuscrita:** a leitura da ficha erra o ano do protocolo e a data de forma sistemática;
+  a correção depende do servidor.
+- **Envio ao provedor:** o áudio e a imagem da ficha vão inteiros para transcrição e leitura, e a
+  minuta aprovada vai para a API de voz; processamento local seria preferível em produção (RF08 e
+  RF12).
+- **Voz sintética:** não atende pessoas surdas; a naturalidade e a pronúncia de nomes ainda podem
+  falhar.
+- **Avaliação limitada:** 7 casos, todos de matrícula; resistência a injection medida em dois ataques
+  e revisão feita por uma única revisora.
+- **Verificação automática por padrões de texto:** não detecta invenção escrita de forma não prevista.
+- **Custos estimados** pela tabela de preços, não pela fatura do provedor.
+- **Acessibilidade da própria interface** não foi testada com leitores de tela.
 
-Para verificar a sintaxe de um módulo:
+## 12. Segurança e privacidade
 
-```powershell
-python -m py_compile src/vision.py
-```
+- Somente dados fictícios.
+- Chave da API só no `.env`, fora do git; o registro mascara qualquer texto com formato de chave.
+- Conteúdo do cidadão delimitado e tratado como dado; alertas de injection destacados na revisão.
+- Nenhum envio automático; a minuta só é salva depois da aprovação do servidor.
+- Entrega gerada com `git archive --format=zip -o entrega.zip HEAD`, que não inclui o `.env`.
 
-A avaliação do sistema deve considerar:
+Detalhes em [`documentacao/rf12_lgpd_privacidade.md`](documentacao/rf12_lgpd_privacidade.md).
 
-- Fidelidade às informações de entrada.
-- Completude e consistência dos resultados.
-- Formato e linguagem institucional.
-- Ausência de informações inventadas.
-- Resistência a instruções maliciosas presentes nos documentos.
-- Tratamento de entradas inválidas e falhas de API.
-- Registro da origem das informações.
-- Revisão humana e rastreabilidade.
+## 13. Equipe e uso de IA
 
-Os resultados dos testes devem ser registrados após cada alteração relevante.
+| Integrante | Responsabilidades |
+|---|---|
+| Ana Beatriz Schuindt do Amaral | Casos de teste e gabaritos; experimento de prompts (RF02); prompt seguro (RF03); registro e rastreabilidade (RF11); LGPD (RF12); avaliação de qualidade (RF13); integração final: revisão humana na interface, conferência dos dados críticos, PDF da minuta aprovada, áudio da minuta e peça de orientação; documentação |
+| Maria Luiza Batista de Souza | Transcrição (RF06), síntese de voz (RF07), visão e OCR (RF08) e primeiras versões da imagem (RF10) |
+| Felipe Ferreira Aguiar | Inicialização e configuração (RF01), chamada à API (RF04), extração (RF05), minuta e primeira versão do PDF (RF09) e interface em etapas |
 
-## 🔐 Segurança e LGPD
-
-O desenvolvimento considera os seguintes princípios:
-
-- Utilização de dados fictícios para os experimentos.
-- Proteção de chaves e credenciais.
-- Minimização de dados pessoais enviados aos provedores.
-- Tratamento de documentos e instruções incorporadas como conteúdo não confiável.
-- Identificação de campos ausentes ou ilegíveis.
-- Registro de metadados relevantes para auditoria.
-- Revisão humana antes da aprovação de informações institucionais.
-- Ausência de envio automático de respostas aos cidadãos.
-
-A implementação efetiva de cada controle deve ser confirmada por inspeção do código e testes específicos.
-
-## 📊 Resultados e evidências
-
-Os resultados gerados são organizados nas pastas `dados/processados/` e `resultados/`, de acordo com a funcionalidade executada.
-
-A pasta `dados/gabaritos/` contém arquivos de referência utilizados nos casos de teste. A documentação complementar inclui registros de validação e evidências disponíveis.
-
-Os resultados devem ser avaliados considerando as limitações dos modelos e a necessidade de conferência humana.
-
-## 📚 Documentação
-
-A documentação técnica complementar está organizada em `documentacao/`, incluindo registros de validação e casos de teste.
-
-Os arquivos de referência e os exemplos de entrada estão organizados em `dados/originais/` e `dados/gabaritos/`.
-
-## 👩‍💻 Desenvolvimento
-
-**Maria Luiza**
-Desafio Prático 01 — FIC_DEV 2026
-Programador de Sistemas com Inteligência Artificial
+O desenvolvimento teve apoio de ferramentas de IA. Ana Beatriz usou o **Claude Code** para auxiliar
+o desenvolvimento, criar a estrutura de diretórios esperada, sugerir a arquitetura, sugerir como
+documentar cada etapa, acompanhar os requisitos funcionais obrigatórios e manter o trabalho dentro
+do escopo. Todo código e todo conteúdo gerado com apoio de IA foram revisados e testados pela equipe.
+O registro completo está em [`documentacao/02_registro_uso_ia.md`](documentacao/02_registro_uso_ia.md).
 
 ---
 
