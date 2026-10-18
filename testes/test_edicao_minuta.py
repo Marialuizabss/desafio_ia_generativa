@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 from streamlit.testing.v1 import AppTest
 
-from src import fluxo, llm_client
+from src import audit, fluxo, llm_client
 from src.experimento_rf03 import procurar_texto_fixo_alterado
 from src.extracao import CAMPOS, VALOR_AUSENTE
 
@@ -86,6 +86,10 @@ class TestAplicarEdicao(unittest.TestCase):
             atualizado = fluxo.aplicar_edicao(self.registro, edicao)
 
         self.assertEqual(atualizado["categoria"], "documentacao")
+        self.assertEqual(
+            atualizado["campos_alterados"],
+            ["categoria", "assunto", "pedido", "protocolo"],
+        )
         self.assertEqual(atualizado["assunto"], "Novo assunto")
         self.assertEqual(atualizado["pedido"], VALOR_AUSENTE)
         self.assertEqual(atualizado["campos"]["solicitante"]["fonte"], "dados/originais/pedido.txt")
@@ -100,7 +104,11 @@ class TestAplicarEdicao(unittest.TestCase):
         self.assertTrue(atualizado["requer_revisao"])
         self.assertEqual(self.registro["minuta"], "Minuta do modelo")
 
-        gravado = json.loads(self.arquivo.read_text(encoding="utf-8"))
+        # A extração do modelo fica intocada; a revisão vai para um arquivo próprio
+        self.assertEqual(self.arquivo.read_text(encoding="utf-8"), "{}")
+        revisao = self.base / atualizado["arquivo_revisao"]
+        self.assertEqual(revisao.name, "extracao_pedido__sem_id__revisao_1.json")
+        gravado = json.loads(revisao.read_text(encoding="utf-8"))
         self.assertEqual(gravado["minuta"], atualizado["minuta"])
         self.assertEqual(gravado["campos"]["protocolo"]["valor"], "2026-1")
 
@@ -154,6 +162,7 @@ class TestInterfaceEdicao(unittest.TestCase):
                 patch("src.interface.processar_entrada", return_value=registro),
                 patch("src.interface.guardar_copia", side_effect=copia_falsa),
                 patch.object(fluxo, "BASE_DIR", base),
+                patch.object(audit, "ARQUIVO_REGISTRO", base / "execucoes.jsonl"),
             ):
                 tela = AppTest.from_string(
                     "from src.interface import renderizar\nrenderizar()\n",

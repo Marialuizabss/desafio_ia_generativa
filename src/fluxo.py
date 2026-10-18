@@ -10,24 +10,25 @@ from time import perf_counter
 from uuid import uuid4
 
 try:
-    from audit import historico, registrar_execucao
+    from audit import decisoes_ligadas, registrar_execucao, registrar_revisao
     from audio import MODELO as MODELO_TRANSCRICAO
     from audio import transcrever_audio
-    from extracao import CAMPOS, CATEGORIAS, FONTE_AUSENTE, VALOR_AUSENTE
+    from extracao import CAMPOS, CAMPOS_SOLICITACAO, CATEGORIAS, FONTE_AUSENTE, VALOR_AUSENTE
     from llm_client import extrair_campos, montar_minuta
     from privacidade import contar_remocoes, minimizar_texto
     from vision import ler_texto_visual
 except ImportError:
-    from src.audit import historico, registrar_execucao
+    from src.audit import decisoes_ligadas, registrar_execucao, registrar_revisao
     from src.audio import MODELO as MODELO_TRANSCRICAO
     from src.audio import transcrever_audio
-    from src.extracao import CAMPOS, CATEGORIAS, FONTE_AUSENTE, VALOR_AUSENTE
+    from src.extracao import CAMPOS, CAMPOS_SOLICITACAO, CATEGORIAS, FONTE_AUSENTE, VALOR_AUSENTE
     from src.llm_client import extrair_campos, montar_minuta
     from src.privacidade import contar_remocoes, minimizar_texto
     from src.vision import ler_texto_visual
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 PASTA_PROCESSADOS = BASE_DIR / "dados" / "processados"
+PASTA_APROVADAS = Path("resultados") / "minutas" / "aprovadas"
 
 
 MODELOS_ANALISE = {"gpt-5.6-luna", "gpt-5.6-terra", "o4-mini", "gpt-4o-mini"}
@@ -67,17 +68,26 @@ def processar_entrada(
         registro = json.loads(saida.read_text(encoding="utf-8"))
         if _pode_reaproveitar(registro, arquivo, modelo_id, temperatura, idioma):
             registro["arquivo_extracao"] = saida.relative_to(BASE_DIR).as_posix()
-            if not registro.get("id_execucao"):
-                # Extração anterior ao registro (RF11): a reutilização ganha um identificador
-                registro["id_execucao"] = registrar_execucao({
-                    "tipo": "extracao_reaproveitada",
-                    "modalidade": modalidade,
-                    "arquivo_origem": arquivo,
-                    "arquivo_extracao": registro["arquivo_extracao"],
-                    "modelo": modelo_id,
-                    "resultado": "reaproveitada",
-                    "versao_prompt": (registro.get("chamada") or {}).get("versao_prompt"),
-                })
+            # Cada envio é uma execução nova, com revisão própria, mesmo sem nova
+            # chamada à API. A origem aponta a execução que gerou a extração
+            # (None nas extrações anteriores ao registro do RF11).
+            origem = registro.get("id_execucao")
+            registro["id_execucao_origem"] = origem
+            registro["id_execucao"] = registrar_execucao({
+                "tipo": "extracao_reaproveitada",
+                "modalidade": modalidade,
+                "arquivo_origem": arquivo,
+                "arquivo_extracao": registro["arquivo_extracao"],
+                "id_execucao_origem": origem,
+                "modelo": modelo_id,
+                "versao_prompt": (registro.get("chamada") or {}).get("versao_prompt"),
+                "resultado": "reaproveitada",
+                "categoria": registro.get("categoria"),
+                "campos_ausentes": registro.get("campos_ausentes"),
+                "alertas_seguranca": registro.get("alertas_seguranca"),
+                "dados_removidos": registro.get("dados_removidos"),
+                "requer_revisao": True,
+            })
             return registro
 
     anterior_id = (id_execucao_anterior or "").strip() or None
@@ -156,15 +166,55 @@ def processar_entrada(
     return registro
 
 
-def decisao_de_aprovacao(registro: dict) -> str:
-    """Aprovado com revisão quando algum campo da minuta ficou não localizado."""
-    campos = (registro or {}).get("campos") or {}
-    for nome in CAMPOS:
+def motivos_da_revisao(registro: dict) -> list[str]:
+    """Por que a aprovação entra como aprovado com revisão (lista vazia: aprovado).
+
+    Documentos, prazo e local nunca vêm na solicitação, então não contam.
+    """
+    registro = registro or {}
+    campos = registro.get("campos") or {}
+    motivos = []
+    for nome in CAMPOS_SOLICITACAO:
         item = campos.get(nome) or {}
         valor = (item.get("valor") if isinstance(item, dict) else "") or ""
         if not valor.strip() or valor.strip() == VALOR_AUSENTE:
-            return "aprovado_com_revisao"
-    return "aprovado"
+            motivos.append("faltam dados da solicitação")
+            break
+    if registro.get("campos_alterados"):
+        motivos.append("campos alterados na revisão")
+    return motivos
+
+
+def decisao_de_aprovacao(registro: dict) -> str:
+    """Aprovado com revisão quando falta dado da solicitação ou o revisor alterou campos."""
+    return "aprovado_com_revisao" if motivos_da_revisao(registro) else "aprovado"
+
+
+def salvar_minuta_aprovada(registro: dict) -> str:
+    """Grava a minuta aprovada em resultados/minutas/aprovadas/, sem sobrescrever."""
+    minuta = (registro.get("minuta") or "").strip()
+    if not minuta:
+        raise ValueError("A minuta está vazia.")
+    id_execucao = (registro.get("id_execucao") or "").strip()
+    if not id_execucao:
+        raise ValueError("A execução avaliada não foi identificada.")
+    origem = Path(registro.get("arquivo_origem") or "minuta").stem
+    pasta = BASE_DIR / PASTA_APROVADAS
+    nome = f"minuta_{origem}_{id_execucao[:8]}"
+    destino = pasta / f"{nome}.md"
+    numero = 2
+    while destino.exists():
+        destino = pasta / f"{nome}_{numero}.md"
+        numero += 1
+    pasta.mkdir(parents=True, exist_ok=True)
+    destino.write_text(minuta + "\n", encoding="utf-8")
+    return destino.relative_to(BASE_DIR).as_posix()
+
+
+def descartar_minuta_aprovada(caminho: str) -> None:
+    """Apaga a minuta gravada quando a decisão não chegou ao registro."""
+    if caminho:
+        (BASE_DIR / caminho).unlink(missing_ok=True)
 
 
 def preservar_extracao(registro: dict) -> str:
@@ -202,7 +252,8 @@ def _pode_reaproveitar(registro: dict, arquivo: str, modelo_id: str, temperatura
 def _decisao_impede_reuso(id_execucao: str | None) -> bool:
     if not id_execucao:
         return False
-    decisoes = historico(id_execucao)["decisoes"]
+    # A rejeição pode ter sido feita num reaproveitamento: vale a decisão mais recente
+    decisoes = decisoes_ligadas(id_execucao)
     if not decisoes:
         return False
     return decisoes[-1].get("decisao") in {"rejeitado", "nova_geracao"}
@@ -217,13 +268,21 @@ def _versao_prompt(idioma: str | None) -> str:
 
 
 def aplicar_edicao(registro: dict, edicao: dict) -> dict:
-    """Grava os campos editados e monta a minuta a partir deles.
+    """Monta a minuta a partir dos campos revisados e grava a revisão à parte.
 
-    O objeto original não é alterado. A cópia gravada em processados passa a
-    ser a versão revisada, com ``minuta_gerada_de_campos`` marcado.
+    O JSON da extração continua com a resposta do modelo; cada revisão vira
+    um arquivo numerado ao lado dele e uma linha no registro (RF11). O objeto
+    recebido não é alterado.
     """
 
+    extraido = registro.get("extraido") or {
+        "categoria": registro.get("categoria"),
+        "assunto": registro.get("assunto"),
+        "pedido": registro.get("pedido"),
+        "campos": registro.get("campos") or {},
+    }
     atualizado = dict(registro)
+    atualizado["extraido"] = extraido
     categoria = str(edicao.get("categoria") or "").strip()
     if categoria not in CATEGORIAS:
         categoria = str(registro.get("categoria") or "").strip()
@@ -231,18 +290,18 @@ def aplicar_edicao(registro: dict, edicao: dict) -> dict:
     atualizado["assunto"] = _texto_editado(edicao.get("assunto"))
     atualizado["pedido"] = _texto_editado(edicao.get("pedido"))
 
-    anteriores = registro.get("campos") or {}
+    originais = extraido.get("campos") or {}
     campos = {}
     ausentes = []
     valores = {}
     for nome in CAMPOS:
         valor = _texto_editado(edicao.get(nome))
-        anterior = anteriores.get(nome) or {}
+        original = originais.get(nome) or {}
         if valor == VALOR_AUSENTE:
             fonte = FONTE_AUSENTE
             ausentes.append(nome)
-        elif valor == (anterior.get("valor") or ""):
-            fonte = anterior.get("fonte") or FONTE_AUSENTE
+        elif valor == (original.get("valor") or ""):
+            fonte = original.get("fonte") or FONTE_AUSENTE
         else:
             fonte = "edicao"
         campos[nome] = {"valor": valor, "fonte": fonte}
@@ -250,19 +309,53 @@ def aplicar_edicao(registro: dict, edicao: dict) -> dict:
 
     atualizado["campos"] = campos
     atualizado["campos_ausentes"] = ausentes
+    atualizado["campos_alterados"] = _campos_alterados(extraido, atualizado)
     atualizado["minuta"] = montar_minuta(valores)
     atualizado["minuta_gerada_de_campos"] = True
     atualizado["requer_revisao"] = True
-
-    caminho = (atualizado.get("arquivo_extracao") or "").strip()
-    if caminho:
-        destino = BASE_DIR / caminho
-        destino.parent.mkdir(parents=True, exist_ok=True)
-        destino.write_text(
-            json.dumps(atualizado, ensure_ascii=False, indent=2),
-            encoding="utf-8",
-        )
+    atualizado["arquivo_revisao"] = _gravar_revisao(atualizado)
     return atualizado
+
+
+def _campos_alterados(extraido: dict, atualizado: dict) -> list[str]:
+    alterados = [
+        nome for nome in ("categoria", "assunto", "pedido")
+        if _texto_editado(extraido.get(nome)) != atualizado[nome]
+    ]
+    originais = extraido.get("campos") or {}
+    for nome in CAMPOS:
+        original = _texto_editado((originais.get(nome) or {}).get("valor"))
+        if original != atualizado["campos"][nome]["valor"]:
+            alterados.append(nome)
+    return alterados
+
+
+def _gravar_revisao(atualizado: dict) -> str | None:
+    """Grava a revisão numerada; repetir a mesma revisão não cria arquivo novo."""
+    caminho = (atualizado.get("arquivo_extracao") or "").strip()
+    if not caminho:
+        return None
+    principal = BASE_DIR / caminho
+    id_execucao = (atualizado.get("id_execucao") or "").strip()
+    prefixo = f"{principal.stem}__{id_execucao or 'sem_id'}__revisao_"
+    existentes = sorted(
+        principal.parent.glob(f"{prefixo}*.json"),
+        key=lambda arquivo: int(arquivo.stem.rsplit("_", 1)[-1]),
+    )
+    conteudo = {chave: atualizado.get(chave) for chave in ("categoria", "assunto", "pedido", "campos", "minuta")}
+    if existentes:
+        ultima = json.loads(existentes[-1].read_text(encoding="utf-8"))
+        if {chave: ultima.get(chave) for chave in conteudo} == conteudo:
+            return existentes[-1].relative_to(BASE_DIR).as_posix()
+
+    destino = principal.parent / f"{prefixo}{len(existentes) + 1}.json"
+    destino.parent.mkdir(parents=True, exist_ok=True)
+    gravado = {chave: valor for chave, valor in atualizado.items() if chave != "arquivo_revisao"}
+    destino.write_text(json.dumps(gravado, ensure_ascii=False, indent=2), encoding="utf-8")
+    relativo = destino.relative_to(BASE_DIR).as_posix()
+    if id_execucao:
+        registrar_revisao(id_execucao, atualizado["campos_alterados"], relativo)
+    return relativo
 
 
 def _texto_editado(valor) -> str:

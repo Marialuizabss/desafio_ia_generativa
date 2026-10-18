@@ -112,6 +112,38 @@ class TestRF11Decisao(BaseRegistro):
         registro["campos"]["protocolo"] = {"valor": VALOR_AUSENTE}
         self.assertEqual(fluxo.decisao_de_aprovacao(registro), "aprovado_com_revisao")
 
+    def test_institucionais_ausentes_nao_mudam_a_decisao(self):
+        from src.extracao import CAMPOS, CAMPOS_INSTITUCIONAIS, VALOR_AUSENTE
+
+        registro = {"campos": {nome: {"valor": "ok"} for nome in CAMPOS}}
+        for nome in CAMPOS_INSTITUCIONAIS:
+            registro["campos"][nome] = {"valor": VALOR_AUSENTE}
+        self.assertEqual(fluxo.decisao_de_aprovacao(registro), "aprovado")
+        self.assertEqual(fluxo.motivos_da_revisao(registro), [])
+
+    def test_campo_alterado_vira_aprovado_com_revisao(self):
+        from src.extracao import CAMPOS
+
+        registro = {"campos": {nome: {"valor": "ok"} for nome in CAMPOS}, "campos_alterados": ["turno"]}
+        self.assertEqual(fluxo.decisao_de_aprovacao(registro), "aprovado_com_revisao")
+        self.assertEqual(fluxo.motivos_da_revisao(registro), ["campos alterados na revisão"])
+
+    def test_minuta_aprovada_e_gravada_sem_sobrescrever(self):
+        from tempfile import TemporaryDirectory
+
+        registro = {
+            "id_execucao": "3f1c2b7a-0000", "minuta": "Minuta aprovada.",
+            "arquivo_origem": "dados/originais/caso1.txt",
+        }
+        with TemporaryDirectory() as pasta, patch.object(fluxo, "BASE_DIR", Path(pasta)):
+            primeira = fluxo.salvar_minuta_aprovada(registro)
+            segunda = fluxo.salvar_minuta_aprovada({**registro, "minuta": "Outra versão."})
+            self.assertEqual(primeira, "resultados/minutas/aprovadas/minuta_caso1_3f1c2b7a.md")
+            self.assertEqual(segunda, "resultados/minutas/aprovadas/minuta_caso1_3f1c2b7a_2.md")
+            self.assertEqual((Path(pasta) / primeira).read_text(encoding="utf-8"), "Minuta aprovada.\n")
+            fluxo.descartar_minuta_aprovada(segunda)
+            self.assertFalse((Path(pasta) / segunda).exists())
+
     def test_historico_reune_execucao_e_decisoes(self):
         id_execucao = audit.registrar_execucao({"resultado": "sucesso"})
         audit.registrar_execucao({"resultado": "sucesso"})
@@ -220,13 +252,46 @@ class TestRF11Fluxo(BaseRegistro):
         self.assertEqual(evento["erro"], "ValueError: A API retornou uma resposta vazia.")
         self.assertFalse((self.processados / "extracao_pedido.json").exists())
 
-    def test_reaproveitamento_usa_o_mesmo_identificador(self):
+    def test_cada_envio_e_uma_execucao_nova_ligada_a_origem(self):
         self.simular(side_effect=self.extrair_simulado)
         primeira = fluxo.processar_entrada(self.entrada)
         segunda = fluxo.processar_entrada(self.entrada)
+        terceira = fluxo.processar_entrada(self.entrada)
 
-        self.assertEqual(primeira["id_execucao"], segunda["id_execucao"])
-        self.assertEqual(len(self.linhas()), 1)
+        self.assertEqual(fluxo.extrair_campos.call_count, 1)
+        self.assertEqual(len({primeira["id_execucao"], segunda["id_execucao"], terceira["id_execucao"]}), 3)
+        sucesso, reaproveitada, _ = self.linhas()
+        self.assertEqual(reaproveitada["resultado"], "reaproveitada")
+        self.assertEqual(reaproveitada["id_execucao"], segunda["id_execucao"])
+        self.assertEqual(reaproveitada["id_execucao_origem"], sucesso["id_execucao"])
+        self.assertEqual(reaproveitada["versao_prompt"], llm_client.versao_do_prompt(None))
+        self.assertEqual(reaproveitada["categoria"], "matricula")
+        self.assertNotIn("texto_extraido", reaproveitada)
+
+    def test_rejeicao_num_reaproveitamento_impede_novo_reaproveitamento(self):
+        self.simular(side_effect=self.extrair_simulado)
+        fluxo.processar_entrada(self.entrada)
+        segunda = fluxo.processar_entrada(self.entrada)
+        audit.registrar_decisao(segunda["id_execucao"], "rejeitado", justificativa="Errada.", revisor="Ana")
+
+        terceira = fluxo.processar_entrada(self.entrada)
+
+        self.assertEqual(fluxo.extrair_campos.call_count, 2)
+        self.assertNotIn("id_execucao_origem", terceira)
+
+    def test_edicao_nao_e_reaproveitada_como_extracao_do_modelo(self):
+        self.simular(side_effect=self.extrair_simulado)
+        primeira = fluxo.processar_entrada(self.entrada)
+        edicao = {nome: (item or {}).get("valor") for nome, item in primeira["campos"].items()}
+        edicao.update({"categoria": "matricula", "turno": "matutino"})
+        fluxo.aplicar_edicao(primeira, edicao)
+
+        segunda = fluxo.processar_entrada(self.entrada)
+
+        self.assertNotEqual(segunda["campos"]["turno"]["valor"], "matutino")
+        self.assertNotIn("campos_alterados", segunda)
+        revisao = next(linha for linha in self.linhas() if linha["evento"] == "revisao_campos")
+        self.assertIn("turno", revisao["campos_alterados"])
 
     def test_extracao_antiga_reaproveitada_ganha_identificador(self):
         self.simular(side_effect=self.extrair_simulado)

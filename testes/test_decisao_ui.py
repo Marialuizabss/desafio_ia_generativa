@@ -95,9 +95,17 @@ class TestDecisaoInterface(unittest.TestCase):
         return tela
 
     def _eventos(self):
+        """Só as decisões; a revisão dos campos também entra no registro."""
         if not self.log.is_file():
             return []
-        return [json.loads(linha) for linha in self.log.read_text(encoding="utf-8").splitlines() if linha.strip()]
+        linhas = [json.loads(linha) for linha in self.log.read_text(encoding="utf-8").splitlines() if linha.strip()]
+        return [linha for linha in linhas if linha.get("evento") == "decisao"]
+
+    def _revisoes(self):
+        if not self.log.is_file():
+            return []
+        linhas = [json.loads(linha) for linha in self.log.read_text(encoding="utf-8").splitlines() if linha.strip()]
+        return [linha for linha in linhas if linha.get("evento") == "revisao_campos"]
 
     def test_rejeicao_sem_justificativa_nao_grava(self):
         tela = self._ate_revisao()
@@ -198,3 +206,37 @@ class TestDecisaoInterface(unittest.TestCase):
         self.assertEqual(eventos[0]["justificativa"], "")
         self.assertTrue(eventos[0]["conferencia_dados_criticos"])
         self.audio.assert_not_called()
+
+        aprovada = self.base / eventos[0]["arquivo_minuta"]
+        self.assertEqual(aprovada.parent, self.base / "resultados" / "minutas" / "aprovadas")
+        self.assertIn("Prezado(a) Ana", aprovada.read_text(encoding="utf-8"))
+        self.assertIn(eventos[0]["arquivo_minuta"], "\n".join(item.value for item in tela.caption))
+        self.assertEqual(self.extracao.read_text(encoding="utf-8"), '{"evidencia": true}\n')
+
+    def test_aprovacao_recusada_nao_deixa_minuta_gravada(self):
+        tela = self._ate_revisao()
+        tela.button(key="prosseguir").click().run()
+        tela.text_input(key="revisor").set_value("Ana").run()
+        tela.checkbox(key="conferencia_critica").set_value(True).run()
+        with patch("src.interface.registrar_decisao", side_effect=ValueError("Falhou.")):
+            tela.button(key="aprovar").click().run()
+
+        self.assertIn("Falhou.", _texto(tela))
+        self.assertEqual(self._eventos(), [])
+        aprovadas = self.base / "resultados" / "minutas" / "aprovadas"
+        self.assertEqual(list(aprovadas.glob("*.md")) if aprovadas.exists() else [], [])
+
+    def test_revisao_dos_campos_vai_para_o_registro_sem_os_valores(self):
+        tela = self._ate_revisao()
+        tela.text_input(key="edit_solicitante").set_value("Joana Lima").run()
+        tela.button(key="prosseguir").click().run()
+        tela.button(key="voltar").click().run()
+        tela.button(key="prosseguir").click().run()
+
+        revisoes = self._revisoes()
+        self.assertEqual(len(revisoes), 1)
+        self.assertEqual(revisoes[0]["campos_alterados"], ["solicitante"])
+        self.assertNotIn("Joana Lima", self.log.read_text(encoding="utf-8"))
+        arquivo = self.base / revisoes[0]["arquivo_revisao"]
+        self.assertIn("Joana Lima", arquivo.read_text(encoding="utf-8"))
+        self.assertEqual(self.extracao.read_text(encoding="utf-8"), '{"evidencia": true}\n')

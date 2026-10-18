@@ -28,10 +28,16 @@ import streamlit as st
 
 try:
     from audit import registrar_decisao
-    from fluxo import aplicar_edicao, decisao_de_aprovacao, preservar_extracao, processar_entrada
+    from fluxo import (
+        aplicar_edicao, decisao_de_aprovacao, descartar_minuta_aprovada, motivos_da_revisao,
+        preservar_extracao, processar_entrada, salvar_minuta_aprovada,
+    )
 except ImportError:
     from src.audit import registrar_decisao
-    from src.fluxo import aplicar_edicao, decisao_de_aprovacao, preservar_extracao, processar_entrada
+    from src.fluxo import (
+        aplicar_edicao, decisao_de_aprovacao, descartar_minuta_aprovada, motivos_da_revisao,
+        preservar_extracao, processar_entrada, salvar_minuta_aprovada,
+    )
 
 try:
     from src.configuracao import carregar_modelos, obter_modelo, parametros_aplicaveis, rotulo_da_opcao
@@ -1005,10 +1011,11 @@ def _acoes_da_minuta() -> None:
         "Conferi nome, protocolo e datas.",
         key="conferencia_critica",
     )
-    if decisao_de_aprovacao(st.session_state.extracao_registro or {}) == "aprovado_com_revisao":
+    motivos = motivos_da_revisao(st.session_state.extracao_registro or {})
+    if motivos:
         st.markdown(
-            "<p class=\"orientacao\">Há campos não localizados. "
-            "A aprovação entra como aprovado com revisão.</p>",
+            f'<p class="orientacao">A aprovação entra como aprovado com revisão: '
+            f'{escape("; ".join(motivos))}.</p>',
             unsafe_allow_html=True,
         )
     if st.session_state.decisao_erro:
@@ -1113,9 +1120,10 @@ def _passos_apos_rejeicao() -> None:
 
 def _passo_apos_aprovacao() -> None:
     if st.session_state.get("decisao_tipo") == "aprovado_com_revisao":
+        motivos = "; ".join(st.session_state.get("decisao_motivos") or [])
         texto = (
-            "A decisão ficou como aprovado com revisão, porque há campos não localizados. "
-            "Complete esses dados antes de usar a minuta. Nenhum áudio foi gerado."
+            f"A decisão ficou como aprovado com revisão ({motivos}). "
+            "Confira esses pontos antes de usar a minuta. Nenhum áudio foi gerado."
         )
     else:
         texto = (
@@ -1123,6 +1131,9 @@ def _passo_apos_aprovacao() -> None:
             "Nenhum áudio foi gerado."
         )
     st.markdown(f'<p class="orientacao">{escape(texto)}</p>', unsafe_allow_html=True)
+    arquivo = st.session_state.get("arquivo_minuta_aprovada")
+    if arquivo:
+        st.caption(f"Minuta aprovada salva em {arquivo}")
     st.button(
         "Escolher outra entrada",
         key="encerrar_caso",
@@ -1183,17 +1194,27 @@ def _aprovar() -> None:
     registro = st.session_state.get("extracao_registro") or {}
     decisao = decisao_de_aprovacao(registro)
     try:
+        arquivo = salvar_minuta_aprovada(registro)
+    except (OSError, ValueError) as erro:
+        st.session_state.decisao_erro = str(erro)
+        return
+    try:
         registrar_decisao(
             registro.get("id_execucao") or "",
             decisao,
             revisor=revisor,
             conferencia_dados_criticos=True,
+            arquivo_minuta=arquivo,
         )
     except ValueError as erro:
+        # Sem decisão no registro, a minuta não pode ficar como aprovada
+        descartar_minuta_aprovada(arquivo)
         st.session_state.decisao_erro = str(erro)
         return
     st.session_state.decisao_erro = None
     st.session_state.decisao_tipo = decisao
+    st.session_state.decisao_motivos = motivos_da_revisao(registro)
+    st.session_state.arquivo_minuta_aprovada = arquivo
     st.session_state.decisao_estado = "aprovada"
     st.session_state.decisao_etapa = st.session_state.etapa
 
@@ -1255,6 +1276,8 @@ def _encerrar_caso() -> None:
     st.session_state.decisao_etapa = None
     st.session_state.decisao_justificativa = ""
     st.session_state.decisao_tipo = None
+    st.session_state.decisao_motivos = None
+    st.session_state.arquivo_minuta_aprovada = None
     st.session_state.id_execucao_anterior = None
     st.session_state.texto_guardado = ""
     if "rascunho_texto" in st.session_state:

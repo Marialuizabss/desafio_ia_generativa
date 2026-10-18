@@ -64,6 +64,7 @@ def registrar_decisao(
     revisor: str = "",
     conferencia_dados_criticos: bool | None = None,
     arquivo_preservado: str = "",
+    arquivo_minuta: str = "",
 ) -> dict:
     """Grava a decisão humana sobre uma execução já registrada."""
     if not id_execucao:
@@ -91,7 +92,23 @@ def registrar_decisao(
     preservado = (arquivo_preservado or "").strip()
     if preservado:
         evento["arquivo_preservado"] = preservado
+    minuta = (arquivo_minuta or "").strip()
+    if minuta:
+        evento["arquivo_minuta"] = minuta
     return _gravar(evento)
+
+
+def registrar_revisao(id_execucao: str, campos_alterados: list[str], arquivo_revisao: str) -> dict:
+    """Grava que os campos foram revisados. Só os nomes: os valores ficam no arquivo."""
+    if not id_execucao:
+        raise ValueError("A execução revisada não foi identificada.")
+    return _gravar({
+        "evento": "revisao_campos",
+        "id_execucao": id_execucao,
+        "data_hora": _agora(),
+        "campos_alterados": list(campos_alterados),
+        "arquivo_revisao": arquivo_revisao,
+    })
 
 
 def ler_registro() -> list[dict]:
@@ -110,4 +127,16 @@ def historico(id_execucao: str) -> dict:
     eventos = [e for e in ler_registro() if e.get("id_execucao") == id_execucao]
     execucao = next((e for e in eventos if e["evento"] == "execucao"), None)
     decisoes = [e for e in eventos if e["evento"] == "decisao"]
-    return {"execucao": execucao, "decisoes": decisoes}
+    revisoes = [e for e in eventos if e["evento"] == "revisao_campos"]
+    return {"execucao": execucao, "revisoes": revisoes, "decisoes": decisoes}
+
+
+def decisoes_ligadas(id_execucao: str) -> list[dict]:
+    """Decisões sobre a execução e sobre os reaproveitamentos dela, em ordem."""
+    eventos = ler_registro()
+    ligados = {id_execucao} | {
+        e["id_execucao"]
+        for e in eventos
+        if e.get("evento") == "execucao" and e.get("id_execucao_origem") == id_execucao
+    }
+    return [e for e in eventos if e.get("evento") == "decisao" and e.get("id_execucao") in ligados]
