@@ -3,6 +3,8 @@
   "arquivo_entrada": "entrada_audio.mp3",
   "modelo": "gpt-4o-transcribe",
   "idioma": "pt",
+  "duracao_audio_segundos": 89.16,
+  "observacao_duracao": "Duração medida do arquivo entrada_audio.mp3 em 18/10/2026 (src/audio.py, duracao_do_audio), depois da transcrição original.",
   "status": "sucesso",
   "data_execucao": null,
   "tempo_execucao_segundos": null,

@@ -1917,6 +1917,10 @@ def _origem_dos_dados(registro: dict) -> str:
     texto = f"Origem: {arquivo}"
     if leitura:
         texto += f" · lido por {leitura}"
+    duracao = registro.get("duracao_audio_segundos")
+    if duracao:
+        minutos, segundos = divmod(int(round(duracao)), 60)
+        texto += f" · duração {minutos}min{segundos:02d}s" if minutos else f" · duração {segundos}s"
     return texto
 
 

@@ -441,3 +441,9 @@ class TestDecisaoInterface(unittest.TestCase):
         aprovadas = self.base / "resultados" / "minutas" / "aprovadas"
         self.assertEqual(list(aprovadas.iterdir()) if aprovadas.exists() else [], [])
         self.assertIn("PDF falhou.", _texto(tela))
+
+    def test_origem_mostra_a_duracao_do_audio(self):
+        self.registro["modalidade"] = "audio"
+        self.registro["duracao_audio_segundos"] = 89.16
+        tela = self._ate_revisao()
+        self.assertIn("lido por gpt-4o-transcribe · duração 1min29s", _texto(tela))

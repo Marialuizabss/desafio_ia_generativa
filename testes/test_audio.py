@@ -172,3 +172,29 @@ class TestRF07Sintese(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestRF06Duracao(unittest.TestCase):
+    """A duração vem do cabeçalho do arquivo, sem chamar a API."""
+
+    def test_duracao_de_um_wav(self):
+        import wave
+
+        with TemporaryDirectory() as pasta:
+            caminho = Path(pasta) / "voz.wav"
+            with wave.open(str(caminho), "wb") as arquivo:
+                arquivo.setnchannels(1)
+                arquivo.setsampwidth(2)
+                arquivo.setframerate(8000)
+                arquivo.writeframes(b"\x00\x00" * 16000)
+            self.assertEqual(audio.duracao_do_audio(caminho), 2.0)
+
+    def test_formato_desconhecido_devolve_none(self):
+        with TemporaryDirectory() as pasta:
+            caminho = Path(pasta) / "voz.webm"
+            caminho.write_bytes(b"nao e audio")
+            self.assertIsNone(audio.duracao_do_audio(caminho))
+
+    def test_audio_do_projeto(self):
+        caminho = Path(__file__).resolve().parent.parent / "dados" / "originais" / "entrada_audio.mp3"
+        self.assertAlmostEqual(audio.duracao_do_audio(caminho), 89.16, places=1)

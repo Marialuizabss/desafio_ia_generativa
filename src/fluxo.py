@@ -13,7 +13,9 @@ from uuid import uuid4
 
 try:
     from audit import decisoes_ligadas, registrar_execucao, registrar_revisao
+    from audio import IDIOMA as IDIOMA_TRANSCRICAO
     from audio import MODELO as MODELO_TRANSCRICAO
+    from audio import duracao_do_audio
     from audio import transcrever_audio
     from extracao import CAMPOS, CAMPOS_SOLICITACAO, CATEGORIAS, FONTE_AUSENTE, VALOR_AUSENTE
     from llm_client import extrair_campos, montar_minuta
@@ -21,7 +23,9 @@ try:
     from vision import ler_texto_visual
 except ImportError:
     from src.audit import decisoes_ligadas, registrar_execucao, registrar_revisao
+    from src.audio import IDIOMA as IDIOMA_TRANSCRICAO
     from src.audio import MODELO as MODELO_TRANSCRICAO
+    from src.audio import duracao_do_audio
     from src.audio import transcrever_audio
     from src.extracao import CAMPOS, CAMPOS_SOLICITACAO, CATEGORIAS, FONTE_AUSENTE, VALOR_AUSENTE
     from src.llm_client import extrair_campos, montar_minuta
@@ -66,6 +70,8 @@ def processar_entrada(
     PASTA_PROCESSADOS.mkdir(parents=True, exist_ok=True)
     saida = PASTA_PROCESSADOS / f"extracao_{caminho.stem}.json"
     modelo_id, temperatura, idioma = _configuracao(configuracao)
+    # RF06: idioma, modelo e duração do áudio, medidos a cada envio (sem chamar a API)
+    audio = _dados_do_audio(caminho, idioma) if modalidade == "audio" else None
     if saida.is_file() and not forcar:
         registro = json.loads(saida.read_text(encoding="utf-8"))
         if _pode_reaproveitar(registro, arquivo, modelo_id, temperatura, idioma):
@@ -75,6 +81,8 @@ def processar_entrada(
             # (None nas extrações anteriores ao registro do RF11).
             origem = registro.get("id_execucao")
             registro["id_execucao_origem"] = origem
+            if audio:
+                registro["duracao_audio_segundos"] = audio["duracao_segundos"]
             registro["id_execucao"] = registrar_execucao({
                 "tipo": "extracao_reaproveitada",
                 "modalidade": modalidade,
@@ -89,6 +97,7 @@ def processar_entrada(
                 "alertas_seguranca": registro.get("alertas_seguranca"),
                 "dados_removidos": registro.get("dados_removidos"),
                 "requer_revisao": True,
+                **({"audio": audio} if audio else {}),
             })
             return registro
 
@@ -107,6 +116,8 @@ def processar_entrada(
         "modelo": modelo_id,
         "modelo_leitura": MODELOS_LEITURA.get(modalidade),
     }
+    if audio:
+        base_registro["audio"] = audio
     if anterior_id:
         base_registro["id_execucao_anterior"] = anterior_id
     if arquivo_anterior:
@@ -139,6 +150,8 @@ def processar_entrada(
     if arquivo_anterior:
         registro["arquivo_extracao_anterior"] = arquivo_anterior
     registro["texto_extraido"] = texto
+    if audio:
+        registro["duracao_audio_segundos"] = audio["duracao_segundos"]
     registro["dados_removidos"] = contar_remocoes(texto)
     registro["chamada"] = chamada
     registro["id_execucao"] = registrar_execucao({
@@ -462,6 +475,14 @@ def _configuracao(configuracao: dict | None) -> tuple[str, float | None, str | N
         temperatura = round(float(temperatura), 1)
     idioma = parametros.get("idioma") or None
     return modelo, temperatura, idioma
+
+
+def _dados_do_audio(caminho: Path, idioma: str | None) -> dict:
+    return {
+        "duracao_segundos": duracao_do_audio(caminho),
+        "idioma": idioma or IDIOMA_TRANSCRICAO,
+        "modelo": MODELO_TRANSCRICAO,
+    }
 
 
 def _extrair_texto(modalidade: str, caminho: Path, entrada: dict, idioma: str | None) -> str:

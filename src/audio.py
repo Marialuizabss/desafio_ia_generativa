@@ -14,6 +14,23 @@ MODELO = "gpt-4o-transcribe"
 IDIOMA = "pt"
 
 
+def duracao_do_audio(caminho) -> float | None:
+    """Duração em segundos, lida do cabeçalho do arquivo (RF06).
+
+    Não chama a API. Devolve None quando o formato não é reconhecido
+    (por exemplo, webm) ou o arquivo não pode ser lido.
+    """
+    try:
+        from mutagen import File as ArquivoDeAudio
+
+        arquivo = ArquivoDeAudio(str(caminho))
+        if arquivo is None or arquivo.info is None:
+            return None
+        return round(float(arquivo.info.length), 2)
+    except Exception:
+        return None
+
+
 def transcrever_audio(caminho, destino_texto=None, idioma=None):
     entrada = Path(caminho)
     if not entrada.is_absolute():
@@ -65,7 +82,8 @@ def transcrever_audio(caminho, destino_texto=None, idioma=None):
                 "requisito": "RF06",
                 "arquivo_entrada": entrada.name,
                 "modelo": MODELO,
-                "idioma": IDIOMA,
+                "idioma": idioma or IDIOMA,
+                "duracao_audio_segundos": duracao_do_audio(entrada),
                 "data_execucao": data_execucao,
                 "tempo_execucao_segundos": duracao,
                 "status": "sucesso",

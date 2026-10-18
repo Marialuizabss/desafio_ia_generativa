@@ -346,5 +346,57 @@ class TestRF11Fluxo(BaseRegistro):
         self.assertNotIn("MINUTA_ANTIGA", saida.read_text(encoding="utf-8"))
 
 
+class TestRF06NoRegistro(BaseRegistro):
+    """Toda execução de áudio registra idioma, modelo e duração (RF06)."""
+
+    extrair_simulado = staticmethod(TestRF11Fluxo.extrair_simulado)
+
+    def simular(self, **efeito):
+        patcher = patch.object(fluxo, "extrair_campos", **efeito)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def setUp(self):
+        super().setUp()
+        import wave
+
+        self.processados = self.base / "dados" / "processados"
+        (self.base / "dados" / "originais").mkdir(parents=True)
+        (self.base / "dados" / "originais" / "pedido.txt").write_text("Protocolo 2026-000142.", encoding="utf-8")
+        for nome, valor in (("BASE_DIR", self.base), ("PASTA_PROCESSADOS", self.processados)):
+            patcher = patch.object(fluxo, nome, valor)
+            patcher.start()
+            self.addCleanup(patcher.stop)
+
+        caminho = self.base / "dados" / "originais" / "voz.wav"
+        with wave.open(str(caminho), "wb") as arquivo:
+            arquivo.setnchannels(1)
+            arquivo.setsampwidth(2)
+            arquivo.setframerate(8000)
+            arquivo.writeframes(b"\x00\x00" * 24000)
+        self.entrada = {"modalidade": "audio", "caminho_copia": "dados/originais/voz.wav"}
+        patcher = patch.object(fluxo, "transcrever_audio", return_value="Protocolo 2026-000142.")
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_audio_grava_idioma_modelo_e_duracao(self):
+        self.simular(side_effect=self.extrair_simulado)
+        registro = fluxo.processar_entrada(self.entrada)
+        reaproveitado = fluxo.processar_entrada(self.entrada)
+
+        sucesso, reaproveitada = self.linhas()
+        esperado = {"duracao_segundos": 3.0, "idioma": "pt", "modelo": "gpt-4o-transcribe"}
+        self.assertEqual(sucesso["audio"], esperado)
+        self.assertEqual(reaproveitada["audio"], esperado)
+        self.assertEqual(registro["duracao_audio_segundos"], 3.0)
+        self.assertEqual(reaproveitado["duracao_audio_segundos"], 3.0)
+
+    def test_texto_nao_ganha_bloco_de_audio(self):
+        self.entrada = {"modalidade": "texto", "caminho_copia": "dados/originais/pedido.txt"}
+        self.simular(side_effect=self.extrair_simulado)
+        fluxo.processar_entrada(self.entrada)
+        self.assertNotIn("audio", self.linhas()[0])
+
+
 if __name__ == "__main__":
     unittest.main()
