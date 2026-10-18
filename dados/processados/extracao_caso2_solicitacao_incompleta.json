@@ -1,0 +1,88 @@
+{
+  "categoria": "matricula",
+  "assunto": "Solicitação de matrícula no Técnico em Administração",
+  "pedido": "Realizar matrícula e obter informações sobre os documentos necessários e o prazo para apresentação.",
+  "campos": {
+    "solicitante": {
+      "valor": "Roberto Alves Nunes",
+      "fonte": "dados/originais/caso2_solicitacao_incompleta.txt"
+    },
+    "protocolo": {
+      "valor": "não localizado",
+      "fonte": "nenhuma"
+    },
+    "data_solicitacao": {
+      "valor": "não localizado",
+      "fonte": "nenhuma"
+    },
+    "curso": {
+      "valor": "Técnico em Administração",
+      "fonte": "dados/originais/caso2_solicitacao_incompleta.txt"
+    },
+    "eixo": {
+      "valor": "Gestão e Negócios",
+      "fonte": "dados/originais/caso2_solicitacao_incompleta.txt"
+    },
+    "carga_horaria": {
+      "valor": "1.000 horas",
+      "fonte": "dados/originais/caso2_solicitacao_incompleta.txt"
+    },
+    "turno": {
+      "valor": "não localizado",
+      "fonte": "nenhuma"
+    },
+    "data_inicio": {
+      "valor": "01/02/2027",
+      "fonte": "dados/originais/caso2_solicitacao_incompleta.txt"
+    },
+    "regras_ciencia": {
+      "valor": "não localizado",
+      "fonte": "nenhuma"
+    },
+    "documentos_necessarios": {
+      "valor": "não localizado",
+      "fonte": "nenhuma"
+    },
+    "prazo_apresentacao": {
+      "valor": "não localizado",
+      "fonte": "nenhuma"
+    },
+    "local_horario": {
+      "valor": "não localizado",
+      "fonte": "nenhuma"
+    }
+  },
+  "campos_ausentes": [
+    "protocolo",
+    "data_solicitacao",
+    "turno",
+    "regras_ciencia",
+    "documentos_necessarios",
+    "prazo_apresentacao",
+    "local_horario"
+  ],
+  "alertas_seguranca": [],
+  "requer_revisao": true,
+  "minuta": "[CABEÇALHO COM BRASÃO — dados/originais/brasao.png]\n\nPrezado(a) Roberto Alves Nunes,\n\nRecebemos sua solicitação de matrícula, registrada sob o protocolo não localizado.\n\n**Dados informados na solicitação**\n- Curso: Técnico em Administração\n- Eixo tecnológico: Gestão e Negócios\n- Carga horária: 1.000 horas\n- Turno: não localizado\n- Início do curso: 01/02/2027\n\n**Orientações**\n- Documentos necessários: não localizado\n- Prazo para apresentação: não localizado\n- Local e horário de atendimento: não localizado\n\n**Ciência das regras de matrícula**\nnão localizado\n\nPermanecemos à disposição para esclarecimentos.\n\nAtenciosamente, \n[NOME DO SERVIDOR RESPONSÁVEL] \n[CARGO / SETOR]\n\n*Minuta elaborada com apoio de IA. Documento sujeito a revisão e aprovação do servidor responsável antes de qualquer envio.*",
+  "modalidade": "texto",
+  "arquivo_origem": "dados/originais/caso2_solicitacao_incompleta.txt",
+  "modelo": "gpt-6-luna",
+  "texto_extraido": "Olá, sou Roberto Alves Nunes, CPF 222.333.444-55.\n\nQuero fazer minha matrícula no Técnico em Administração, eixo Gestão e Negócios, 1.000 horas, com início em 01/02/2027.\n\nNão lembro o número do protocolo. O que eu preciso levar e até quando?\n\nRoberto",
+  "chamada": {
+    "modelo": "gpt-6-luna",
+    "temperatura": null,
+    "idioma": "pt",
+    "timeout_segundos": 120.0,
+    "tempo_resposta_segundos": 8.57,
+    "tokens_entrada": 1734,
+    "tokens_saida": 887,
+    "tokens_total": 2621,
+    "tokens_raciocinio": 113,
+    "tokens_cache": 0,
+    "custo_estimado_usd": 0.000617,
+    "preco_usd_por_milhao_tokens": {
+      "entrada": 0.1,
+      "saida": 0.5
+    }
+  }
+}
