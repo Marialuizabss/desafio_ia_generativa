@@ -350,8 +350,14 @@ def _custo_estimado(modelo_id: str, entrada, saida):
     return round(valor, 6), dict(preco)
 
 
+# Qualquer marca de abertura ou fechamento da delimitação escrita pelo cidadão,
+# em maiúsculas ou minúsculas, com espaços ou acento (achado do CASO-03b no RF03)
+_MARCA_SOLICITACAO = re.compile(r"<(?=\s*/?\s*solicita[cç][aã]o\b)", re.IGNORECASE)
+
+
 def _embrulhar(texto: str, arquivo: str) -> str:
-    corpo = texto.replace("</solicitacao>", "<\\/solicitacao>")
+    # A barra invertida depois de "<" impede que o texto abra ou feche a delimitação
+    corpo = _MARCA_SOLICITACAO.sub(r"<\\", texto)
     origem = (
         arquivo.replace("&", "&amp;")
         .replace('"', "&quot;")
