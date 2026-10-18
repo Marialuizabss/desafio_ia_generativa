@@ -1,5 +1,6 @@
 """Consulta o modelo e devolve a extração da solicitação."""
 
+import hashlib
 import json
 from pathlib import Path
 from time import perf_counter
@@ -234,13 +235,15 @@ def extrair_campos(
     if not isinstance(dados, dict):
         raise ValueError("A API não retornou um objeto JSON.")
 
-    return resultado_de_dict(dados, arquivo), _registrar_chamada(
-        resposta,
-        modelo_id,
-        temperatura_enviada,
-        idioma,
-        duracao,
-    )
+    chamada = _registrar_chamada(resposta, modelo_id, temperatura_enviada, idioma, duracao)
+    chamada.update({
+        "provedor": "OpenAI",
+        "versao_prompt": hashlib.sha256(consulta["instructions"].encode("utf-8")).hexdigest()[:12],
+        "parametros": {
+            chave: consulta[chave] for chave in ("temperature", "reasoning", "store") if chave in consulta
+        },
+    })
+    return resultado_de_dict(dados, arquivo), chamada
 
 
 def _temperatura(valor) -> float | None:

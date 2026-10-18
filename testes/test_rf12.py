@@ -4,7 +4,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
-from src import fluxo
+from src import audit, fluxo
 from src.extracao import resultado_de_dict
 from src.privacidade import MARCADORES, contar_remocoes, minimizar_texto
 
@@ -188,6 +188,10 @@ class TestRF12Fluxo(unittest.TestCase):
             patcher = patch.object(fluxo, nome, valor)
             patcher.start()
             self.addCleanup(patcher.stop)
+
+        patcher = patch.object(audit, "ARQUIVO_REGISTRO", self.base / "execucoes.jsonl")
+        patcher.start()
+        self.addCleanup(patcher.stop)
 
         self.enviados = []
 

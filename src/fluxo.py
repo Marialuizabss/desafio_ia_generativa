@@ -2,13 +2,18 @@
 
 import json
 from pathlib import Path
+from time import perf_counter
 
 try:
+    from audit import registrar_execucao
+    from audio import MODELO as MODELO_TRANSCRICAO
     from audio import transcrever_audio
     from llm_client import extrair_campos
     from privacidade import contar_remocoes, minimizar_texto
     from vision import ler_texto_visual
 except ImportError:
+    from src.audit import registrar_execucao
+    from src.audio import MODELO as MODELO_TRANSCRICAO
     from src.audio import transcrever_audio
     from src.llm_client import extrair_campos
     from src.privacidade import contar_remocoes, minimizar_texto
@@ -19,6 +24,10 @@ PASTA_PROCESSADOS = BASE_DIR / "dados" / "processados"
 
 
 MODELOS_ANALISE = {"gpt-6-luna", "gpt-4o"}
+
+# Modelo que lê a entrada antes da extração (o texto digitado não passa por modelo;
+# PDF com camada de texto é lido localmente, sem modelo)
+MODELOS_LEITURA = {"audio": MODELO_TRANSCRICAO, "imagem": "gpt-4o"}
 
 
 def processar_entrada(entrada: dict, forcar: bool = False, configuracao: dict | None = None) -> dict:
@@ -53,16 +62,44 @@ def processar_entrada(entrada: dict, forcar: bool = False, configuracao: dict | 
             and "dados_removidos" in registro
         ):
             registro["arquivo_extracao"] = saida.relative_to(BASE_DIR).as_posix()
+            if not registro.get("id_execucao"):
+                # Extração anterior ao registro (RF11): a reutilização ganha um identificador
+                registro["id_execucao"] = registrar_execucao({
+                    "tipo": "extracao_reaproveitada",
+                    "modalidade": modalidade,
+                    "arquivo_origem": arquivo,
+                    "arquivo_extracao": registro["arquivo_extracao"],
+                    "modelo": modelo_id,
+                    "resultado": "reaproveitada",
+                })
             return registro
 
-    texto = minimizar_texto(_extrair_texto(modalidade, caminho, entrada, idioma))
-    resultado, chamada = extrair_campos(
-        texto,
-        arquivo,
-        modelo=modelo_id,
-        temperatura=temperatura,
-        idioma=idioma,
-    )
+    base_registro = {
+        "tipo": "extracao_e_minuta",
+        "modalidade": modalidade,
+        "arquivo_origem": arquivo,
+        "modelo": modelo_id,
+        "modelo_leitura": MODELOS_LEITURA.get(modalidade),
+    }
+    inicio = perf_counter()
+    try:
+        texto = minimizar_texto(_extrair_texto(modalidade, caminho, entrada, idioma))
+        resultado, chamada = extrair_campos(
+            texto,
+            arquivo,
+            modelo=modelo_id,
+            temperatura=temperatura,
+            idioma=idioma,
+        )
+    except Exception as erro:
+        registrar_execucao({
+            **base_registro,
+            "resultado": "erro",
+            "erro": f"{type(erro).__name__}: {erro}",
+            "duracao_total_segundos": round(perf_counter() - inicio, 2),
+        })
+        raise
+
     registro = resultado.para_dict()
     registro["modalidade"] = modalidade
     registro["arquivo_origem"] = arquivo
@@ -70,6 +107,24 @@ def processar_entrada(entrada: dict, forcar: bool = False, configuracao: dict | 
     registro["texto_extraido"] = texto
     registro["dados_removidos"] = contar_remocoes(texto)
     registro["chamada"] = chamada
+    registro["id_execucao"] = registrar_execucao({
+        **base_registro,
+        "resultado": "sucesso",
+        "arquivo_extracao": saida.relative_to(BASE_DIR).as_posix(),
+        "provedor": chamada.get("provedor"),
+        "versao_prompt": chamada.get("versao_prompt"),
+        "parametros": {"temperatura": temperatura, "idioma": idioma, **(chamada.get("parametros") or {})},
+        "duracao_total_segundos": round(perf_counter() - inicio, 2),
+        "tempo_resposta_segundos": chamada.get("tempo_resposta_segundos"),
+        "tokens_entrada": chamada.get("tokens_entrada"),
+        "tokens_saida": chamada.get("tokens_saida"),
+        "custo_estimado_usd": chamada.get("custo_estimado_usd"),
+        "categoria": registro["categoria"],
+        "campos_ausentes": registro["campos_ausentes"],
+        "alertas_seguranca": registro["alertas_seguranca"],
+        "dados_removidos": registro["dados_removidos"],
+        "requer_revisao": True,
+    })
 
     saida.write_text(
         json.dumps(registro, ensure_ascii=False, indent=2),
