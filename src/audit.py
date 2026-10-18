@@ -65,6 +65,7 @@ def registrar_decisao(
     conferencia_dados_criticos: bool | None = None,
     arquivo_preservado: str = "",
     arquivo_minuta: str = "",
+    arquivo_pdf: str = "",
     cargo_setor: str = "",
     dados_conferidos: list[str] | None = None,
 ) -> dict:
@@ -97,6 +98,9 @@ def registrar_decisao(
     minuta = (arquivo_minuta or "").strip()
     if minuta:
         evento["arquivo_minuta"] = minuta
+    pdf = (arquivo_pdf or "").strip()
+    if pdf:
+        evento["arquivo_pdf"] = pdf
     cargo = (cargo_setor or "").strip()
     if cargo:
         evento["cargo_setor"] = cargo

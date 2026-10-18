@@ -5,7 +5,7 @@ import pymupdf
 
 from src.extracao import CAMPOS
 from src.llm_client import montar_minuta
-from src.minuta_pdf import MARCADOR_BRASAO, gerar_pdf_minuta
+from src.minuta_pdf import CABECALHO, MARCADOR_BRASAO, gerar_pdf_minuta
 
 BRASAO = Path(__file__).resolve().parent.parent / "dados" / "originais" / "brasao.png"
 
@@ -71,3 +71,33 @@ class TestPdfDaMinuta(unittest.TestCase):
             self.assertGreater(len(documento[0].get_images()), 0)
             self.assertEqual(len(documento[1].get_images()), 0)
         self.assertIn("ciência da regra de permanência", _texto(dados))
+
+    def test_cabecalho_institucional_abaixo_do_brasao(self):
+        dados = gerar_pdf_minuta(montar_minuta(_valores()), BRASAO)
+        with pymupdf.open(stream=dados, filetype="pdf") as documento:
+            pagina = documento[0]
+            texto = pagina.get_text()
+            for linha in CABECALHO:
+                self.assertIn(linha, texto)
+            topo_cabecalho = pagina.search_for("GOVERNO DE MATO GROSSO")[0].y0
+            topo_corpo = pagina.search_for("Prezado(a)")[0].y0
+            self.assertLess(topo_cabecalho, topo_corpo)
+
+    def test_rodape_em_todas_as_paginas_com_numero(self):
+        longa = montar_minuta(_valores()) + "\n\n" + "\n\n".join(f"Parágrafo {n} " + "texto " * 60 for n in range(25))
+        rodape = ["Origem: entrada_audio.mp3 · Protocolo 2026-000142 · Execução 28b62555",
+                  "Aprovada por Ana Beatriz (SECITECI) em 18/10/2026 às 16:40"]
+        dados = gerar_pdf_minuta(longa, BRASAO, rodape=rodape)
+        with pymupdf.open(stream=dados, filetype="pdf") as documento:
+            total = documento.page_count
+            self.assertGreater(total, 1)
+            for numero, pagina in enumerate(documento, start=1):
+                texto = pagina.get_text()
+                self.assertIn("Origem: entrada_audio.mp3", texto)
+                self.assertIn(f"Página {numero} de {total}", texto)
+            self.assertNotIn("dados/originais", "\n".join(p.get_text() for p in documento))
+            self.assertNotIn("GOVERNO DE MATO GROSSO", documento[1].get_text())
+
+    def test_sem_rodape_continua_funcionando(self):
+        texto = _texto(gerar_pdf_minuta(montar_minuta(_valores()), BRASAO))
+        self.assertNotIn("Página 1", texto)

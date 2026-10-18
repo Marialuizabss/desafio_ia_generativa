@@ -5,6 +5,8 @@ a interface deixa os campos editáveis e só monta a minuta quando o usuário pe
 """
 
 import json
+import re
+from datetime import datetime
 from pathlib import Path
 from time import perf_counter
 from uuid import uuid4
@@ -237,6 +239,50 @@ def assinar_minuta(minuta: str, servidor: str = "", cargo: str = "") -> str:
         if valores[campo]:
             texto = texto.replace(marcador, valores[campo])
     return texto
+
+
+def protocolo_da_minuta(registro: dict) -> str:
+    valor = (((registro.get("campos") or {}).get("protocolo") or {}).get("valor") or "").strip()
+    return "" if valor == VALOR_AUSENTE else valor
+
+
+def rodape_da_minuta(registro: dict, servidor: str, cargo: str, quando: datetime | None = None) -> list[str]:
+    """Linhas do pé do PDF: só o nome do arquivo de origem (sem diretório), protocolo e id."""
+    origem = [f"Origem: {Path(registro.get('arquivo_origem') or '').name or 'não informada'}"]
+    protocolo = protocolo_da_minuta(registro)
+    if protocolo:
+        origem.append(f"Protocolo {protocolo}")
+    id_execucao = (registro.get("id_execucao") or "").strip()
+    if id_execucao:
+        origem.append(f"Execução {id_execucao[:8]}")
+    quando = quando or datetime.now()
+    assinatura = (servidor or "").strip()
+    if (cargo or "").strip():
+        assinatura += f" ({cargo.strip()})"
+    return [
+        " · ".join(origem),
+        f"Aprovada por {assinatura} em {quando.strftime('%d/%m/%Y às %H:%M')}",
+    ]
+
+
+def nome_do_pdf(registro: dict) -> str:
+    """minuta_<protocolo>.pdf; sem protocolo, usa o nome do arquivo de origem."""
+    base = protocolo_da_minuta(registro) or Path(registro.get("arquivo_origem") or "minuta").stem
+    return f"minuta_{re.sub(r'[^0-9A-Za-z._-]+', '_', base).strip('_') or 'minuta'}.pdf"
+
+
+def salvar_pdf_aprovado(arquivo_minuta: str, dados: bytes) -> str:
+    """Grava o PDF ao lado da minuta aprovada, com o mesmo nome."""
+    destino = (BASE_DIR / arquivo_minuta).with_suffix(".pdf")
+    if destino.exists():
+        raise FileExistsError(f"O PDF já existe: {destino.name}")
+    destino.write_bytes(dados)
+    return destino.relative_to(BASE_DIR).as_posix()
+
+
+def caminho_no_projeto(relativo: str) -> Path:
+    """Caminho absoluto de um arquivo gravado pelo fluxo (minuta e PDF aprovados)."""
+    return BASE_DIR / relativo
 
 
 def descartar_minuta_aprovada(caminho: str) -> None:

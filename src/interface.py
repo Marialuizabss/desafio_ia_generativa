@@ -31,15 +31,17 @@ try:
     from audit import registrar_decisao
     from fluxo import (
         DADOS_CRITICOS, MODELOS_LEITURA, aplicar_edicao, assinar_minuta, decisao_de_aprovacao,
-        descartar_minuta_aprovada, motivos_da_revisao, preservar_extracao, processar_entrada,
-        salvar_minuta_aprovada,
+        caminho_no_projeto, descartar_minuta_aprovada, motivos_da_revisao, nome_do_pdf,
+        preservar_extracao, processar_entrada, rodape_da_minuta, salvar_minuta_aprovada,
+        salvar_pdf_aprovado,
     )
 except ImportError:
     from src.audit import registrar_decisao
     from src.fluxo import (
         DADOS_CRITICOS, MODELOS_LEITURA, aplicar_edicao, assinar_minuta, decisao_de_aprovacao,
-        descartar_minuta_aprovada, motivos_da_revisao, preservar_extracao, processar_entrada,
-        salvar_minuta_aprovada,
+        caminho_no_projeto, descartar_minuta_aprovada, motivos_da_revisao, nome_do_pdf,
+        preservar_extracao, processar_entrada, rodape_da_minuta, salvar_minuta_aprovada,
+        salvar_pdf_aprovado,
     )
 
 try:
@@ -1076,8 +1078,8 @@ def _etapa_minuta() -> None:
         st.image(str(BRASAO), width=88)
     st.markdown(texto)
     st.caption("Revisão humana obrigatória antes de qualquer envio.")
-    if minuta:
-        _botao_baixar_pdf(minuta)
+    if st.session_state.get("decisao_estado") != "aprovada":
+        st.caption("O PDF fica disponível depois da aprovação.")
     if _decisao_em_curso():
         _navegacao(None)
         _painel_decisao()
@@ -1090,7 +1092,7 @@ def _minuta_em_tela(registro: dict) -> str:
     """A aprovada, depois da aprovação; antes, a montada com a assinatura digitada."""
     arquivo = st.session_state.get("arquivo_minuta_aprovada")
     if st.session_state.get("decisao_estado") == "aprovada" and arquivo:
-        caminho = BASE_DIR / arquivo
+        caminho = caminho_no_projeto(arquivo)
         if caminho.is_file():
             return caminho.read_text(encoding="utf-8").strip()
     return assinar_minuta(
@@ -1100,19 +1102,17 @@ def _minuta_em_tela(registro: dict) -> str:
     )
 
 
-def _botao_baixar_pdf(minuta: str) -> None:
-    try:
-        pdf = gerar_pdf_minuta(minuta, BRASAO)
-    except (OSError, ValueError):
-        st.markdown(
-            '<p class="aviso">Não foi possível gerar o PDF.</p>',
-            unsafe_allow_html=True,
-        )
+def _botao_baixar_pdf() -> None:
+    """Entrega o PDF salvo na aprovação; ele já tem assinatura, cabeçalho e rodapé."""
+    arquivo = st.session_state.get("arquivo_pdf_aprovado")
+    caminho = caminho_no_projeto(arquivo) if arquivo else None
+    if not caminho or not caminho.is_file():
+        st.markdown('<p class="aviso">O PDF da minuta aprovada não foi encontrado.</p>', unsafe_allow_html=True)
         return
     st.download_button(
         "Baixar PDF",
-        data=pdf,
-        file_name="minuta.pdf",
+        data=caminho.read_bytes(),
+        file_name=nome_do_pdf(st.session_state.get("extracao_registro") or {}),
         mime="application/pdf",
         key="baixar_pdf",
         type="primary",
@@ -1366,6 +1366,7 @@ def _passo_apos_aprovacao() -> None:
     arquivo = st.session_state.get("arquivo_minuta_aprovada")
     if arquivo:
         st.caption(f"Minuta aprovada salva em {arquivo}")
+    _botao_baixar_pdf()
     st.button(
         "Escolher outra entrada",
         key="encerrar_caso",
@@ -1450,7 +1451,10 @@ def _aprovar() -> None:
         st.session_state.decisao_erro = str(erro)
         avisar("Não foi possível salvar a minuta aprovada.", "erro")
         return
+    pdf = None
     try:
+        dados = gerar_pdf_minuta(assinada["minuta"], BRASAO, rodape=rodape_da_minuta(registro, revisor, cargo))
+        pdf = salvar_pdf_aprovado(arquivo, dados)
         registrar_decisao(
             registro.get("id_execucao") or "",
             decisao,
@@ -1458,12 +1462,15 @@ def _aprovar() -> None:
             revisor=revisor,
             conferencia_dados_criticos=True,
             arquivo_minuta=arquivo,
+            arquivo_pdf=pdf,
             cargo_setor=cargo,
             dados_conferidos=conferidos,
         )
-    except ValueError as erro:
-        # Sem decisão no registro, a minuta não pode ficar como aprovada
+    except (OSError, ValueError, RuntimeError) as erro:
+        # Sem decisão no registro, nada pode ficar como aprovado
         descartar_minuta_aprovada(arquivo)
+        if pdf:
+            descartar_minuta_aprovada(pdf)
         st.session_state.decisao_erro = str(erro)
         avisar("A aprovação não foi registrada.", "erro")
         return
@@ -1472,6 +1479,7 @@ def _aprovar() -> None:
     st.session_state.decisao_tipo = decisao
     st.session_state.decisao_motivos = motivos_da_revisao(registro)
     st.session_state.arquivo_minuta_aprovada = arquivo
+    st.session_state.arquivo_pdf_aprovado = pdf
     st.session_state.decisao_estado = "aprovada"
     st.session_state.decisao_etapa = st.session_state.etapa
 
@@ -1539,6 +1547,7 @@ def _encerrar_caso() -> None:
     st.session_state.decisao_tipo = None
     st.session_state.decisao_motivos = None
     st.session_state.arquivo_minuta_aprovada = None
+    st.session_state.arquivo_pdf_aprovado = None
     st.session_state.id_execucao_anterior = None
     # Outra entrada é outro atendimento: quem revisa e assina informa de novo
     st.session_state.revisor = ""

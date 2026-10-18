@@ -374,3 +374,40 @@ class TestDecisaoInterface(unittest.TestCase):
 
         tela.button(key="aprovar").click().run()
         self.assertIn("Confira nome, protocolo e datas antes de aprovar.", _texto(tela))
+
+    def test_pdf_so_depois_de_aprovar_assinado_e_salvo(self):
+        import pymupdf
+
+        tela = self._ate_minuta()
+        self.assertEqual(tela.get("download_button"), [])
+        tela = self._aprovar_texto(tela, servidor="Ana Beatriz", cargo="SECITECI")
+
+        self.assertEqual(len(tela.get("download_button")), 1)
+        decisao = self._eventos()[0]
+        pdf = self.base / decisao["arquivo_pdf"]
+        self.assertEqual(pdf.with_suffix(".md"), self.base / decisao["arquivo_minuta"])
+        with pymupdf.open(pdf) as documento:
+            texto = "\n".join(pagina.get_text() for pagina in documento)
+        self.assertIn("Ana Beatriz", texto)
+        self.assertIn("GOVERNO DE MATO GROSSO", texto)
+        self.assertIn("Origem: solicitacao_texto.txt", texto)
+        self.assertIn("Aprovada por Ana Beatriz (SECITECI)", texto)
+        self.assertNotIn("[NOME DO SERVIDOR RESPONSÁVEL]", texto)
+
+    def test_rejeicao_nao_mostra_pdf(self):
+        tela = self._ate_minuta()
+        tela.button(key="rejeitar").click().run()
+        tela.text_input(key="revisor").set_value("Ana").run()
+        tela.text_area(key="justificativa_rejeicao").set_value("Dados errados.").run()
+        tela.button(key="confirmar_rejeicao").click().run()
+        self.assertEqual(tela.get("download_button"), [])
+        self.assertFalse((self.base / "resultados" / "minutas" / "aprovadas").exists())
+
+    def test_falha_no_pdf_nao_registra_e_nao_deixa_arquivos(self):
+        tela = self._ate_minuta()
+        with patch("src.interface.gerar_pdf_minuta", side_effect=RuntimeError("PDF falhou.")):
+            tela = self._aprovar_texto(tela)
+        self.assertEqual(self._eventos(), [])
+        aprovadas = self.base / "resultados" / "minutas" / "aprovadas"
+        self.assertEqual(list(aprovadas.iterdir()) if aprovadas.exists() else [], [])
+        self.assertIn("PDF falhou.", _texto(tela))

@@ -55,6 +55,37 @@ class TestAssinatura(unittest.TestCase):
         self.assertEqual(fluxo.assinar_minuta(minuta, "Ana", ""), "Ana\n[CARGO / SETOR]")
 
 
+class TestRodapeENomeDoPdf(unittest.TestCase):
+    REGISTRO = {
+        "arquivo_origem": "dados/originais/entrada_audio.mp3",
+        "id_execucao": "28b62555-aaaa-bbbb",
+        "campos": {"protocolo": {"valor": "2026-000142"}},
+    }
+
+    def test_rodape_sem_diretorio_com_protocolo_e_execucao(self):
+        from datetime import datetime
+
+        linhas = fluxo.rodape_da_minuta(self.REGISTRO, "Ana Beatriz", "SECITECI", datetime(2026, 10, 18, 16, 40))
+        self.assertEqual(linhas, [
+            "Origem: entrada_audio.mp3 · Protocolo 2026-000142 · Execução 28b62555",
+            "Aprovada por Ana Beatriz (SECITECI) em 18/10/2026 às 16:40",
+        ])
+
+    def test_sem_protocolo_o_rodape_omite_a_parte(self):
+        registro = {**self.REGISTRO, "campos": {"protocolo": {"valor": VALOR_AUSENTE}}}
+        self.assertEqual(
+            fluxo.rodape_da_minuta(registro, "Ana", "")[0],
+            "Origem: entrada_audio.mp3 · Execução 28b62555",
+        )
+
+    def test_nome_do_pdf(self):
+        self.assertEqual(fluxo.nome_do_pdf(self.REGISTRO), "minuta_2026-000142.pdf")
+        sem = {**self.REGISTRO, "campos": {}}
+        self.assertEqual(fluxo.nome_do_pdf(sem), "minuta_entrada_audio.pdf")
+        estranho = {**self.REGISTRO, "campos": {"protocolo": {"valor": "2026/000 142"}}}
+        self.assertEqual(fluxo.nome_do_pdf(estranho), "minuta_2026_000_142.pdf")
+
+
 class TestAplicarEdicao(unittest.TestCase):
     def setUp(self):
         self.temp = TemporaryDirectory()
@@ -207,7 +238,9 @@ class TestInterfaceEdicao(unittest.TestCase):
                 self.assertNotIn("MINUTA_DO_MODELO_OCULTA", texto)
                 self.assertIn("[NOME DO SERVIDOR RESPONSÁVEL]", texto)
                 self.assertEqual(tela.button(key="voltar").label, "Voltar")
-                self.assertEqual(tela.download_button(key="baixar_pdf").label, "Baixar PDF")
+                # O PDF só existe depois da aprovação
+                self.assertEqual([botao.key for botao in tela.get("download_button")], [])
+                self.assertIn("O PDF fica disponível depois da aprovação.", "\n".join(c.value for c in tela.caption))
 
                 tela.button(key="voltar").click().run()
                 self.assertFalse(tela.exception)
