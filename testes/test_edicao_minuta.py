@@ -187,6 +187,7 @@ class TestInterfaceEdicao(unittest.TestCase):
                 self.assertNotIn("MINUTA_DO_MODELO_OCULTA", texto)
                 self.assertIn("[NOME DO SERVIDOR RESPONSÁVEL]", texto)
                 self.assertEqual(tela.button(key="voltar").label, "Voltar")
+                self.assertEqual(tela.download_button(key="baixar_pdf").label, "Baixar PDF")
 
                 tela.button(key="voltar").click().run()
                 self.assertFalse(tela.exception)

@@ -36,9 +36,11 @@ except ImportError:
 try:
     from src.configuracao import carregar_modelos, obter_modelo, parametros_aplicaveis, rotulo_da_opcao
     from src.extracao import CATEGORIAS, VALOR_AUSENTE
+    from src.minuta_pdf import gerar_pdf_minuta
 except ImportError:
     from configuracao import carregar_modelos, obter_modelo, parametros_aplicaveis, rotulo_da_opcao
     from extracao import CATEGORIAS, VALOR_AUSENTE
+    from minuta_pdf import gerar_pdf_minuta
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 PASTA_ORIGINAIS = BASE_DIR / "dados" / "originais"
@@ -329,6 +331,7 @@ ESTILOS = """
   .st-key-escolher_imagem [data-testid="stBaseButton-primary"],
   .st-key-prosseguir [data-testid="stBaseButton-primary"],
   .st-key-aprovar [data-testid="stBaseButton-primary"],
+  .st-key-baixar_pdf [data-testid="stBaseButton-primary"],
   .st-key-voltar [data-testid="stBaseButton-secondary"],
   .st-key-rejeitar [data-testid="stBaseButton-secondary"],
   .st-key-confirmar_rejeicao [data-testid="stBaseButton-secondary"],
@@ -521,6 +524,7 @@ ESTILOS = """
 
   .st-key-prosseguir [data-testid="stBaseButton-primary"],
   .st-key-aprovar [data-testid="stBaseButton-primary"],
+  .st-key-baixar_pdf [data-testid="stBaseButton-primary"],
   .st-key-corrigir_campos [data-testid="stBaseButton-primary"],
   .st-key-gerar_de_novo [data-testid="stBaseButton-primary"] {
     border: none !important;
@@ -530,6 +534,7 @@ ESTILOS = """
 
   .st-key-prosseguir [data-testid="stBaseButton-primary"]:hover,
   .st-key-aprovar [data-testid="stBaseButton-primary"]:hover,
+  .st-key-baixar_pdf [data-testid="stBaseButton-primary"]:hover,
   .st-key-corrigir_campos [data-testid="stBaseButton-primary"]:hover,
   .st-key-gerar_de_novo [data-testid="stBaseButton-primary"]:hover {
     background: var(--verde-escuro) !important;
@@ -928,12 +933,35 @@ def _etapa_minuta() -> None:
         st.image(str(BRASAO), width=88)
     st.markdown(texto)
     st.caption("Revisão humana obrigatória antes de qualquer envio.")
+    if minuta:
+        _botao_baixar_pdf(minuta)
     if _decisao_em_curso():
         _navegacao(None)
         _painel_decisao()
         return
     _acoes_da_minuta()
     _navegacao(None)
+
+
+def _botao_baixar_pdf(minuta: str) -> None:
+    try:
+        pdf = gerar_pdf_minuta(minuta, BRASAO)
+    except (OSError, ValueError):
+        st.markdown(
+            '<p class="aviso">Não foi possível gerar o PDF.</p>',
+            unsafe_allow_html=True,
+        )
+        return
+    st.download_button(
+        "Baixar PDF",
+        data=pdf,
+        file_name="minuta.pdf",
+        mime="application/pdf",
+        key="baixar_pdf",
+        type="primary",
+        icon=":material/download:",
+        width="stretch",
+    )
 
 
 def _decisao_em_curso() -> bool:
