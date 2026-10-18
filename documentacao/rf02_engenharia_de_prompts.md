@@ -41,7 +41,7 @@ salvo indicação.
 | Estabilidade entre repetições | ❌ luna · ⚠️ sol | ✅ | ✅ |
 | Tempo de resposta médio — luna | 7,7 s | 3,6 s | 3,4 s |
 | Tempo de resposta médio — sol | 14,4 s | 5,1 s | 4,4 s |
-| Tempo para escrever o prompt | [preencher] min | [preencher] min | [preencher] min + geração (8,5 s luna · 57,6 s sol) |
+| Tempo para escrever o prompt (estimado) | ~1 min | ~30 min | ~10 min (metaprompt) + geração (8,5 s luna · 57,6 s sol) |
 | Resultado utilizável | Não | **Sim, sem correção** | Com correção manual da ciência |
 
 Comparação com o gabarito (`dados/gabaritos/gabarito_entrada_texto.json`):
@@ -53,6 +53,10 @@ Comparação com o gabarito (`dados/gabaritos/gabarito_entrada_texto.json`):
 | Documentos, prazo e local = "não localizado" | ❌ inventados | ✅ | ✅ |
 | Cabeçalho com brasão, assinatura entre colchetes e aviso de IA | ❌ | ✅ | ✅ |
 | Sem CPF, RG, data de nascimento, naturalidade, nome da mãe e e-mail | ✅ | ✅ | ✅ |
+
+O tempo para escrever cada prompt não foi cronometrado; os valores são estimativas da autora, feitas
+depois do experimento. A ordem de grandeza é o que importa para a comparação: o Prompt B exigiu
+muito mais tempo de escrita que o A, e o C trocou tempo de escrita pela geração do prompt.
 
 ## Principais achados
 

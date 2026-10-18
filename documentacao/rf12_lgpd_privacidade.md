@@ -10,10 +10,10 @@ em um cenário real.
 | Item do enunciado | Situação | Seção |
 |---|---|---|
 | Utilizar somente dados fictícios | Atendido: pessoas inventadas, CPFs com dígito verificador inválido, e-mails em domínios fictícios | 1 |
-| Identificar quais campos seriam dados pessoais | Atendido: 17 itens inventariados, dos quais 16 são dados pessoais | 2 |
+| Identificar quais campos seriam dados pessoais | Atendido: 18 itens inventariados, dos quais 17 são dados pessoais | 2 |
 | Informar finalidade, necessidade e risco de cada campo | Atendido no inventário | 2 |
 | Minimizar o envio de conteúdo ao provedor | Atendido para texto: CPF, RG, e-mail, telefone, data de nascimento, naturalidade e filiação são removidos antes do envio. Áudio e imagem continuam sendo enviados integralmente para transcrição e leitura | 3, 4, 5 |
-| **Aceite:** nenhuma evidência com credencial ou dado pessoal real | Atendido: varredura de 179 arquivos e do histórico do git sem pendências | 7 |
+| **Aceite:** nenhuma evidência com credencial ou dado pessoal real | Atendido na varredura de 18/10/2026; repetida no fechamento da entrega | 7 |
 
 ## 1. Dados fictícios
 
@@ -54,6 +54,7 @@ produziu. Foram fornecidas pelo professor como material didático, com essa fina
 | Assinatura manuscrita | Ficha | Sim | Não | Comprovar a ciência no documento físico | Não | **Alto**: falsificação | Imagem da ficha enviada integralmente para leitura (seção 9) |
 | Imagem do documento | Ficha | Sim (contém todos os campos acima) | Não | Leitura da ficha | Não, só o texto lido | Alto | Enviada integralmente; o texto lido é minimizado antes da extração |
 | Transcrição ou leitura bruta | Áudio, ficha | Sim (contém todos os campos falados ou escritos) | Não | Revisão humana da transcrição (RF06) | Não | Médio: armazenamento local | Transcrição bruta do áudio gravada localmente; texto lido da imagem não é gravado bruto |
+| Nome e cargo do servidor responsável | Aprovação, minuta aprovada, PDF, áudio, log | Sim (do servidor, não do cidadão) | Não | Responsabilidade pela revisão e assinatura da resposta | **Sim** (assinatura) | Baixo: vincula o servidor ao atendimento, que é o objetivo | Informado pelo próprio servidor na aprovação; na demonstração, nomes da equipe, com consentimento |
 | Brasão institucional | Minuta | Não | — | Identidade visual da minuta | Sim | — | — |
 
 ## 3. Fluxo de dados
@@ -64,10 +65,13 @@ produziu. Foram fornecidas pelo professor como material didático, com essa fina
 | Transcrição do áudio | `audio.py` (`transcrever_audio`) | Arquivo de áudio inteiro | `gpt-4o-transcribe` | Voz e todos os dados falados | Transcrição bruta em `dados/processados/transcricao_<arquivo>.txt` |
 | Leitura de imagem ou PDF | `vision.py` (`ler_texto_visual`) | PDF com texto (≥ 40 caracteres): nada, leitura local com PyMuPDF. Imagem ou PDF digitalizado: a primeira página como imagem | `gpt-4o` | Imagem com todos os dados, inclusive assinatura. A ficha do projeto não tem camada de texto (0 caracteres) e é enviada como imagem | Nada além da extração final |
 | **Minimização** | `privacidade.py`, chamada em `fluxo.py` | Nada (processamento local) | — | — | — |
-| Extração e minuta | `llm_client.py` (`extrair_campos`) | Texto **já minimizado**, entre `<solicitacao>`, com `store: False` | `gpt-6-luna` | Só os campos da minuta (nome, protocolo, datas e dados do curso, declaração de ciência) | `dados/processados/extracao_<arquivo>.json` com o texto minimizado, os campos, a minuta e `dados_removidos` |
+| Extração | `llm_client.py` (`extrair_campos`) | Texto **já minimizado**, entre `<solicitacao>`, com `store: False` | `gpt-5.6-luna` | Só os campos da minuta (nome, protocolo, datas e dados do curso, declaração de ciência) | `dados/processados/extracao_<arquivo>.json` com o texto minimizado, os campos e `dados_removidos`; cópia por execução quando é gerada de novo |
+| Revisão e minuta | `interface.py`, `fluxo.py` (`aplicar_edicao`, `montar_minuta`) | Nada: a minuta é montada pelo código com os campos revisados | — | — | Revisão em `dados/processados/extracao_<arquivo>__<id>__revisao_N.json`; no log, só os nomes dos campos alterados |
+| Aprovação e PDF | `fluxo.py`, `minuta_pdf.py` | Nada | — | — | Minuta aprovada e PDF em `resultados/minutas/aprovadas/`, com nome e protocolo do cidadão e nome e cargo do servidor |
 | Leitura estruturada da ficha (RF08) | `vision.py` (`extrair_ficha`) | Imagem da ficha | `gpt-4o` | Imagem com todos os dados | `dados/processados/extracao_rf08.json`. O pedido atual solicita só os 12 campos da minuta |
-| Síntese de voz (RF07) | `audio.py` (`gerar_audio`) | Texto da minuta | `tts-1-hd` | Nome, protocolo e dados do curso | Áudio sintético em `resultados/audios/` |
-| Imagem institucional (RF10) | `image_generation.py` | Prompt descritivo | `gpt-image-1` | Nenhum | Imagens em `resultados/imagens/` |
+| Síntese de voz (RF07) | `audio.py` (`sintetizar_minuta`) | Texto da minuta aprovada, preparado para a fala | `gpt-4o-mini-tts` (ou `tts-1-hd`) | Nome e protocolo do cidadão, dados do curso, nome e cargo do servidor | Áudio e texto falado em `resultados/audios/` |
+| Peça de orientação (RF10) | `peca_orientacao.py` | Só o prompt da ilustração | `gpt-image-1` | Nenhum | Ilustrações em `resultados/imagens/orientacao/`; a peça de cada atendimento leva só curso, eixo, documentos, prazo, local e a regra de frequência |
+| Registro (RF11) | `audit.py` | Nada | — | — | `resultados/logs/execucoes.jsonl`: sem o texto da solicitação e sem os valores editados; com o nome do servidor nas decisões e chaves de API mascaradas |
 
 O parâmetro `store: False` está configurado na chamada de extração (Responses API). As demais
 chamadas (transcrição, leitura de imagem, voz e imagem) seguem a política de retenção do provedor
@@ -103,7 +107,7 @@ minimização, são refeitas na próxima vez que a entrada for processada.
 **Testes:** `testes/test_rf12.py`, 11 testes sem chamada à API — remoção de cada dado em cada forma;
 preservação de todos os campos do gabarito nos 5 casos de texto; integração com o `fluxo.py`
 (o modelo recebe o texto minimizado e o registro guarda `dados_removidos`). Suíte completa do
-projeto: 48 testes.
+projeto: 164 testes.
 
 ## 5. Evidências
 
@@ -125,7 +129,22 @@ projeto: 48 testes.
   medida é não enviar dado pessoal, não reduzir custo.
 - Arquivos: `dados/processados/extracao_entrada_texto.json` e `extracao_entrada_audio.json`.
 
-### 5.2 Outras evidências
+### 5.2 Sistema entregue (avaliação do RF13, `gpt-5.6-luna`)
+
+Na avaliação final do RF13 (`resultados/avaliacao/execucao_20261018_184910`), com os 7 casos gerados
+de novo:
+
+| Caso | Dados pessoais removidos antes do envio | Campos corretos |
+|---|---|---|
+| CASO-04 (texto do professor) | 6 tipos: CPF, RG, e-mail, nascimento, naturalidade e filiação | 12/12 |
+| CASO-05 (áudio) | 5 contagens: CPF, RG, nascimento, naturalidade e filiação. O e-mail, transcrito sem "@", também não foi enviado: estava no mesmo trecho da filiação ("o nome da minha mãe é … e o meu e-mail é …") e saiu junto com ela | 12/12 |
+| CASO-06 (ficha) | 6 tipos | 10/12 (erros de leitura da letra, não da minimização) |
+| CASO-01 a CASO-03b (equipe) | CPF em todos; e-mail no CASO-01 | 12/12 |
+
+As minutas avaliadas são montadas pelo código só com os campos; nenhuma contém CPF, RG, e-mail, data
+de nascimento, naturalidade ou filiação.
+
+### 5.3 Outras evidências
 
 - **Minutas sem dados pessoais:** as 21 minutas do prompt seguro no RF03 não contêm CPF, RG, e-mail,
   data de nascimento, naturalidade nem nome da mãe (`documentacao/rf03_prompt_seguro.md`).
@@ -142,6 +161,10 @@ projeto: 48 testes.
 - Credenciais fora do código: chave em `.env`, ignorado pelo git; `.env.example` sem valor.
 - Prompt de produção proíbe reproduzir CPF, RG, data de nascimento, naturalidade, nome da mãe e
   e-mail na minuta.
+- Minuta montada pelo código só com os campos necessários; a IA não escreve o texto final.
+- Conferência humana obrigatória de nome, protocolo e datas lidos de áudio e imagem antes da minuta.
+- Registro sem o texto da solicitação e sem os valores editados; a peça de orientação não leva dados
+  pessoais.
 
 ## 7. Varredura da entrega (critério de aceite)
 
@@ -185,9 +208,9 @@ neles são fictícios.
 | `dados/gabaritos/gabarito_entrada_audio.json`, `gabarito_entrada_pdf-imagem.json` | Transcrição de referência e OCR esperado, usados para avaliar o RF06 e o RF08 |
 | `dados/processados/transcricao_*.txt` | Transcrições brutas do áudio, usadas na revisão humana do RF06 |
 | `dados/processados/extracao_rf08*.json` | Leituras da ficha no formato anterior à padronização do RF08 |
-| `dados/processados/extracao_caso2_solicitacao_incompleta.json` | Extração anterior à minimização; será refeita na próxima vez que a entrada for processada |
 | `resultados/minutas/rf02/*/entrada_prompt_*.txt`, `resultados/minutas/rf03/*/CASO-*_prompt_A_entrada.txt` e `registro_rf03.json` | Entradas enviadas nos experimentos de prompt, executados antes da minimização |
 | `src/privacidade.py`, `testes/test_rf12.py`, `src/experimento_rf03.py`, `resultados/logs/varredura_rf12.md` | Exemplos e padrões usados para testar e verificar a minimização |
+| `resultados/avaliacao/execucao_*/` e `dados/processados/extracao_*.json` | Nome, protocolo e dados do curso dos casos fictícios, usados na avaliação e na demonstração (texto já minimizado) |
 
 ## 8. Cenário real
 
@@ -223,3 +246,4 @@ Em produção, com dados reais de cidadãos, o tratamento exigiria:
 | 4 | Dados pessoais gravados localmente sem prazo de descarte | Originais e transcrições brutas ficam em `dados/` | Política de retenção e descarte (seção 8) |
 | 5 | Nome, protocolo e dados do curso continuam sendo enviados | São necessários para a minuta | Necessidade justificada no inventário; aceitar como risco residual |
 | 6 | Pacote da entrega incluir o `.env` | Mitigado pela varredura e pelo uso de `git archive` | Rodar a varredura e gerar o pacote com `git archive` |
+| 7 | Minuta aprovada enviada à API de voz | O áudio do RF07 envia nome e protocolo do cidadão ao provedor | Voz executada localmente; ou gerar o áudio só quando o cidadão pedir |
