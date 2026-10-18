@@ -7,8 +7,16 @@ from pathlib import Path
 from dotenv import load_dotenv
 from openai import OpenAI
 
+try:
+    from configuracao import MODELOS, PARAMETROS_GERAIS
+except ImportError:
+    from src.configuracao import MODELOS, PARAMETROS_GERAIS
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
+
+MODELO_VISUAL = MODELOS["leitura_visual"]
+TIMEOUT_SEGUNDOS = float(PARAMETROS_GERAIS["timeout_segundos"])
 
 ARQUIVO_ORIGEM = "dados/originais/entrada_pdf-imagem.pdf"
 VALOR_AUSENTE = "não localizado"
@@ -65,12 +73,12 @@ Regras:
 - Não inclua campos adicionais.
 """
 
-    client = OpenAI(timeout=120.0, max_retries=2)
+    client = OpenAI(timeout=TIMEOUT_SEGUNDOS, max_retries=2)
 
     print("Iniciando análise da ficha de matrícula...")
 
     resposta = client.chat.completions.create(
-        model="gpt-4o",
+        model=MODELO_VISUAL,
         messages=[
             {
                 "role": "user",
@@ -176,12 +184,12 @@ def ler_texto_visual(caminho):
 
     imagem, mime = _bytes_visuais(entrada)
     imagem_base64 = base64.b64encode(imagem).decode("ascii")
-    client = OpenAI(timeout=120.0, max_retries=2)
+    client = OpenAI(timeout=TIMEOUT_SEGUNDOS, max_retries=2)
 
     print("Lendo o texto do documento...")
 
     resposta = client.chat.completions.create(
-        model="gpt-4o",
+        model=MODELO_VISUAL,
         messages=[
             {
                 "role": "user",

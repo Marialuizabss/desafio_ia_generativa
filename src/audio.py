@@ -8,23 +8,25 @@ import re
 from dotenv import load_dotenv
 from openai import BadRequestError, NotFoundError, OpenAI
 
+try:
+    from configuracao import CAMINHOS, CUSTOS, MODELOS, PARAMETROS_GERAIS
+except ImportError:
+    from src.configuracao import CAMINHOS, CUSTOS, MODELOS, PARAMETROS_GERAIS
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
 
-MODELO = "gpt-4o-transcribe"
-IDIOMA = "pt"
+MODELO = MODELOS["transcricao"]
+IDIOMA = PARAMETROS_GERAIS["idioma"]
+TIMEOUT_SEGUNDOS = float(PARAMETROS_GERAIS["timeout_segundos"])
 
 # RF07: voz da minuta aprovada. O tts-1-hd não aceita instruções e só é usado
 # se a chave não tiver acesso ao modelo principal.
-MODELO_VOZ = "gpt-4o-mini-tts"
-MODELO_VOZ_ALTERNATIVO = "tts-1-hd"
-VOZ = "nova"
-INSTRUCOES_VOZ = (
-    "Fale em português do Brasil, com tom institucional, cordial e calmo. "
-    "Ritmo pausado. Leia números e datas com clareza, fazendo pausa entre os grupos "
-    "do protocolo. Não acrescente nem omita palavras."
-)
-CUSTO_VOZ_USD_POR_MINUTO = 0.015
+MODELO_VOZ = MODELOS["voz"]
+MODELO_VOZ_ALTERNATIVO = MODELOS["voz_alternativo"]
+VOZ = PARAMETROS_GERAIS["voz"]
+INSTRUCOES_VOZ = PARAMETROS_GERAIS["instrucoes_voz"]
+CUSTO_VOZ_USD_POR_MINUTO = CUSTOS["voz_por_minuto"]
 AVISO_NAO_LOCALIZADO = (
     "Atenção: esta minuta contém campos não localizados. "
     "Confira as informações antes de prosseguir."
@@ -56,8 +58,8 @@ def transcrever_audio(caminho, destino_texto=None, idioma=None):
     entrada = Path(caminho)
     if not entrada.is_absolute():
         entrada = BASE_DIR / entrada
-    pasta_saida = BASE_DIR / "dados" / "processados"
-    pasta_logs = BASE_DIR / "resultados" / "logs"
+    pasta_saida = BASE_DIR / CAMINHOS["processados"]
+    pasta_logs = BASE_DIR / CAMINHOS["logs"]
 
     if not entrada.is_file():
         raise FileNotFoundError(f"Áudio não encontrado: {entrada}")
@@ -69,7 +71,7 @@ def transcrever_audio(caminho, destino_texto=None, idioma=None):
     data_execucao = datetime.now().astimezone().isoformat()
 
     try:
-        client = OpenAI(timeout=60.0, max_retries=2)
+        client = OpenAI(timeout=TIMEOUT_SEGUNDOS, max_retries=2)
 
         print("Iniciando transcrição...")
 
@@ -173,7 +175,7 @@ def sintetizar_minuta(minuta: str, destino: Path) -> dict:
     destino.parent.mkdir(parents=True, exist_ok=True)
     texto_falado = destino.with_name(f"{destino.stem}_texto_falado.txt")
 
-    cliente = OpenAI(timeout=120.0, max_retries=2)
+    cliente = OpenAI(timeout=TIMEOUT_SEGUNDOS, max_retries=2)
     inicio = perf_counter()
     try:
         _falar(cliente, MODELO_VOZ, texto, destino, INSTRUCOES_VOZ)

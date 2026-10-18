@@ -31,17 +31,19 @@ from PIL import Image, ImageDraw, ImageFont
 
 try:
     from audit import registrar_evento
+    from configuracao import CAMINHOS, CUSTOS, MODELOS, PARAMETROS_GERAIS
 except ImportError:
     from src.audit import registrar_evento
+    from src.configuracao import CAMINHOS, CUSTOS, MODELOS, PARAMETROS_GERAIS
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
 
-MODELO_IMAGEM = "gpt-image-1"
-TAMANHO = "1536x1024"
-QUALIDADE = "medium"
-# Estimativa da tabela do provedor para 1536x1024 em qualidade média; a conferir
-CUSTO_ESTIMADO_USD = 0.063
+MODELO_IMAGEM = MODELOS["imagem"]
+TAMANHO = PARAMETROS_GERAIS["imagem_tamanho"]
+QUALIDADE = PARAMETROS_GERAIS["imagem_qualidade"]
+# Estimativa da tabela do provedor para o tamanho e a qualidade configurados; a conferir
+CUSTO_ESTIMADO_USD = CUSTOS["imagem"]
 
 PROMPT_ILUSTRACAO = """
 Sujeito: balcão de atendimento de uma secretaria escolar com uma pasta fechada, um
@@ -103,11 +105,11 @@ _FONTES = {
 
 
 def _pasta() -> Path:
-    return BASE_DIR / "resultados" / "imagens" / "orientacao"
+    return BASE_DIR / CAMINHOS["imagens_orientacao"]
 
 
 def _arquivo_versoes() -> Path:
-    return BASE_DIR / "resultados" / "logs" / "metadados_peca_orientacao.json"
+    return BASE_DIR / CAMINHOS["logs"] / "metadados_peca_orientacao.json"
 
 
 def _relativo(caminho: Path) -> str:
@@ -161,7 +163,7 @@ def gerar_ilustracao() -> dict:
 
     inicio = perf_counter()
     try:
-        cliente = OpenAI(timeout=180.0, max_retries=1)
+        cliente = OpenAI(timeout=max(180.0, float(PARAMETROS_GERAIS['timeout_segundos'])), max_retries=1)
         resposta = cliente.images.generate(
             model=MODELO_IMAGEM,
             prompt=PROMPT_ILUSTRACAO,
@@ -408,7 +410,7 @@ def _desenhar(ilustracao: Path, dados: dict, passos, tamanho: int, limite: int =
             y += fonte.size + espaco
         return y
 
-    brasao = BASE_DIR / "dados" / "originais" / "brasao.png"
+    brasao = BASE_DIR / CAMINHOS["brasao"]
     if brasao.is_file():
         with Image.open(brasao) as original:
             selo = original.convert("RGBA")

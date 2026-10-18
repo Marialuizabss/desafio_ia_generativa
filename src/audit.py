@@ -14,8 +14,13 @@ from datetime import datetime
 from pathlib import Path
 from uuid import uuid4
 
+try:
+    from configuracao import CAMINHOS
+except ImportError:
+    from src.configuracao import CAMINHOS
+
 BASE_DIR = Path(__file__).resolve().parent.parent
-ARQUIVO_REGISTRO = BASE_DIR / "resultados" / "logs" / "execucoes.jsonl"
+ARQUIVO_REGISTRO = BASE_DIR / CAMINHOS["registro"]
 
 DECISOES = ("aprovado", "aprovado_com_revisao", "rejeitado", "nova_geracao")
 APROVACOES = ("aprovado", "aprovado_com_revisao")

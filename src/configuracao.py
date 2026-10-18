@@ -1,14 +1,89 @@
-"""Lê os modelos e os parâmetros padrão de ``config/modelos.json``.
+"""Configuração não sensível do projeto (RF01).
 
-Um parâmetro com valor ``null`` não se aplica àquele modelo. A interface
-mostra só os demais e guarda a escolha do usuário na sessão.
+- ``config.json`` (raiz): caminhos, modelos de transcrição, leitura, voz e
+  imagem, e parâmetros. Item ausente usa o valor padrão abaixo.
+- ``config/modelos.json``: os modelos de análise que a interface oferece.
+  Um parâmetro com valor ``null`` não se aplica àquele modelo; a interface
+  mostra só os demais e guarda a escolha do usuário na sessão.
+
+A chave da API não fica em nenhum dos dois: vem do ``.env``.
 """
 
 import json
+from copy import deepcopy
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-ARQUIVO = BASE_DIR / "config" / "modelos.json"
+ARQUIVO_GERAL = BASE_DIR / "config.json"
+
+PADROES = {
+    "caminhos": {
+        "originais": "dados/originais",
+        "processados": "dados/processados",
+        "gabaritos": "dados/gabaritos",
+        "minutas_aprovadas": "resultados/minutas/aprovadas",
+        "audios": "resultados/audios",
+        "imagens_orientacao": "resultados/imagens/orientacao",
+        "logs": "resultados/logs",
+        "registro": "resultados/logs/execucoes.jsonl",
+        "modelo_minuta": "prompts/modelo_minuta.md",
+        "brasao": "dados/originais/brasao.png",
+        "modelos_analise": "config/modelos.json",
+    },
+    "modelos": {
+        "transcricao": "gpt-4o-transcribe",
+        "leitura_visual": "gpt-4o",
+        "voz": "gpt-4o-mini-tts",
+        "voz_alternativo": "tts-1-hd",
+        "imagem": "gpt-image-1",
+    },
+    "parametros": {
+        "idioma": "pt",
+        "timeout_segundos": 120,
+        "voz": "nova",
+        "instrucoes_voz": (
+            "Fale em português do Brasil, com tom institucional, cordial e calmo. "
+            "Ritmo pausado. Leia números e datas com clareza, fazendo pausa entre os grupos "
+            "do protocolo. Não acrescente nem omita palavras."
+        ),
+        "imagem_tamanho": "1536x1024",
+        "imagem_qualidade": "medium",
+        "limite_texto_caracteres": 20000,
+        "limite_arquivo_texto_mb": 5,
+        "limite_audio_mb": 25,
+        "limite_imagem_mb": 20,
+    },
+    "custos_estimados_usd": {"voz_por_minuto": 0.015, "imagem": 0.063},
+}
+
+
+def carregar_config(arquivo: Path | None = None) -> dict:
+    """Lê o config.json e completa com os padrões o que faltar."""
+    arquivo = Path(arquivo or ARQUIVO_GERAL)
+    config = deepcopy(PADROES)
+    if not arquivo.is_file():
+        return config
+    try:
+        dados = json.loads(arquivo.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as erro:
+        raise ValueError(f"O {arquivo.name} não é um JSON válido (linha {erro.lineno}).") from erro
+    if not isinstance(dados, dict):
+        raise ValueError(f"O {arquivo.name} não é um objeto JSON.")
+    for secao, valores in dados.items():
+        if isinstance(valores, dict) and isinstance(config.get(secao), dict):
+            config[secao].update(valores)
+        elif not secao.startswith("_"):
+            config[secao] = valores
+    return config
+
+
+CONFIG = carregar_config()
+CAMINHOS = CONFIG["caminhos"]
+MODELOS = CONFIG["modelos"]
+PARAMETROS_GERAIS = CONFIG["parametros"]
+CUSTOS = CONFIG["custos_estimados_usd"]
+
+ARQUIVO = BASE_DIR / CAMINHOS["modelos_analise"]
 
 PARAMETROS = ("idioma", "temperatura", "tamanho", "qualidade")
 OPCOES = ("idioma", "tamanho", "qualidade")

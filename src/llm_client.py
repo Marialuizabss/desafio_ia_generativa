@@ -21,15 +21,25 @@ from openai import (
 )
 
 try:
+    from src.configuracao import CAMINHOS, PARAMETROS_GERAIS, carregar_modelos
     from src.extracao import CAMPOS, CATEGORIAS, VALOR_AUSENTE, ResultadoExtracao, resultado_de_dict
 except ImportError:
+    from configuracao import CAMINHOS, PARAMETROS_GERAIS, carregar_modelos
     from extracao import CAMPOS, CATEGORIAS, VALOR_AUSENTE, ResultadoExtracao, resultado_de_dict
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
 
-MODELO = "gpt-5.6-luna"
-TIMEOUT_SEGUNDOS = 120.0
+def _modelo_padrao() -> str:
+    """O padrão de config/modelos.json, o mesmo que a interface oferece."""
+    try:
+        return carregar_modelos()["modelo_padrao"]
+    except (ValueError, KeyError):
+        return "gpt-5.6-luna"
+
+
+MODELO = _modelo_padrao()
+TIMEOUT_SEGUNDOS = float(PARAMETROS_GERAIS["timeout_segundos"])
 MODELOS_COM_TEMPERATURA = {"gpt-4o-mini"}
 MODELOS_COM_RACIOCINIO = {"gpt-5.6-luna", "gpt-5.6-terra", "o4-mini"}
 
@@ -282,7 +292,7 @@ def montar_minuta(valores: dict) -> str:
     O nome e o cargo do servidor continuam entre colchetes.
     """
 
-    modelo = BASE_DIR / "prompts" / "modelo_minuta.md"
+    modelo = BASE_DIR / CAMINHOS["modelo_minuta"]
     if not modelo.is_file():
         raise FileNotFoundError(f"Modelo de minuta não encontrado: {modelo}")
     texto = modelo.read_text(encoding="utf-8").strip()
@@ -300,7 +310,7 @@ def versao_do_prompt(idioma: str | None = None) -> str:
 
 
 def _prompt_sistema(idioma: str | None = None) -> str:
-    modelo = BASE_DIR / "prompts" / "modelo_minuta.md"
+    modelo = BASE_DIR / CAMINHOS["modelo_minuta"]
     if not modelo.is_file():
         raise FileNotFoundError(f"Modelo de minuta não encontrado: {modelo}")
     texto_modelo = modelo.read_text(encoding="utf-8").strip()

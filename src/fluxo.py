@@ -14,6 +14,7 @@ from uuid import uuid4
 try:
     from audit import decisoes_ligadas, registrar_audio_minuta, registrar_execucao, registrar_revisao
     from audio import IDIOMA as IDIOMA_TRANSCRICAO
+    from configuracao import CAMINHOS, MODELOS
     from audio import MODELO as MODELO_TRANSCRICAO
     from audio import duracao_do_audio, sintetizar_minuta
     from audio import transcrever_audio
@@ -24,6 +25,7 @@ try:
 except ImportError:
     from src.audit import decisoes_ligadas, registrar_audio_minuta, registrar_execucao, registrar_revisao
     from src.audio import IDIOMA as IDIOMA_TRANSCRICAO
+    from src.configuracao import CAMINHOS, MODELOS
     from src.audio import MODELO as MODELO_TRANSCRICAO
     from src.audio import duracao_do_audio, sintetizar_minuta
     from src.audio import transcrever_audio
@@ -33,15 +35,15 @@ except ImportError:
     from src.vision import ler_texto_visual
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-PASTA_PROCESSADOS = BASE_DIR / "dados" / "processados"
-PASTA_APROVADAS = Path("resultados") / "minutas" / "aprovadas"
+PASTA_PROCESSADOS = BASE_DIR / CAMINHOS["processados"]
+PASTA_APROVADAS = Path(CAMINHOS["minutas_aprovadas"])
 
 
 MODELOS_ANALISE = {"gpt-5.6-luna", "gpt-5.6-terra", "o4-mini", "gpt-4o-mini"}
 
 # Modelo que lê a entrada antes da extração (o texto digitado não passa por modelo;
 # PDF com camada de texto é lido localmente, sem modelo)
-MODELOS_LEITURA = {"audio": MODELO_TRANSCRICAO, "imagem": "gpt-4o"}
+MODELOS_LEITURA = {"audio": MODELO_TRANSCRICAO, "imagem": MODELOS["leitura_visual"]}
 
 
 def processar_entrada(
@@ -307,7 +309,7 @@ def gerar_audio_da_minuta(registro: dict, arquivo_minuta: str) -> dict:
     if not minuta.is_file():
         raise FileNotFoundError(f"Minuta aprovada não encontrada: {arquivo_minuta}")
     nome = minuta.stem.replace("minuta_", "audio_minuta_", 1)
-    destino = BASE_DIR / "resultados" / "audios" / f"{nome}.mp3"
+    destino = BASE_DIR / CAMINHOS["audios"] / f"{nome}.mp3"
     if destino.is_file():
         return {"arquivo_audio": destino.relative_to(BASE_DIR).as_posix(), "reaproveitado": True}
 

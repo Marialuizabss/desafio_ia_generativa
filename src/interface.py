@@ -51,20 +51,22 @@ except ImportError:
     from src import peca_orientacao
 
 try:
+    from src.configuracao import CAMINHOS, PARAMETROS_GERAIS
     from src.configuracao import carregar_modelos, obter_modelo, parametros_aplicaveis, rotulo_da_opcao
     from src.extracao import CATEGORIAS, VALOR_AUSENTE
     from src.minuta_pdf import gerar_pdf_minuta
 except ImportError:
+    from configuracao import CAMINHOS, PARAMETROS_GERAIS
     from configuracao import carregar_modelos, obter_modelo, parametros_aplicaveis, rotulo_da_opcao
     from extracao import CATEGORIAS, VALOR_AUSENTE
     from minuta_pdf import gerar_pdf_minuta
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-PASTA_ORIGINAIS = BASE_DIR / "dados" / "originais"
+PASTA_ORIGINAIS = BASE_DIR / CAMINHOS["originais"]
 
 # Marcador que o modelo copia do modelo de minuta; a interface troca pela imagem
 MARCADOR_BRASAO = "[CABEÇALHO COM BRASÃO — dados/originais/brasao.png]"
-BRASAO = PASTA_ORIGINAIS / "brasao.png"
+BRASAO = BASE_DIR / CAMINHOS["brasao"]
 
 MODALIDADES = (
     ("texto", "Texto", "Cole o pedido ou envie um .txt", ":material/edit_note:"),
@@ -86,11 +88,12 @@ TIPOS_UPLOAD = {
     "imagem": ["png", "jpg", "jpeg", "webp", "pdf"],
 }
 
-LIMITE_BYTES = {
-    "texto": 5 * 1024 * 1024,
-    "audio": 25 * 1024 * 1024,
-    "imagem": 20 * 1024 * 1024,
+LIMITE_MB = {
+    "texto": PARAMETROS_GERAIS["limite_arquivo_texto_mb"],
+    "audio": PARAMETROS_GERAIS["limite_audio_mb"],
+    "imagem": PARAMETROS_GERAIS["limite_imagem_mb"],
 }
+LIMITE_BYTES = {modalidade: mb * 1024 * 1024 for modalidade, mb in LIMITE_MB.items()}
 
 MENSAGEM_VAZIA = {
     "texto": "Cole o pedido ou envie um .txt para continuar.",
@@ -106,7 +109,7 @@ MIME_AUDIO = {
     ".webm": "audio/webm",
 }
 
-LIMITE_TEXTO = 20_000
+LIMITE_TEXTO = PARAMETROS_GERAIS["limite_texto_caracteres"]
 
 ROTULOS_CAMPOS = (
     ("solicitante", "Solicitante"),
@@ -1925,7 +1928,7 @@ def _campo_texto():
         key="arquivo_texto",
         label_visibility="collapsed",
         accept_multiple_files=False,
-        max_upload_size=5,
+        max_upload_size=LIMITE_MB["texto"],
     )
     if arquivo is not None:
         st.caption(f"{arquivo.name} · {formatar_tamanho(arquivo.size)}")
@@ -1962,7 +1965,7 @@ def _campo_arquivo(modalidade: str):
         key=f"arquivo_{modalidade}",
         label_visibility="collapsed",
         accept_multiple_files=False,
-        max_upload_size=25 if modalidade == "audio" else 20,
+        max_upload_size=LIMITE_MB[modalidade],
     )
     nome, mime, dados = _bytes_do_arquivo(modalidade, arquivo)
     if dados and nome:
