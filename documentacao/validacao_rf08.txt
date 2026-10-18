@@ -1,54 +1,52 @@
-# Validação — RF08: OCR e visão computacional
+# Validação — RF08: Visão e OCR
 
-Responsável pela revisão humana: Maria Luiza
+**Responsável pela revisão humana:** Maria Luiza
 
-Modelo utilizado: gpt-4o  
-Documento de entrada: entrada_rf08.pdf  
-Imagem processada: entrada_rf08_pagina1.png
+## 1. Objetivo
 
-## Resultado da extração
+Avaliar a extração de informações de uma ficha de matrícula digitalizada por meio de visão multimodal, verificando a estrutura do resultado, a identificação de campos ausentes e a necessidade de revisão humana.
 
-A API realizou a leitura da ficha de matrícula digitalizada e gerou um arquivo JSON estruturado.
+## 2. Evidências da revisão manual do caso anterior
 
-O resultado apresentou divergências em seis campos da ficha de matrícula, identificadas durante a revisão humana.
+Os arquivos `extracao_rf08_original.json` e `extracao_rf08_revisada.json` registram uma extração anterior, baseada nos campos `codigo`, `nome`, `data_nascimento`, `nome_mae`, `email` e `data_matricula`, entre outros.
 
-## Divergências identificadas
+Na comparação entre os dois arquivos, foram registradas seis divergências:
 
-| Campo | Extração original da IA | Valor corrigido |
-|---|---|---|
-| Código | 2022-000142 | 2026-000142 |
-| Nome | MARLON VINICIUS DE ALMEIDA SANTOS | MARCOS VINICIUS DE ALMEIDA SANTOS |
-| Data de nascimento | 12/05/2008 | 12/08/2008 |
-| Nome da mãe | LUCA HELENA DE ALMEIDA SANTOS | LUCIA HELENA DE ALMEIDA SANTOS |
-| E-mail | MARLON.ALMEIDA.TESTE@EXEMPLO.COM | MARCOS.ALMEIDA.TESTE@EXEMPLO.COM |
-| Data da matrícula | 17/01/2026 | 14/10/2026 |
+- Código: `2022-000142` para `2026-000142`.
+- Nome: `MARLON VINICIUS DE ALMEIDA SANTOS` para `MARCOS VINICIUS DE ALMEIDA SANTOS`.
+- Data de nascimento: `12/05/2008` para `12/08/2008`.
+- Nome da mãe: `LUCA HELENA DE ALMEIDA SANTOS` para `LUCIA HELENA DE ALMEIDA SANTOS`.
+- E-mail: `MARLON.ALMEIDA.TESTE@EXEMPLO.COM` para `MARCOS.ALMEIDA.TESTE@EXEMPLO.COM`.
+- Data da matrícula: `17/01/2026` para `14/10/2026`.
 
-## Revisão humana
+Esses arquivos são evidências da revisão manual anterior e não devem ser confundidos com a saída produzida pela implementação atual.
 
-- Extração original preservada sem alterações.
-- Seis divergências identificadas e corrigidas manualmente.
-- Demais campos sujeitos à conferência final com o documento original.
-- JSON revisado validado com `python -m json.tool`.
-- Não foi realizada nova chamada à API durante a revisão.
+## 3. Implementação atual
 
-## Conclusão
+O módulo `src/vision.py` processa a imagem `dados/processados/entrada_rf08_pagina1.png` e grava o resultado em `dados/processados/extracao_rf08.json`.
 
-A extração automática foi funcional, mas apresentou erros na interpretação de campos manuscritos.
+A implementação atual utiliza uma estrutura com identificação do caso, modalidade, arquivo de origem, campos extraídos com seus respectivos valores e fontes, lista de campos ausentes, metadados de execução e indicação de revisão humana pendente.
 
-**Resultado:** Aprovado para demonstração, com ressalvas quanto à precisão do OCR.
+## 4. Tratamento de erros
 
-A revisão humana permanece necessária antes de utilizar os dados em processos administrativos.
+Os testes automatizados específicos do RF08 verificam:
 
-## Testes de tratamento de erros — RF08
+- Imagem inexistente: a função lança `FileNotFoundError`.
+- Resposta vazia da API: a função lança `ValueError`.
+- Extração simulada com sucesso: o resultado é validado conforme o formato esperado pela implementação atual.
 
-**Teste 1 — Imagem inexistente**
-- Método: simulação com `unittest.mock`.
-- Resultado: APROVADO.
-- Comportamento observado: a função lançou `FileNotFoundError`.
+**Resultado dos testes:** os três testes específicos do RF08 passaram na última execução.
 
-**Teste 2 — Resposta vazia da API**
-- Método: simulação da resposta com `unittest.mock` e `MagicMock`.
-- Resultado: APROVADO.
-- Comportamento observado: a função lançou `ValueError` com a mensagem "A API retornou uma resposta vazia."
+## 5. Segurança e revisão humana
 
-**Conclusão:** Os dois testes de tratamento de erros foram aprovados. Nenhuma chamada real à API foi realizada durante os testes.
+A implementação atual instrui o modelo a não incluir CPF, RG, data de nascimento, nomes dos pais ou e-mail no resultado compartilhado com a minuta. Também trata instruções presentes no documento como conteúdo não confiável.
+
+A revisão humana permanece obrigatória antes da utilização das informações em um processo administrativo.
+
+## 6. Conclusão
+
+O RF08 possui uma implementação funcional e testes automatizados aprovados. Os arquivos de extração original e revisada preservam evidências de uma revisão manual anterior, enquanto a saída atual segue um esquema diferente.
+
+A validação integral da fidelidade da extração atual depende da conferência do resultado com o documento de entrada.
+
+**Resultado:** aprovado nos cenários automatizados disponíveis, com conferência humana necessária para validar os dados extraídos.
