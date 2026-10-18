@@ -17,7 +17,6 @@ Atendimento e Comunicação Institucional. Todos os documentos ficam nesta pasta
 | Resultados de texto, áudio, OCR/visão e imagem | `resultados/minutas/`, `resultados/audios/`, `dados/processados/`, `resultados/imagens/` |
 | Relatório técnico (arquitetura, modelos, custos, riscos, LGPD e avaliação) | `01_relatorio_tecnico.md` |
 | Registro do uso de IA no desenvolvimento | `02_registro_uso_ia.md` |
-| Contexto para agentes de codificação (opcional) | `AGENTS.md` (raiz) |
 
 ## Requisitos funcionais
 
