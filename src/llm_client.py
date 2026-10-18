@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import re
 from pathlib import Path
 from time import perf_counter
 
@@ -20,9 +21,9 @@ from openai import (
 )
 
 try:
-    from src.extracao import CAMPOS, CATEGORIAS, ResultadoExtracao, resultado_de_dict
+    from src.extracao import CAMPOS, CATEGORIAS, VALOR_AUSENTE, ResultadoExtracao, resultado_de_dict
 except ImportError:
-    from extracao import CAMPOS, CATEGORIAS, ResultadoExtracao, resultado_de_dict
+    from extracao import CAMPOS, CATEGORIAS, VALOR_AUSENTE, ResultadoExtracao, resultado_de_dict
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
@@ -45,6 +46,25 @@ NOMES_IDIOMA = {
     "en": "inglês",
     "es": "espanhol",
 }
+
+# Trechos entre colchetes do modelo que a minuta preenche com os campos extraídos.
+# A assinatura do servidor fica de fora: continua em branco para o revisor.
+_CAMPOS_DA_MINUTA = (
+    ("[NOME DO SOLICITANTE]", "solicitante"),
+    ("[PROTOCOLO]", "protocolo"),
+    ("[CURSO]", "curso"),
+    ("[EIXO]", "eixo"),
+    ("[CARGA HORÁRIA]", "carga_horaria"),
+    ("[TURNO]", "turno"),
+    ("[DATA DE INÍCIO]", "data_inicio"),
+    ("[LISTA DE DOCUMENTOS]", "documentos_necessarios"),
+    ("[PRAZO]", "prazo_apresentacao"),
+    ("[LOCAL E HORÁRIO]", "local_horario"),
+    (
+        "[REGRAS DE CANCELAMENTO OU PERMANÊNCIA, conforme o termo de ciência assinado pelo solicitante.]",
+        "regras_ciencia",
+    ),
+)
 
 PROMPT_SISTEMA = """
 # Papel
@@ -253,6 +273,25 @@ def _temperatura(valor) -> float | None:
     if valor is None or valor == "":
         return None
     return round(float(valor), 1)
+
+
+def montar_minuta(valores: dict) -> str:
+    """Preenche o modelo da minuta com os valores informados.
+
+    O texto fixo do modelo permanece. Campo vazio vira "não localizado".
+    O nome e o cargo do servidor continuam entre colchetes.
+    """
+
+    modelo = BASE_DIR / "prompts" / "modelo_minuta.md"
+    if not modelo.is_file():
+        raise FileNotFoundError(f"Modelo de minuta não encontrado: {modelo}")
+    texto = modelo.read_text(encoding="utf-8").strip()
+    substitutos = {
+        marcador: (valores.get(campo) or "").strip() or VALOR_AUSENTE
+        for marcador, campo in _CAMPOS_DA_MINUTA
+    }
+    marcadores = "|".join(re.escape(marcador) for marcador in substitutos)
+    return re.sub(marcadores, lambda encontrado: substitutos[encontrado.group(0)], texto)
 
 
 def _prompt_sistema(idioma: str | None = None) -> str:

@@ -27,14 +27,16 @@ from pathlib import Path
 import streamlit as st
 
 try:
-    from fluxo import processar_entrada
+    from fluxo import aplicar_edicao, processar_entrada
 except ImportError:
-    from src.fluxo import processar_entrada
+    from src.fluxo import aplicar_edicao, processar_entrada
 
 try:
     from src.configuracao import carregar_modelos, obter_modelo, parametros_aplicaveis, rotulo_da_opcao
+    from src.extracao import CATEGORIAS, VALOR_AUSENTE
 except ImportError:
     from configuracao import carregar_modelos, obter_modelo, parametros_aplicaveis, rotulo_da_opcao
+    from extracao import CATEGORIAS, VALOR_AUSENTE
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 PASTA_ORIGINAIS = BASE_DIR / "dados" / "originais"
@@ -99,6 +101,17 @@ ROTULOS_CAMPOS = (
     ("prazo_apresentacao", "Prazo"),
     ("local_horario", "Local e horário"),
 )
+
+ROTULOS_CATEGORIA = {
+    "matricula": "Matrícula",
+    "documentacao": "Documentação",
+    "frequencia_cancelamento": "Frequência e cancelamento",
+    "informacao_geral": "Informação geral",
+    "reclamacao": "Reclamação",
+    "outros": "Outros",
+}
+
+CAMPOS_LONGOS = {"regras_ciencia", "documentos_necessarios", "local_horario"}
 
 ROTULOS_PARAMETRO = {
     "idioma": "Idioma",
@@ -220,6 +233,7 @@ ESTILOS = """
   .st-key-escolher_audio [data-testid="stBaseButton-primary"],
   .st-key-escolher_imagem [data-testid="stBaseButton-primary"],
   .st-key-confirmar [data-testid="stBaseButton-primary"],
+  .st-key-gerar_minuta [data-testid="stBaseButton-primary"],
   .st-key-alterar [data-testid="stBaseButton-secondary"] {
     border-radius: 14px !important;
     min-height: 3.15rem;
@@ -284,6 +298,18 @@ ESTILOS = """
   }
 
   [data-testid="stTextArea"] textarea:focus {
+    border-color: var(--verde);
+    box-shadow: 0 0 0 3px rgba(22, 92, 63, 0.14);
+  }
+
+  [data-testid="stTextInput"] input {
+    border: 1px solid var(--linha);
+    border-radius: 14px;
+    background: var(--suave);
+    color: var(--tinta);
+  }
+
+  [data-testid="stTextInput"] input:focus {
     border-color: var(--verde);
     box-shadow: 0 0 0 3px rgba(22, 92, 63, 0.14);
   }
@@ -405,6 +431,27 @@ ESTILOS = """
     border: none !important;
     background: #E3EBE6 !important;
     color: #8AA094 !important;
+  }
+
+  .st-key-edicao [data-baseweb="select"] > div {
+    border-radius: 14px;
+    border-color: var(--linha);
+    background: var(--suave);
+  }
+
+  .st-key-gerar_minuta {
+    margin-top: 0.85rem;
+  }
+
+  .st-key-gerar_minuta [data-testid="stBaseButton-primary"] {
+    border: none !important;
+    background: var(--verde) !important;
+    color: #FFFFFF !important;
+  }
+
+  .st-key-gerar_minuta [data-testid="stBaseButton-primary"]:hover {
+    background: var(--verde-escuro) !important;
+    color: #FFFFFF !important;
   }
 
   .st-key-alterar {
@@ -541,6 +588,8 @@ def _iniciar_estado() -> None:
     st.session_state.setdefault("extracao_registro", None)
     st.session_state.setdefault("extracao_erro", None)
     st.session_state.setdefault("extracao_forcar", False)
+    st.session_state.setdefault("edicao_id", None)
+    st.session_state.setdefault("minuta_erro", None)
 
 
 def _cabecalho() -> None:
@@ -843,6 +892,8 @@ def _mostrar_extracao(entrada: dict) -> None:
         st.session_state.extracao_registro = None
         st.session_state.extracao_erro = None
         st.session_state.extracao_chave = chave
+        st.session_state.edicao_id = None
+        st.session_state.minuta_erro = None
 
     if st.session_state.extracao_erro:
         st.markdown(
@@ -874,14 +925,7 @@ def _mostrar_extracao(entrada: dict) -> None:
 
 
 def _resumo_extracao(registro: dict) -> None:
-    campos = registro.get("campos") or {}
-    ausentes = registro.get("campos_ausentes") or []
-    linhas = []
-    for chave, rotulo in ROTULOS_CAMPOS:
-        valor = ((campos.get(chave) or {}).get("valor")) or "não localizado"
-        linhas.append(
-            f"<div><dt>{escape(rotulo)}</dt><dd>{escape(str(valor))}</dd></div>"
-        )
+    _preparar_edicao(registro)
     alertas = registro.get("alertas_seguranca") or []
     aviso_alerta = ""
     if alertas:
@@ -890,30 +934,126 @@ def _resumo_extracao(registro: dict) -> None:
 
     st.markdown('<p class="rotulo">Extração</p>', unsafe_allow_html=True)
     st.markdown(
-        f"""
-        <dl class="ficha">
-          <div><dt>Categoria</dt><dd>{escape(str(registro.get("categoria") or ""))}</dd></div>
-          <div><dt>Assunto</dt><dd>{escape(str(registro.get("assunto") or ""))}</dd></div>
-          <div class="amplo"><dt>Pedido</dt><dd>{escape(str(registro.get("pedido") or ""))}</dd></div>
-          {"".join(linhas)}
-          <div class="amplo"><dt>Arquivo</dt><dd>{escape(str(registro.get("arquivo_extracao") or ""))}</dd></div>
-        </dl>
-        """,
+        '<p class="orientacao">Revise os campos antes de gerar a minuta. '
+        "O texto só é montado quando você pedir, com os valores desta tela.</p>",
         unsafe_allow_html=True,
     )
+    if aviso_alerta:
+        st.markdown(aviso_alerta, unsafe_allow_html=True)
+
+    with st.container(key="edicao"):
+        st.selectbox(
+            "Categoria",
+            list(CATEGORIAS),
+            key="edit_categoria",
+            format_func=lambda valor: ROTULOS_CATEGORIA.get(valor, valor),
+        )
+        st.text_input("Assunto", key="edit_assunto")
+        st.text_area("Pedido", key="edit_pedido", height=88)
+        _campos_edicao()
+
+    ausentes = _ausentes_da_edicao()
     if ausentes:
         st.caption("Campos não localizados: " + ", ".join(ausentes))
     _resumo_chamada(registro.get("chamada") or {})
-    if aviso_alerta:
-        st.markdown(aviso_alerta, unsafe_allow_html=True)
-    st.caption("Revisão humana obrigatória antes de qualquer envio.")
-    minuta = (registro.get("minuta") or "").strip()
+    st.caption(f"Arquivo: {registro.get('arquivo_extracao') or ''}")
+
+    ja_gerada = bool(registro.get("minuta_gerada_de_campos"))
+    st.button(
+        "Regerar minuta" if ja_gerada else "Gerar minuta",
+        key="gerar_minuta",
+        type="primary",
+        width="stretch",
+        on_click=_gerar_minuta_editada,
+    )
+    if st.session_state.minuta_erro:
+        st.markdown(
+            f'<p class="aviso">{escape(st.session_state.minuta_erro)}</p>',
+            unsafe_allow_html=True,
+        )
+
+    minuta = (registro.get("minuta") or "").strip() if ja_gerada else ""
     if minuta:
-        with st.expander("Minuta"):
+        st.caption("A minuta usa os campos acima. Edite de novo e clique em Regerar minuta.")
+        with st.expander("Minuta", expanded=True):
             com_brasao, texto = preparar_minuta(minuta)
             if com_brasao and BRASAO.is_file():
                 st.image(str(BRASAO), width=110)
             st.markdown(texto)
+    st.caption("Revisão humana obrigatória antes de qualquer envio.")
+
+
+def _preparar_edicao(registro: dict) -> None:
+    identificador = registro.get("id_execucao") or registro.get("arquivo_extracao")
+    if st.session_state.get("edicao_id") == identificador:
+        return
+    st.session_state.edicao_id = identificador
+    st.session_state.minuta_erro = None
+    categoria = str(registro.get("categoria") or "").strip()
+    st.session_state.edit_categoria = categoria if categoria in CATEGORIAS else "outros"
+    st.session_state.edit_assunto = registro.get("assunto") or ""
+    st.session_state.edit_pedido = registro.get("pedido") or ""
+    campos = registro.get("campos") or {}
+    for nome, _ in ROTULOS_CAMPOS:
+        valor = ((campos.get(nome) or {}).get("valor")) or VALOR_AUSENTE
+        st.session_state[f"edit_{nome}"] = valor
+
+
+def _campos_edicao() -> None:
+    linha = []
+    for nome, rotulo in ROTULOS_CAMPOS:
+        if nome in CAMPOS_LONGOS:
+            _linha_de_campos(linha)
+            linha = []
+            st.text_area(rotulo, key=f"edit_{nome}", height=110)
+            continue
+        linha.append((nome, rotulo))
+        if len(linha) == 2:
+            _linha_de_campos(linha)
+            linha = []
+    _linha_de_campos(linha)
+
+
+def _linha_de_campos(linha: list[tuple[str, str]]) -> None:
+    if not linha:
+        return
+    colunas = st.columns(len(linha))
+    for coluna, (nome, rotulo) in zip(colunas, linha):
+        with coluna:
+            st.text_input(rotulo, key=f"edit_{nome}")
+
+
+def _ausentes_da_edicao() -> list[str]:
+    ausentes = []
+    for nome, _ in ROTULOS_CAMPOS:
+        valor = (st.session_state.get(f"edit_{nome}") or "").strip()
+        if not valor or valor == VALOR_AUSENTE:
+            ausentes.append(nome)
+    return ausentes
+
+
+def _gerar_minuta_editada() -> None:
+    registro = st.session_state.get("extracao_registro") or {}
+    edicao = {
+        "categoria": st.session_state.get("edit_categoria"),
+        "assunto": st.session_state.get("edit_assunto"),
+        "pedido": st.session_state.get("edit_pedido"),
+    }
+    for nome, _ in ROTULOS_CAMPOS:
+        valor = (st.session_state.get(f"edit_{nome}") or "").strip() or VALOR_AUSENTE
+        st.session_state[f"edit_{nome}"] = valor
+        edicao[nome] = valor
+    assunto = (edicao["assunto"] or "").strip() or VALOR_AUSENTE
+    pedido = (edicao["pedido"] or "").strip() or VALOR_AUSENTE
+    st.session_state.edit_assunto = assunto
+    st.session_state.edit_pedido = pedido
+    edicao["assunto"] = assunto
+    edicao["pedido"] = pedido
+    try:
+        st.session_state.extracao_registro = aplicar_edicao(registro, edicao)
+        st.session_state.minuta_erro = None
+    except (OSError, FileNotFoundError, ValueError) as erro:
+        st.session_state.minuta_erro = str(erro)
 
 
 def preparar_minuta(minuta: str) -> tuple[bool, str]:
@@ -997,6 +1137,8 @@ def _alterar() -> None:
     st.session_state.extracao_registro = None
     st.session_state.extracao_erro = None
     st.session_state.extracao_forcar = False
+    st.session_state.edicao_id = None
+    st.session_state.minuta_erro = None
 
 
 def _pendencia(modalidade: str, arquivo) -> str | None:

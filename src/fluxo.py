@@ -1,4 +1,8 @@
-"""Lê a entrada confirmada, extrai o texto e grava o objeto em processados."""
+"""Lê a entrada confirmada, extrai o texto e grava o objeto em processados.
+
+A minuta não entra nessa gravação como texto definitivo: depois da extração,
+a interface deixa os campos editáveis e só monta a minuta quando o usuário pede.
+"""
 
 import json
 from pathlib import Path
@@ -8,14 +12,16 @@ try:
     from audit import registrar_execucao
     from audio import MODELO as MODELO_TRANSCRICAO
     from audio import transcrever_audio
-    from llm_client import extrair_campos
+    from extracao import CAMPOS, CATEGORIAS, FONTE_AUSENTE, VALOR_AUSENTE
+    from llm_client import extrair_campos, montar_minuta
     from privacidade import contar_remocoes, minimizar_texto
     from vision import ler_texto_visual
 except ImportError:
     from src.audit import registrar_execucao
     from src.audio import MODELO as MODELO_TRANSCRICAO
     from src.audio import transcrever_audio
-    from src.llm_client import extrair_campos
+    from src.extracao import CAMPOS, CATEGORIAS, FONTE_AUSENTE, VALOR_AUSENTE
+    from src.llm_client import extrair_campos, montar_minuta
     from src.privacidade import contar_remocoes, minimizar_texto
     from src.vision import ler_texto_visual
 
@@ -132,6 +138,60 @@ def processar_entrada(entrada: dict, forcar: bool = False, configuracao: dict | 
     )
     registro["arquivo_extracao"] = saida.relative_to(BASE_DIR).as_posix()
     return registro
+
+
+def aplicar_edicao(registro: dict, edicao: dict) -> dict:
+    """Grava os campos editados e monta a minuta a partir deles.
+
+    O objeto original não é alterado. A cópia gravada em processados passa a
+    ser a versão revisada, com ``minuta_gerada_de_campos`` marcado.
+    """
+
+    atualizado = dict(registro)
+    categoria = str(edicao.get("categoria") or "").strip()
+    if categoria not in CATEGORIAS:
+        categoria = str(registro.get("categoria") or "").strip()
+    atualizado["categoria"] = categoria if categoria in CATEGORIAS else "outros"
+    atualizado["assunto"] = _texto_editado(edicao.get("assunto"))
+    atualizado["pedido"] = _texto_editado(edicao.get("pedido"))
+
+    anteriores = registro.get("campos") or {}
+    campos = {}
+    ausentes = []
+    valores = {}
+    for nome in CAMPOS:
+        valor = _texto_editado(edicao.get(nome))
+        anterior = anteriores.get(nome) or {}
+        if valor == VALOR_AUSENTE:
+            fonte = FONTE_AUSENTE
+            ausentes.append(nome)
+        elif valor == (anterior.get("valor") or ""):
+            fonte = anterior.get("fonte") or FONTE_AUSENTE
+        else:
+            fonte = "edicao"
+        campos[nome] = {"valor": valor, "fonte": fonte}
+        valores[nome] = valor
+
+    atualizado["campos"] = campos
+    atualizado["campos_ausentes"] = ausentes
+    atualizado["minuta"] = montar_minuta(valores)
+    atualizado["minuta_gerada_de_campos"] = True
+    atualizado["requer_revisao"] = True
+
+    caminho = (atualizado.get("arquivo_extracao") or "").strip()
+    if caminho:
+        destino = BASE_DIR / caminho
+        destino.parent.mkdir(parents=True, exist_ok=True)
+        destino.write_text(
+            json.dumps(atualizado, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+    return atualizado
+
+
+def _texto_editado(valor) -> str:
+    texto = "" if valor is None else str(valor).strip()
+    return texto or VALOR_AUSENTE
 
 
 def _configuracao(configuracao: dict | None) -> tuple[str, float | None, str | None]:
