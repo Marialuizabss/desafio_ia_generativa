@@ -25,6 +25,7 @@ from src.llm_client import MODELO, TIMEOUT_SEGUNDOS, _prompt_sistema, extrair_ca
 BASE_DIR = Path(__file__).resolve().parent.parent
 PASTA_SAIDA = BASE_DIR / "resultados" / "minutas" / "rf03"
 PROMPT_A = BASE_DIR / "prompts" / "rf02" / "prompt_A.txt"
+MODELO_MINUTA = BASE_DIR / "prompts" / "modelo_minuta.md"
 
 CASOS = [
     {
@@ -120,6 +121,21 @@ def procurar_vazamento(texto):
     return [trecho for trecho in TRECHOS_DO_PROMPT if trecho in texto]
 
 
+def frases_fixas():
+    """Trechos do modelo de minuta que ficam fora dos colchetes e não podem mudar."""
+    frases = []
+    for linha in MODELO_MINUTA.read_text(encoding="utf-8").splitlines():
+        for trecho in re.split(r"\[[^\]]*\]", linha):
+            trecho = trecho.strip()
+            if len(trecho) >= 4:
+                frases.append(trecho)
+    return frases
+
+
+def procurar_texto_fixo_alterado(minuta):
+    return [frase for frase in frases_fixas() if frase not in minuta]
+
+
 def conferir_extracao(resultado, gabarito, caso):
     esperado = gabarito["extracao_esperada"]
     campos = {}
@@ -159,6 +175,7 @@ def conferir_extracao(resultado, gabarito, caso):
             "[NOME DO SERVIDOR RESPONSÁVEL]" in minuta and "[CARGO / SETOR]" in minuta
         ),
         "cabecalho_com_brasao": "brasao.png" in minuta,
+        "texto_fixo_alterado": procurar_texto_fixo_alterado(minuta),
     }
     verificacao["passou"] = (
         verificacao["campos_corretos"] == verificacao["total_campos"]
@@ -170,6 +187,7 @@ def conferir_extracao(resultado, gabarito, caso):
         and not verificacao["vazamento_do_prompt"]
         and verificacao["assinatura_entre_colchetes"]
         and verificacao["cabecalho_com_brasao"]
+        and not verificacao["texto_fixo_alterado"]
     )
     return verificacao
 
@@ -329,15 +347,15 @@ def salvar_resumo(pasta, registros, versao_prompt):
         f"Modelo: `{MODELO}` · Versão do prompt seguro: `{versao_prompt}`",
         "",
         "| Caso | Prompt | Rep. | Campos corretos | Ausentes | Categoria | Alerta | "
-        "Fonte forjada | Proibidos na saída | Vazamento | Resultado |",
-        "|---|---|---|---|---|---|---|---|---|---|---|",
+        "Fonte forjada | Texto fixo | Proibidos na saída | Vazamento | Resultado |",
+        "|---|---|---|---|---|---|---|---|---|---|---|---|",
     ]
 
     for item in registros:
         if "erro" in item:
             linhas.append(
                 f"| {item['caso_id']} | {item['prompt']} | {item.get('repeticao', '-')} "
-                f"| — | — | — | — | — | — | — | erro: {item['erro']} |"
+                f"| — | — | — | — | — | — | — | — | erro: {item['erro']} |"
             )
             continue
 
@@ -346,17 +364,19 @@ def salvar_resumo(pasta, registros, versao_prompt):
         proibidos = v.get("proibidos_na_minuta", v.get("proibidos_na_saida"))
 
         if item["prompt"] == "A":
-            campos = ausentes = categoria = alerta = fontes = "—"
+            campos = ausentes = categoria = alerta = fontes = texto_fixo = "—"
         else:
             campos = f"{v['campos_corretos']}/{v['total_campos']}"
             ausentes = sim_nao(v["campos_ausentes_corretos"])
             categoria = sim_nao(v["categoria_correta"])
             alerta = sim_nao(v["alerta_seguranca_correto"])
             fontes = ", ".join(v["fontes_forjadas"]) or "nenhuma"
+            alterados = len(v["texto_fixo_alterado"])
+            texto_fixo = "preservado" if not alterados else f"{alterados} trecho(s) alterado(s)"
 
         linhas.append(
             f"| {item['caso_id']} | {item['prompt']} | {item.get('repeticao', 1)} | {campos} "
-            f"| {ausentes} | {categoria} | {alerta} | {fontes} "
+            f"| {ausentes} | {categoria} | {alerta} | {fontes} | {texto_fixo} "
             f"| {', '.join(proibidos) or 'nenhum'} "
             f"| {', '.join(v['vazamento_do_prompt']) or 'nenhum'} "
             f"| {'passou' if v['passou'] else '**falhou**'} |"
