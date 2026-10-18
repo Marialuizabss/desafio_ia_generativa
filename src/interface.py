@@ -120,17 +120,24 @@ ROTULOS_PARAMETRO = {
     "qualidade": "Qualidade",
 }
 
+ETAPAS = (
+    (1, "Modelo", "Modelo e idioma", "Escolha quem vai ler a solicitação."),
+    (2, "Envio", "Forma de envio", "Escolha como o pedido chega e confira o que será enviado."),
+    (3, "Revisão", "Avaliação humana", "Confira os campos extraídos e ajuste o que for preciso."),
+    (4, "Minuta", "Minuta", "Rascunho montado com os campos revisados."),
+)
+
 ESTILOS = """
 <style>
   :root {
-    --verde: #165C3F;
-    --verde-escuro: #123F2C;
-    --tinta: #173028;
-    --apoio: #5C7066;
-    --linha: #D5E0DA;
+    --verde: #4169E1;
+    --verde-escuro: #2746C4;
+    --tinta: #172033;
+    --apoio: #5C6B86;
+    --linha: #D5DFF2;
     --folha: #FFFFFF;
-    --fundo: #E9EEEA;
-    --suave: #F6F9F7;
+    --fundo: #E8EEF9;
+    --suave: #F4F7FC;
     --serif: "Iowan Old Style", Palatino, "Palatino Linotype", Georgia, serif;
     --sans: "Avenir Next", "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
   }
@@ -159,17 +166,55 @@ ESTILOS = """
 
   [data-testid="stMainBlockContainer"],
   .block-container {
-    max-width: 760px;
-    padding-top: 3.2rem;
-    padding-bottom: 4rem;
+    max-width: 640px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-top: 2.4rem;
+    padding-bottom: 2.4rem;
   }
 
   .st-key-folha {
     background: var(--folha);
     border: 1px solid var(--linha);
-    border-radius: 22px;
-    padding: 1.85rem 1.85rem 1.35rem;
+    border-radius: 16px;
+    padding: 1.15rem 1.25rem 1rem;
     box-shadow: 0 18px 48px rgba(22, 46, 36, 0.06);
+  }
+
+  .st-key-palco > div[data-testid="stVerticalBlock"] {
+    gap: 1.35rem;
+  }
+
+  .st-key-palco_avancar,
+  .st-key-palco_voltar {
+    animation-duration: 0.42s;
+    animation-timing-function: cubic-bezier(.22, .7, .25, 1);
+    animation-fill-mode: both;
+  }
+
+  .st-key-palco_avancar {
+    animation-name: deslizar-avancar;
+  }
+
+  .st-key-palco_voltar {
+    animation-name: deslizar-voltar;
+  }
+
+  @keyframes deslizar-avancar {
+    from { opacity: 0; transform: translateX(1.75rem); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  @keyframes deslizar-voltar {
+    from { opacity: 0; transform: translateX(-1.75rem); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .st-key-palco_avancar,
+    .st-key-palco_voltar {
+      animation: none;
+    }
   }
 
   .topo .filete {
@@ -180,39 +225,87 @@ ESTILOS = """
     background: var(--verde);
   }
 
+  .marca {
+    margin: 0 0 0.85rem;
+    color: var(--apoio);
+    font-size: 0.64rem;
+    font-weight: 650;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .passos {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.55rem;
+    margin: 0 0 1.15rem;
+    padding: 0;
+    list-style: none;
+  }
+
+  .passos li {
+    margin: 0;
+    padding-top: 0.4rem;
+    border-top: 2px solid var(--linha);
+    color: #8A97B0;
+    font-size: 0.64rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    line-height: 1.3;
+    text-align: center;
+  }
+
+  .passos li.feita {
+    border-color: #8EAAE8;
+    color: #2A3A66;
+  }
+
+  .passos li.atual {
+    border-color: var(--verde);
+    color: var(--verde);
+  }
+
   .topo .selo,
   .rotulo {
     margin: 0;
     color: var(--verde);
-    font-size: 0.72rem;
+    font-size: 0.64rem;
     font-weight: 650;
-    letter-spacing: 0.15em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
   }
 
   .topo h1 {
-    margin: 0.4rem 0 0.55rem;
+    margin: 0.15rem 0 0.2rem;
     color: var(--tinta);
     font-family: var(--serif);
-    font-size: clamp(1.95rem, 4vw, 2.55rem);
+    font-size: 1.35rem;
     font-weight: 500;
     letter-spacing: -0.03em;
-    line-height: 1.08;
+    line-height: 1.15;
   }
 
   .topo .apoio,
   .orientacao {
     margin: 0;
     color: var(--apoio);
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     line-height: 1.45;
   }
 
   .rotulo {
-    margin: 1.2rem 0 0.45rem;
-    color: #3E564A;
-    font-size: 0.62rem;
-    letter-spacing: 0.09em;
+    margin: 0 0 0.35rem;
+    color: #3A4A72;
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+  }
+
+  [data-testid="stWidgetLabel"] p {
+    font-size: 0.75rem;
+  }
+
+  [data-testid="stCaptionContainer"] p {
+    font-size: 0.72rem;
   }
 
   .divisoria {
@@ -232,11 +325,11 @@ ESTILOS = """
   .st-key-escolher_texto [data-testid="stBaseButton-primary"],
   .st-key-escolher_audio [data-testid="stBaseButton-primary"],
   .st-key-escolher_imagem [data-testid="stBaseButton-primary"],
-  .st-key-confirmar [data-testid="stBaseButton-primary"],
-  .st-key-gerar_minuta [data-testid="stBaseButton-primary"],
-  .st-key-alterar [data-testid="stBaseButton-secondary"] {
-    border-radius: 14px !important;
-    min-height: 3.15rem;
+  .st-key-prosseguir [data-testid="stBaseButton-primary"],
+  .st-key-voltar [data-testid="stBaseButton-secondary"] {
+    border-radius: 10px !important;
+    min-height: 2.35rem;
+    font-size: 0.84rem;
     font-weight: 600;
     letter-spacing: -0.01em;
     box-shadow: none !important;
@@ -289,33 +382,36 @@ ESTILOS = """
 
   [data-testid="stTextArea"] textarea {
     border: 1px solid var(--linha);
-    border-radius: 14px;
+    border-radius: 10px;
     background: var(--suave);
     color: var(--tinta);
-    font-size: 1rem;
-    line-height: 1.55;
-    padding: 0.95rem 1rem;
+    font-size: 0.9rem;
+    line-height: 1.45;
+    padding: 0.55rem 0.75rem;
   }
 
   [data-testid="stTextArea"] textarea:focus {
     border-color: var(--verde);
-    box-shadow: 0 0 0 3px rgba(22, 92, 63, 0.14);
+    box-shadow: 0 0 0 3px rgba(65, 105, 225, 0.16);
   }
 
   [data-testid="stTextInput"] input {
     border: 1px solid var(--linha);
-    border-radius: 14px;
+    border-radius: 10px;
     background: var(--suave);
     color: var(--tinta);
+    font-size: 0.9rem;
+    padding-top: 0.35rem;
+    padding-bottom: 0.35rem;
   }
 
   [data-testid="stTextInput"] input:focus {
     border-color: var(--verde);
-    box-shadow: 0 0 0 3px rgba(22, 92, 63, 0.14);
+    box-shadow: 0 0 0 3px rgba(65, 105, 225, 0.16);
   }
 
   [data-testid="stFileUploaderDropzone"] {
-    border: 1px dashed #C3D4CB;
+    border: 1px dashed #C5D2EA;
     border-radius: 14px;
     background: var(--suave);
     padding: 0.85rem 1rem;
@@ -324,7 +420,7 @@ ESTILOS = """
   [data-testid="stFileUploaderDropzone"]:hover,
   [data-testid="stFileUploaderDropzone"]:focus-within {
     border-color: var(--verde);
-    background: #F3F8F5;
+    background: #F3F6FC;
   }
 
   [data-testid="stFileUploaderDropzoneInstructions"] span {
@@ -379,8 +475,8 @@ ESTILOS = """
   }
 
   .st-key-modelo {
-    margin-top: 1.35rem;
-    padding-top: 0.35rem;
+    margin-top: 0;
+    padding-top: 0;
   }
 
   .st-key-modelo [data-baseweb="select"] > div {
@@ -412,61 +508,38 @@ ESTILOS = """
     color: var(--verde-escuro) !important;
   }
 
-  .st-key-confirmar {
-    margin-top: 0.85rem;
-  }
-
-  .st-key-confirmar [data-testid="stBaseButton-primary"] {
+  .st-key-prosseguir [data-testid="stBaseButton-primary"] {
     border: none !important;
     background: var(--verde) !important;
     color: #FFFFFF !important;
   }
 
-  .st-key-confirmar [data-testid="stBaseButton-primary"]:hover {
+  .st-key-prosseguir [data-testid="stBaseButton-primary"]:hover {
     background: var(--verde-escuro) !important;
     color: #FFFFFF !important;
   }
 
-  .st-key-confirmar [data-testid="stBaseButton-primary"]:disabled {
+  .st-key-prosseguir [data-testid="stBaseButton-primary"]:disabled {
     border: none !important;
-    background: #E3EBE6 !important;
-    color: #8AA094 !important;
+    background: #E4EAF6 !important;
+    color: #8A97B0 !important;
+  }
+
+  .st-key-voltar [data-testid="stBaseButton-secondary"] {
+    border: 1px solid var(--linha) !important;
+    background: transparent !important;
+    color: var(--verde) !important;
+  }
+
+  .st-key-voltar [data-testid="stBaseButton-secondary"]:hover {
+    border-color: var(--verde) !important;
+    color: var(--verde-escuro) !important;
   }
 
   .st-key-edicao [data-baseweb="select"] > div {
     border-radius: 14px;
     border-color: var(--linha);
     background: var(--suave);
-  }
-
-  .st-key-gerar_minuta {
-    margin-top: 0.85rem;
-  }
-
-  .st-key-gerar_minuta [data-testid="stBaseButton-primary"] {
-    border: none !important;
-    background: var(--verde) !important;
-    color: #FFFFFF !important;
-  }
-
-  .st-key-gerar_minuta [data-testid="stBaseButton-primary"]:hover {
-    background: var(--verde-escuro) !important;
-    color: #FFFFFF !important;
-  }
-
-  .st-key-alterar {
-    margin-top: 0.85rem;
-  }
-
-  .st-key-alterar [data-testid="stBaseButton-secondary"] {
-    border: 1px solid var(--linha) !important;
-    background: transparent !important;
-    color: var(--verde) !important;
-  }
-
-  .st-key-alterar [data-testid="stBaseButton-secondary"]:hover {
-    border-color: var(--verde) !important;
-    color: var(--verde-escuro) !important;
   }
 
   .titulo-entrada {
@@ -507,24 +580,24 @@ ESTILOS = """
   .ficha dd {
     margin: 0.18rem 0 0;
     color: var(--tinta);
-    font-size: 1rem;
+    font-size: 0.9rem;
     line-height: 1.4;
     overflow-wrap: anywhere;
   }
 
   .trecho {
-    margin: 0.9rem 0 0.2rem;
-    padding: 0.85rem 1rem;
+    margin: 0.15rem 0 0;
+    padding: 0.65rem 0.8rem;
     border-left: 2px solid var(--verde);
-    border-radius: 0 12px 12px 0;
+    border-radius: 0 10px 10px 0;
     background: var(--suave);
     color: var(--tinta);
-    font-size: 0.98rem;
-    line-height: 1.5;
+    font-size: 0.84rem;
+    line-height: 1.45;
   }
 
   [data-testid="stImage"] img {
-    border: 1px solid #E1EAE4;
+    border: 1px solid #E1E7F4;
     border-radius: 12px;
   }
 
@@ -535,8 +608,12 @@ ESTILOS = """
     }
 
     .st-key-folha {
-      padding: 1.2rem 1rem 1rem;
-      border-radius: 16px;
+      padding: 0.95rem 0.85rem 0.8rem;
+      border-radius: 14px;
+    }
+
+    .passos {
+      gap: 0.35rem;
     }
 
     .st-key-seletor [data-testid="stHorizontalBlock"] {
@@ -560,7 +637,7 @@ def obter_entrada() -> dict | None:
 
 
 def renderizar() -> None:
-    """Desenha a tela de entrada e guarda a escolha na sessão."""
+    """Desenha uma etapa por vez e guarda a escolha na sessão."""
     st.set_page_config(
         page_title="Central de atendimento",
         layout="centered",
@@ -568,17 +645,28 @@ def renderizar() -> None:
     )
     st.markdown(ESTILOS, unsafe_allow_html=True)
     _iniciar_estado()
+    _ajustar_etapa()
+    animacao = st.session_state.animacao
+    st.session_state.animacao = ""
 
     with st.container(key="folha"):
-        _cabecalho()
-        _secao_modelo()
-        if st.session_state.confirmada and st.session_state.entrada:
-            _entrada_registrada(st.session_state.entrada)
-        else:
-            _formulario()
+        st.markdown('<p class="marca">Central de atendimento</p>', unsafe_allow_html=True)
+        _passos()
+        with st.container(key=f"palco_{animacao}" if animacao else "palco"):
+            _titulo_da_etapa()
+            if st.session_state.etapa == 1:
+                _etapa_modelo()
+            elif st.session_state.etapa == 2:
+                _etapa_envio()
+            elif st.session_state.etapa == 3:
+                _etapa_revisao()
+            else:
+                _etapa_minuta()
 
 
 def _iniciar_estado() -> None:
+    st.session_state.setdefault("etapa", 1)
+    st.session_state.setdefault("animacao", "")
     st.session_state.setdefault("modalidade", "texto")
     st.session_state.setdefault("confirmada", False)
     st.session_state.setdefault("entrada", None)
@@ -592,18 +680,204 @@ def _iniciar_estado() -> None:
     st.session_state.setdefault("minuta_erro", None)
 
 
-def _cabecalho() -> None:
+def _ajustar_etapa() -> None:
+    etapa = int(st.session_state.get("etapa") or 1)
+    if etapa > 2 and not st.session_state.get("entrada"):
+        etapa = 2
+    registro = st.session_state.get("extracao_registro") or {}
+    if etapa > 3 and not registro.get("minuta_gerada_de_campos"):
+        etapa = 3
+    st.session_state.etapa = etapa
+
+
+def _ir(destino: int) -> None:
+    _guardar_rascunho()
+    _guardar_edicao()
+    destino = max(1, min(4, int(destino)))
+    atual = int(st.session_state.get("etapa") or 1)
+    if destino == atual:
+        return
+    st.session_state.animacao = "avancar" if destino > atual else "voltar"
+    st.session_state.etapa = destino
+
+
+def _guardar_rascunho() -> None:
+    if "rascunho_texto" in st.session_state:
+        st.session_state.texto_guardado = st.session_state.rascunho_texto or ""
+
+
+def _chaves_edicao() -> tuple[str, ...]:
+    return ("edit_categoria", "edit_assunto", "edit_pedido", *(f"edit_{nome}" for nome, _ in ROTULOS_CAMPOS))
+
+
+def _guardar_edicao() -> None:
+    if "edit_assunto" not in st.session_state:
+        return
+    st.session_state.edicao_guardada = {
+        chave: st.session_state.get(chave) for chave in _chaves_edicao()
+    }
+    st.session_state.edicao_id_guardada = st.session_state.get("edicao_id")
+
+
+def _passos() -> None:
+    atual = st.session_state.etapa
+    itens = []
+    for numero, nome, *_ in ETAPAS:
+        if numero == atual:
+            classe = "atual"
+        elif numero < atual:
+            classe = "feita"
+        else:
+            classe = ""
+        itens.append(f'<li class="{classe}">{numero} {escape(nome)}</li>')
+    st.markdown(f'<ol class="passos">{"".join(itens)}</ol>', unsafe_allow_html=True)
+
+
+def _titulo_da_etapa() -> None:
+    _, _, titulo, apoio = ETAPAS[st.session_state.etapa - 1]
     st.markdown(
-        """
+        f"""
         <header class="topo">
-          <div class="filete"></div>
-          <p class="selo">Entrada</p>
-          <h1>Central de atendimento</h1>
-          <p class="apoio">Cole o pedido, envie um .txt, um áudio ou a ficha digitalizada.</p>
+          <p class="selo">Etapa {st.session_state.etapa} de 4</p>
+          <h1>{escape(titulo)}</h1>
+          <p class="apoio">{escape(apoio)}</p>
         </header>
         """,
         unsafe_allow_html=True,
     )
+
+
+def _navegacao(prosseguir=None, desabilitado: bool = False) -> None:
+    if st.session_state.etapa == 1:
+        st.button(
+            "Prosseguir",
+            key="prosseguir",
+            type="primary",
+            width="stretch",
+            disabled=desabilitado or prosseguir is None,
+            on_click=prosseguir,
+        )
+        return
+
+    if prosseguir is None:
+        st.button(
+            "Voltar",
+            key="voltar",
+            width="stretch",
+            on_click=_ir,
+            args=(st.session_state.etapa - 1,),
+        )
+        return
+
+    voltar, seguir = st.columns(2, gap="small")
+    with voltar:
+        st.button(
+            "Voltar",
+            key="voltar",
+            width="stretch",
+            on_click=_ir,
+            args=(st.session_state.etapa - 1,),
+        )
+    with seguir:
+        st.button(
+            "Prosseguir",
+            key="prosseguir",
+            type="primary",
+            width="stretch",
+            disabled=desabilitado,
+            on_click=prosseguir,
+        )
+
+
+def _etapa_modelo() -> None:
+    _secao_modelo()
+    _navegacao(_prosseguir_modelo)
+
+
+def _prosseguir_modelo() -> None:
+    _ir(2)
+
+
+def _prosseguir_envio() -> None:
+    _confirmar()
+    if st.session_state.erro or not st.session_state.get("entrada"):
+        return
+    _ir(3)
+
+
+def _prosseguir_revisao() -> None:
+    _gerar_minuta_editada()
+    if st.session_state.minuta_erro:
+        return
+    _ir(4)
+
+
+def _etapa_envio() -> None:
+    modalidade = st.session_state.modalidade
+    _seletor()
+    if modalidade == "texto":
+        arquivo = _campo_texto()
+    else:
+        arquivo = _campo_arquivo(modalidade)
+
+    pendencia = _pendencia(modalidade, arquivo)
+    if st.session_state.erro:
+        st.markdown(
+            f'<p class="aviso">{escape(st.session_state.erro)}</p>',
+            unsafe_allow_html=True,
+        )
+    elif pendencia:
+        st.caption(pendencia)
+    else:
+        _selecionado(modalidade, arquivo)
+    _navegacao(_prosseguir_envio, desabilitado=pendencia is not None)
+
+
+def _selecionado(modalidade: str, arquivo) -> None:
+    material, erro = receber_material(modalidade, arquivo)
+    if erro or material is None:
+        return
+    if material.get("origem") == "cola":
+        origem = "Texto colado"
+        tamanho = f"{_formatar_inteiro(len(material['texto']))} caracteres"
+    elif modalidade == "texto":
+        origem = material["nome_arquivo"] or "Arquivo .txt"
+        tamanho = f"{_formatar_inteiro(len(material['texto']))} caracteres"
+    else:
+        origem = material["nome_arquivo"] or "Arquivo"
+        tamanho = formatar_tamanho(material["tamanho_bytes"])
+    st.markdown(
+        f"""
+        <dl class="ficha">
+          <div><dt>Selecionado</dt><dd>{escape(ROTULOS[modalidade])}</dd></div>
+          <div><dt>Origem</dt><dd>{escape(origem)}</dd></div>
+          <div class="amplo"><dt>Tamanho</dt><dd>{escape(tamanho)}</dd></div>
+        </dl>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def _etapa_revisao() -> None:
+    _mostrar_extracao(st.session_state.entrada)
+    if st.session_state.minuta_erro:
+        st.markdown(
+            f'<p class="aviso">{escape(st.session_state.minuta_erro)}</p>',
+            unsafe_allow_html=True,
+        )
+    pronto = bool(st.session_state.extracao_registro) and not st.session_state.extracao_erro
+    _navegacao(_prosseguir_revisao if pronto else None, desabilitado=not pronto)
+
+
+def _etapa_minuta() -> None:
+    registro = st.session_state.extracao_registro or {}
+    minuta = (registro.get("minuta") or "").strip()
+    com_brasao, texto = preparar_minuta(minuta)
+    if com_brasao and BRASAO.is_file():
+        st.image(str(BRASAO), width=88)
+    st.markdown(texto)
+    st.caption("Revisão humana obrigatória antes de qualquer envio.")
+    _navegacao(None)
 
 
 def _secao_modelo() -> None:
@@ -624,7 +898,6 @@ def _secao_modelo() -> None:
         st.session_state.setdefault(f"cfg_{nome}", valor)
 
     with st.container(key="modelo"):
-        st.markdown('<p class="rotulo">Modelo</p>', unsafe_allow_html=True)
         st.selectbox(
             "Modelo",
             ids,
@@ -632,6 +905,7 @@ def _secao_modelo() -> None:
             format_func=lambda modelo_id: obter_modelo(config, modelo_id)["nome"],
             on_change=_ao_trocar_modelo,
             label_visibility="collapsed",
+            persist_state="session",
         )
         modelo = obter_modelo(config, st.session_state.modelo_escolhido)
         st.caption(modelo["descricao"])
@@ -661,6 +935,7 @@ def _parametros_do_modelo(config: dict, modelo: dict) -> None:
                     max_value=faixa["maximo"],
                     step=faixa["passo"],
                     key="cfg_temperatura",
+                    persist_state="session",
                 )
                 continue
             opcoes = [item["valor"] for item in config["opcoes"][nome]]
@@ -669,6 +944,7 @@ def _parametros_do_modelo(config: dict, modelo: dict) -> None:
                 opcoes,
                 key=f"cfg_{nome}",
                 format_func=lambda valor, parametro=nome: rotulo_da_opcao(config, parametro, valor),
+                persist_state="session",
             )
 
 
@@ -704,35 +980,6 @@ def _restaurar_padroes() -> None:
     _ao_trocar_modelo()
 
 
-def _formulario() -> None:
-    st.markdown('<p class="rotulo">Forma de envio</p>', unsafe_allow_html=True)
-    _seletor()
-
-    modalidade = st.session_state.modalidade
-    if modalidade == "texto":
-        arquivo = _campo_texto()
-    else:
-        arquivo = _campo_arquivo(modalidade)
-
-    pendencia = _pendencia(modalidade, arquivo)
-    if st.session_state.erro:
-        st.markdown(
-            f'<p class="aviso">{escape(st.session_state.erro)}</p>',
-            unsafe_allow_html=True,
-        )
-
-    st.button(
-        "Confirmar entrada",
-        key="confirmar",
-        type="primary",
-        width="stretch",
-        disabled=pendencia is not None,
-        on_click=_confirmar,
-    )
-    if pendencia and not st.session_state.erro:
-        st.caption(pendencia)
-
-
 def _seletor() -> None:
     with st.container(key="seletor"):
         colunas = st.columns(3, gap="small")
@@ -759,13 +1006,18 @@ def _campo_texto():
         unsafe_allow_html=True,
     )
     if "rascunho_texto" not in st.session_state:
-        st.session_state.rascunho_texto = st.session_state.texto_guardado
+        entrada = st.session_state.get("entrada") or {}
+        guardado = st.session_state.texto_guardado
+        if not guardado and entrada.get("origem") == "cola":
+            guardado = entrada.get("texto") or ""
+        st.session_state.rascunho_texto = guardado
     texto = st.text_area(
         "Solicitação",
         key="rascunho_texto",
-        height=180,
+        height=120,
         label_visibility="collapsed",
         placeholder="Descreva quem solicita, o curso, o turno e o que precisa ser resolvido.",
+        persist_state="session",
     )
     st.session_state.texto_guardado = texto
     quantidade = len(texto.strip())
@@ -829,63 +1081,6 @@ def _campo_arquivo(modalidade: str):
     return arquivo
 
 
-def _entrada_registrada(entrada: dict) -> None:
-    modalidade = entrada["modalidade"]
-    st.markdown('<p class="rotulo">Entrada registrada</p>', unsafe_allow_html=True)
-    st.markdown(
-        f'<h2 class="titulo-entrada">{escape(ROTULOS[modalidade])}</h2>',
-        unsafe_allow_html=True,
-    )
-
-    if entrada.get("origem") == "cola":
-        tamanho = f"{_formatar_inteiro(len(entrada['texto']))} caracteres"
-        origem = "Texto colado"
-    elif modalidade == "texto":
-        tamanho = f"{_formatar_inteiro(len(entrada['texto']))} caracteres"
-        origem = entrada["nome_arquivo"] or "Arquivo .txt"
-    else:
-        tamanho = formatar_tamanho(entrada["tamanho_bytes"])
-        origem = entrada["nome_arquivo"] or "Arquivo"
-
-    copia = entrada.get("caminho_copia") or ""
-    st.markdown(
-        f"""
-        <dl class="ficha">
-          <div><dt>Origem</dt><dd>{escape(origem)}</dd></div>
-          <div><dt>Tamanho</dt><dd>{escape(tamanho)}</dd></div>
-          <div class="amplo"><dt>Cópia</dt><dd>{escape(copia)}</dd></div>
-        </dl>
-        """,
-        unsafe_allow_html=True,
-    )
-    if entrada.get("preservou_existente"):
-        st.markdown(
-            '<p class="orientacao">O arquivo que já estava em dados/originais foi mantido.</p>',
-            unsafe_allow_html=True,
-        )
-
-    if modalidade == "texto":
-        st.markdown(
-            f'<p class="trecho">{escape(_trecho(entrada["texto"]))}</p>',
-            unsafe_allow_html=True,
-        )
-    else:
-        _previsualizar(
-            modalidade,
-            entrada["nome_arquivo"],
-            entrada["tipo_mime"],
-            entrada["conteudo"],
-        )
-
-    _mostrar_extracao(entrada)
-    st.button(
-        "Escolher outra entrada",
-        key="alterar",
-        width="stretch",
-        on_click=_alterar,
-    )
-
-
 def _mostrar_extracao(entrada: dict) -> None:
     chave = entrada.get("caminho_copia")
     if st.session_state.get("extracao_chave") != chave:
@@ -932,10 +1127,8 @@ def _resumo_extracao(registro: dict) -> None:
         itens = "".join(f"<li>{escape(str(item))}</li>" for item in alertas)
         aviso_alerta = f'<ul class="orientacao">{itens}</ul>'
 
-    st.markdown('<p class="rotulo">Extração</p>', unsafe_allow_html=True)
     st.markdown(
-        '<p class="orientacao">Revise os campos antes de gerar a minuta. '
-        "O texto só é montado quando você pedir, com os valores desta tela.</p>",
+        '<p class="orientacao">Ao prosseguir, a minuta é montada com estes campos.</p>',
         unsafe_allow_html=True,
     )
     if aviso_alerta:
@@ -947,46 +1140,34 @@ def _resumo_extracao(registro: dict) -> None:
             list(CATEGORIAS),
             key="edit_categoria",
             format_func=lambda valor: ROTULOS_CATEGORIA.get(valor, valor),
+            persist_state="session",
         )
-        st.text_input("Assunto", key="edit_assunto")
-        st.text_area("Pedido", key="edit_pedido", height=88)
+        st.text_input("Assunto", key="edit_assunto", persist_state="session")
+        st.text_area("Pedido", key="edit_pedido", height=88, persist_state="session")
         _campos_edicao()
 
     ausentes = _ausentes_da_edicao()
     if ausentes:
         st.caption("Campos não localizados: " + ", ".join(ausentes))
     _resumo_chamada(registro.get("chamada") or {})
-    st.caption(f"Arquivo: {registro.get('arquivo_extracao') or ''}")
-
-    ja_gerada = bool(registro.get("minuta_gerada_de_campos"))
-    st.button(
-        "Regerar minuta" if ja_gerada else "Gerar minuta",
-        key="gerar_minuta",
-        type="primary",
-        width="stretch",
-        on_click=_gerar_minuta_editada,
-    )
-    if st.session_state.minuta_erro:
-        st.markdown(
-            f'<p class="aviso">{escape(st.session_state.minuta_erro)}</p>',
-            unsafe_allow_html=True,
-        )
-
-    minuta = (registro.get("minuta") or "").strip() if ja_gerada else ""
-    if minuta:
-        st.caption("A minuta usa os campos acima. Edite de novo e clique em Regerar minuta.")
-        with st.expander("Minuta", expanded=True):
-            com_brasao, texto = preparar_minuta(minuta)
-            if com_brasao and BRASAO.is_file():
-                st.image(str(BRASAO), width=110)
-            st.markdown(texto)
-    st.caption("Revisão humana obrigatória antes de qualquer envio.")
+    _guardar_edicao()
 
 
 def _preparar_edicao(registro: dict) -> None:
     identificador = registro.get("id_execucao") or registro.get("arquivo_extracao")
-    if st.session_state.get("edicao_id") == identificador:
+    if st.session_state.get("edicao_id") == identificador and "edit_assunto" in st.session_state:
         return
+    guardada = st.session_state.get("edicao_guardada")
+    if (
+        st.session_state.get("edicao_id_guardada") == identificador
+        and isinstance(guardada, dict)
+    ):
+        for chave in _chaves_edicao():
+            if chave not in st.session_state and chave in guardada:
+                st.session_state[chave] = guardada[chave]
+        if "edit_assunto" in st.session_state:
+            st.session_state.edicao_id = identificador
+            return
     st.session_state.edicao_id = identificador
     st.session_state.minuta_erro = None
     categoria = str(registro.get("categoria") or "").strip()
@@ -1005,7 +1186,7 @@ def _campos_edicao() -> None:
         if nome in CAMPOS_LONGOS:
             _linha_de_campos(linha)
             linha = []
-            st.text_area(rotulo, key=f"edit_{nome}", height=110)
+            st.text_area(rotulo, key=f"edit_{nome}", height=76, persist_state="session")
             continue
         linha.append((nome, rotulo))
         if len(linha) == 2:
@@ -1020,7 +1201,7 @@ def _linha_de_campos(linha: list[tuple[str, str]]) -> None:
     colunas = st.columns(len(linha))
     for coluna, (nome, rotulo) in zip(colunas, linha):
         with coluna:
-            st.text_input(rotulo, key=f"edit_{nome}")
+            st.text_input(rotulo, key=f"edit_{nome}", persist_state="session")
 
 
 def _ausentes_da_edicao() -> list[str]:
@@ -1049,6 +1230,7 @@ def _gerar_minuta_editada() -> None:
     st.session_state.edit_pedido = pedido
     edicao["assunto"] = assunto
     edicao["pedido"] = pedido
+    _guardar_edicao()
     try:
         st.session_state.extracao_registro = aplicar_edicao(registro, edicao)
         st.session_state.minuta_erro = None
@@ -1122,23 +1304,6 @@ def _confirmar() -> None:
     st.session_state.entrada = material
     st.session_state.confirmada = True
     st.session_state.erro = None
-
-
-def _alterar() -> None:
-    entrada = st.session_state.get("entrada") or {}
-    if entrada.get("modalidade"):
-        st.session_state.modalidade = entrada["modalidade"]
-    if entrada.get("origem") == "cola" and entrada.get("texto"):
-        st.session_state.texto_guardado = entrada["texto"]
-        st.session_state.rascunho_texto = entrada["texto"]
-    st.session_state.confirmada = False
-    st.session_state.erro = None
-    st.session_state.extracao_chave = None
-    st.session_state.extracao_registro = None
-    st.session_state.extracao_erro = None
-    st.session_state.extracao_forcar = False
-    st.session_state.edicao_id = None
-    st.session_state.minuta_erro = None
 
 
 def _pendencia(modalidade: str, arquivo) -> str | None:

@@ -111,6 +111,10 @@ class TestAplicarEdicao(unittest.TestCase):
         self.assertEqual(atualizado["categoria"], "matricula")
 
 
+def _texto(tela) -> str:
+    return "\n".join(item.value for item in tela.markdown)
+
+
 class TestInterfaceEdicao(unittest.TestCase):
     def test_minuta_so_aparece_depois_do_botao(self):
         with TemporaryDirectory() as pasta:
@@ -157,21 +161,39 @@ class TestInterfaceEdicao(unittest.TestCase):
                 )
                 tela.run()
                 self.assertFalse(tela.exception)
-                tela.text_area(key="rascunho_texto").set_value("Pedido de matrícula.").run()
-                tela.button(key="confirmar").click().run()
+                self.assertIn("Modelo e idioma", _texto(tela))
+                tela.button(key="prosseguir").click().run()
                 self.assertFalse(tela.exception)
 
-                texto = "\n".join(item.value for item in tela.markdown)
+                self.assertIn("Forma de envio", _texto(tela))
+                self.assertNotIn("edit_solicitante", [campo.key for campo in tela.text_input])
+                tela.text_area(key="rascunho_texto").set_value("Pedido de matrícula.").run()
+                tela.button(key="prosseguir").click().run()
+                self.assertFalse(tela.exception)
+
+                texto = _texto(tela)
+                self.assertIn("Avaliação humana", texto)
                 self.assertNotIn("MINUTA_DO_MODELO_OCULTA", texto)
-                self.assertEqual(tela.button(key="gerar_minuta").label, "Gerar minuta")
+                self.assertNotIn("Joana Lima", texto)
                 self.assertEqual(tela.text_input(key="edit_solicitante").value, "Ana")
 
                 tela.text_input(key="edit_solicitante").set_value("Joana Lima").run()
-                tela.button(key="gerar_minuta").click().run()
+                tela.button(key="prosseguir").click().run()
                 self.assertFalse(tela.exception)
 
-                texto = "\n".join(item.value for item in tela.markdown)
+                texto = _texto(tela)
+                self.assertIn("Rascunho montado com os campos revisados.", texto)
                 self.assertIn("Joana Lima", texto)
                 self.assertNotIn("MINUTA_DO_MODELO_OCULTA", texto)
-                self.assertEqual(tela.button(key="gerar_minuta").label, "Regerar minuta")
                 self.assertIn("[NOME DO SERVIDOR RESPONSÁVEL]", texto)
+                self.assertEqual(tela.button(key="voltar").label, "Voltar")
+
+                tela.button(key="voltar").click().run()
+                self.assertFalse(tela.exception)
+                self.assertEqual(tela.text_input(key="edit_solicitante").value, "Joana Lima")
+                self.assertIn("Avaliação humana", _texto(tela))
+
+                tela.button(key="voltar").click().run()
+                self.assertFalse(tela.exception)
+                self.assertEqual(tela.text_area(key="rascunho_texto").value, "Pedido de matrícula.")
+                self.assertIn("Forma de envio", _texto(tela))
