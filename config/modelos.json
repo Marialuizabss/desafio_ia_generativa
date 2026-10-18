@@ -1,5 +1,5 @@
 {
-  "modelo_padrao": "gpt-6-luna",
+  "modelo_padrao": "gpt-5.6-luna",
   "opcoes": {
     "idioma": [
       {"valor": "pt", "rotulo": "Português"},
@@ -24,8 +24,8 @@
   },
   "modelos": [
     {
-      "id": "gpt-6-luna",
-      "nome": "GPT-6 Luna",
+      "id": "gpt-5.6-luna",
+      "nome": "5.6 Luna",
       "descricao": "Analisa a solicitação e redige a minuta. Este modelo não aceita temperatura.",
       "padroes": {
         "idioma": "pt",
@@ -35,36 +35,36 @@
       }
     },
     {
-      "id": "gpt-4o",
-      "nome": "GPT-4o",
-      "descricao": "Lê a ficha digitalizada.",
+      "id": "gpt-5.6-terra",
+      "nome": "5.6 Terra",
+      "descricao": "Analisa a solicitação e redige a minuta. Este modelo não aceita temperatura.",
+      "padroes": {
+        "idioma": "pt",
+        "temperatura": null,
+        "tamanho": null,
+        "qualidade": null
+      }
+    },
+    {
+      "id": "o4-mini",
+      "nome": "o4-mini",
+      "descricao": "Analisa a solicitação e redige a minuta. Este modelo não aceita temperatura.",
+      "padroes": {
+        "idioma": "pt",
+        "temperatura": null,
+        "tamanho": null,
+        "qualidade": null
+      }
+    },
+    {
+      "id": "gpt-4o-mini",
+      "nome": "gpt-4o-mini",
+      "descricao": "Analisa a solicitação e redige a minuta.",
       "padroes": {
         "idioma": "pt",
         "temperatura": 0.0,
         "tamanho": null,
         "qualidade": null
-      }
-    },
-    {
-      "id": "gpt-4o-transcribe",
-      "nome": "GPT-4o Transcribe",
-      "descricao": "Transcreve o áudio da solicitação.",
-      "padroes": {
-        "idioma": "pt",
-        "temperatura": null,
-        "tamanho": null,
-        "qualidade": null
-      }
-    },
-    {
-      "id": "gpt-image-1",
-      "nome": "GPT Image 1",
-      "descricao": "Gera e edita a imagem institucional.",
-      "padroes": {
-        "idioma": null,
-        "temperatura": null,
-        "tamanho": "1024x1536",
-        "qualidade": "medium"
       }
     }
   ]

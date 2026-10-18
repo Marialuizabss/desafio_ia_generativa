@@ -23,7 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 PASTA_PROCESSADOS = BASE_DIR / "dados" / "processados"
 
 
-MODELOS_ANALISE = {"gpt-6-luna", "gpt-4o"}
+MODELOS_ANALISE = {"gpt-5.6-luna", "gpt-5.6-terra", "o4-mini", "gpt-4o-mini"}
 
 # Modelo que lê a entrada antes da extração (o texto digitado não passa por modelo;
 # PDF com camada de texto é lido localmente, sem modelo)

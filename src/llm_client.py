@@ -27,14 +27,17 @@ except ImportError:
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
 
-MODELO = "gpt-6-luna"
+MODELO = "gpt-5.6-luna"
 TIMEOUT_SEGUNDOS = 120.0
-MODELOS_COM_TEMPERATURA = {"gpt-4o"}
+MODELOS_COM_TEMPERATURA = {"gpt-4o-mini"}
+MODELOS_COM_RACIOCINIO = {"gpt-5.6-luna", "gpt-5.6-terra", "o4-mini"}
 
 # Dólares por 1 milhão de tokens. O custo gravado é uma estimativa com esta tabela.
 PRECOS_USD_POR_MILHAO = {
-    "gpt-6-luna": {"entrada": 0.10, "saida": 0.50},
-    "gpt-4o": {"entrada": 2.50, "saida": 10.00},
+    "gpt-5.6-luna": {"entrada": 0.20, "saida": 1.20},
+    "gpt-5.6-terra": {"entrada": 2.00, "saida": 12.00},
+    "o4-mini": {"entrada": 1.10, "saida": 4.40},
+    "gpt-4o-mini": {"entrada": 0.15, "saida": 0.60},
 }
 
 NOMES_IDIOMA = {
@@ -213,7 +216,7 @@ def extrair_campos(
         temperatura_enviada = temperatura_usada
     else:
         temperatura_enviada = None
-    if modelo_id.startswith("gpt-6"):
+    if modelo_id in MODELOS_COM_RACIOCINIO:
         consulta["reasoning"] = {"effort": "low"}
 
     try:
@@ -326,7 +329,7 @@ def _mensagem_de_falha(erro: Exception) -> str:
     if isinstance(erro, APIConnectionError):
         return "Não foi possível conectar à API. Verifique a rede e tente de novo."
     if isinstance(erro, NotFoundError):
-        return "O modelo gpt-6-luna não está disponível para esta chave."
+        return "O modelo escolhido não está disponível para esta chave."
     if isinstance(erro, BadRequestError):
         return "A API recusou a consulta."
     if isinstance(erro, APIStatusError):

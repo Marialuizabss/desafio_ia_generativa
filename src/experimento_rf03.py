@@ -20,7 +20,13 @@ from uuid import uuid4
 from openai import OpenAI, OpenAIError
 
 from src.extracao import CAMPOS, VALOR_AUSENTE
-from src.llm_client import MODELO, TIMEOUT_SEGUNDOS, _prompt_sistema, extrair_campos
+from src.llm_client import (
+    MODELO,
+    MODELOS_COM_RACIOCINIO,
+    TIMEOUT_SEGUNDOS,
+    _prompt_sistema,
+    extrair_campos,
+)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 PASTA_SAIDA = BASE_DIR / "resultados" / "minutas" / "rf03"
@@ -206,7 +212,7 @@ def chamar_prompt_a(texto):
     """Prompt A do RF02: sem separação, sem delimitação e sem regras."""
     prompt = PROMPT_A.read_text(encoding="utf-8").replace("{SOLICITACAO}", texto)
     consulta = {"model": MODELO, "input": prompt, "store": False}
-    if MODELO.startswith("gpt-6"):
+    if MODELO in MODELOS_COM_RACIOCINIO:
         consulta["reasoning"] = {"effort": "low"}
 
     try:

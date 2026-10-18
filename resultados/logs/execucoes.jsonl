@@ -1,0 +1,1 @@
+{"evento": "execucao", "id_execucao": "c42fac58-d480-4ada-8837-1f548359f046", "data_hora": "2026-10-18T13:22:41-04:00", "tipo": "extracao_reaproveitada", "modalidade": "imagem", "arquivo_origem": "dados/originais/entrada_pdf-imagem.pdf", "arquivo_extracao": "dados/processados/extracao_entrada_pdf-imagem.json", "modelo": "gpt-6-luna", "resultado": "reaproveitada"}
