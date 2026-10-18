@@ -999,7 +999,20 @@ def _prosseguir_envio() -> None:
 
 
 def _prosseguir_revisao() -> None:
-    _gerar_minuta_editada()
+    registro = st.session_state.get("extracao_registro") or {}
+    conferidos = None
+    if _exige_conferencia_por_dado(registro):
+        valores = _valores_criticos_na_tela()
+        conferidos = [campo for campo, _ in DADOS_CRITICOS if st.session_state.get(
+            _chave_conferencia(registro, campo, valores[campo]))]
+        if len(conferidos) < len(DADOS_CRITICOS):
+            faltam = [rotulo for campo, rotulo in DADOS_CRITICOS if campo not in conferidos]
+            st.session_state.conferencia_erro = "Confira com o original: " + ", ".join(faltam) + "."
+            avisar("A minuta não foi montada: " + st.session_state.conferencia_erro, "alerta")
+            return
+        st.session_state.conferencia_erro = None
+        st.session_state.conferencia_valida = {"id": registro.get("id_execucao"), "valores": valores}
+    _gerar_minuta_editada(conferidos)
     if st.session_state.minuta_erro:
         avisar("Não foi possível montar a minuta.", "erro")
         return
@@ -1065,6 +1078,10 @@ def _etapa_revisao() -> None:
         _navegacao(None)
         _painel_decisao()
         return
+    if pronto and _exige_conferencia_por_dado(st.session_state.extracao_registro):
+        _conferencia_por_dado(st.session_state.extracao_registro)
+        if st.session_state.get("conferencia_erro"):
+            _cartao_erro(st.session_state.conferencia_erro)
     _navegacao(_prosseguir_revisao if pronto else None, desabilitado=not pronto)
     if pronto:
         _painel_decisao()
@@ -1176,7 +1193,10 @@ def _acoes_da_minuta() -> None:
         persist_state="session",
     )
     if _exige_conferencia_por_dado(registro):
-        _conferencia_por_dado(registro)
+        if _conferencia_ainda_vale(registro):
+            st.caption("✓ Nome, protocolo e datas conferidos com o original antes de montar a minuta.")
+        else:
+            st.caption("Os dados críticos mudaram depois da conferência: volte e confira de novo.")
     else:
         st.checkbox(
             "Conferi nome, protocolo e datas.",
@@ -1230,12 +1250,38 @@ def _chave_conferencia(registro: dict, campo: str, valor: str) -> str:
     return f"conferido_{campo}_{marca}"
 
 
+def _valores_criticos_na_tela() -> dict[str, str]:
+    """Valores atuais dos campos críticos na etapa 3, já com as correções digitadas."""
+    return {
+        campo: (st.session_state.get(f"edit_{campo}") or "").strip() or VALOR_AUSENTE
+        for campo, _ in DADOS_CRITICOS
+    }
+
+
+def _conferencia_ainda_vale(registro: dict) -> bool:
+    """A conferência feita na etapa 3 vale para os valores que estão na minuta."""
+    conferencia = st.session_state.get("conferencia_valida") or {}
+    if conferencia.get("id") != registro.get("id_execucao"):
+        return False
+    campos = registro.get("campos") or {}
+    atuais = {
+        campo: str((campos.get(campo) or {}).get("valor") or VALOR_AUSENTE)
+        for campo, _ in DADOS_CRITICOS
+    }
+    return conferencia.get("valores") == atuais
+
+
+def _limpar_erro_conferencia() -> None:
+    st.session_state.conferencia_erro = None
+
+
 def _conferencia_por_dado(registro: dict) -> None:
     entrada = st.session_state.get("entrada") or {}
     modalidade = registro.get("modalidade") or entrada.get("modalidade")
+    st.markdown('<p class="rotulo">Conferência com o original</p>', unsafe_allow_html=True)
     st.markdown(
         '<p class="orientacao">A leitura de áudio e imagem pode errar nomes, números e datas. '
-        "Marque cada dado que confere com o original.</p>",
+        "Marque cada dado que confere com o original antes de montar a minuta.</p>",
         unsafe_allow_html=True,
     )
     with st.expander("Ouvir o áudio original" if modalidade == "audio" else "Ver a ficha original"):
@@ -1245,25 +1291,21 @@ def _conferencia_por_dado(registro: dict) -> None:
             entrada.get("tipo_mime"),
             entrada.get("conteudo"),
         )
-    campos = registro.get("campos") or {}
+    valores = _valores_criticos_na_tela()
     for campo, rotulo in DADOS_CRITICOS:
-        valor = str((campos.get(campo) or {}).get("valor") or VALOR_AUSENTE)
         st.checkbox(
-            f"{rotulo}: {valor}",
-            key=_chave_conferencia(registro, campo, valor),
-            on_change=_limpar_erro_decisao,
+            f"{rotulo}: {valores[campo]}",
+            key=_chave_conferencia(registro, campo, valores[campo]),
+            on_change=_limpar_erro_conferencia,
         )
-    st.caption("Se algum estiver errado, clique em Voltar e corrija o campo.")
+    st.caption("Se algum estiver errado, corrija o campo acima: a marcação dele volta a ficar vazia.")
 
 
 def _dados_conferidos(registro: dict) -> list[str]:
-    campos = registro.get("campos") or {}
-    conferidos = []
-    for campo, _ in DADOS_CRITICOS:
-        valor = str((campos.get(campo) or {}).get("valor") or VALOR_AUSENTE)
-        if st.session_state.get(_chave_conferencia(registro, campo, valor)):
-            conferidos.append(campo)
-    return conferidos
+    """Os dados conferidos na etapa 3, se ainda valem para a minuta montada."""
+    if not _conferencia_ainda_vale(registro):
+        return []
+    return [campo for campo, _ in DADOS_CRITICOS]
 
 
 def _formulario_rejeicao() -> None:
@@ -1432,8 +1474,7 @@ def _aprovar() -> None:
     elif conferidos is None and not st.session_state.get("conferencia_critica"):
         pendencia = "Confira nome, protocolo e datas antes de aprovar."
     elif conferidos is not None and len(conferidos) < len(DADOS_CRITICOS):
-        faltam = [rotulo for campo, rotulo in DADOS_CRITICOS if campo not in conferidos]
-        pendencia = "Confira com o original: " + ", ".join(faltam) + "."
+        pendencia = "Os dados críticos mudaram depois da conferência: volte e confira de novo."
     elif registro.get("alertas_seguranca") and not justificativa:
         pendencia = "Há alerta de segurança: justifique a aprovação."
     else:
@@ -1548,6 +1589,8 @@ def _encerrar_caso() -> None:
     st.session_state.decisao_motivos = None
     st.session_state.arquivo_minuta_aprovada = None
     st.session_state.arquivo_pdf_aprovado = None
+    st.session_state.conferencia_valida = None
+    st.session_state.conferencia_erro = None
     st.session_state.id_execucao_anterior = None
     # Outra entrada é outro atendimento: quem revisa e assina informa de novo
     st.session_state.revisor = ""
@@ -1950,7 +1993,7 @@ def _ausentes_da_edicao() -> list[str]:
     return ausentes
 
 
-def _gerar_minuta_editada() -> None:
+def _gerar_minuta_editada(dados_conferidos: list[str] | None = None) -> None:
     registro = st.session_state.get("extracao_registro") or {}
     edicao = {
         "categoria": st.session_state.get("edit_categoria"),
@@ -1969,7 +2012,7 @@ def _gerar_minuta_editada() -> None:
     edicao["pedido"] = pedido
     _guardar_edicao()
     try:
-        st.session_state.extracao_registro = aplicar_edicao(registro, edicao)
+        st.session_state.extracao_registro = aplicar_edicao(registro, edicao, dados_conferidos)
         st.session_state.minuta_erro = None
     except (OSError, FileNotFoundError, ValueError) as erro:
         st.session_state.minuta_erro = str(erro)

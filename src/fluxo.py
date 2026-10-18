@@ -341,7 +341,7 @@ def _versao_prompt(idioma: str | None) -> str:
     return cliente.versao_do_prompt(idioma)
 
 
-def aplicar_edicao(registro: dict, edicao: dict) -> dict:
+def aplicar_edicao(registro: dict, edicao: dict, dados_conferidos: list[str] | None = None) -> dict:
     """Monta a minuta a partir dos campos revisados e grava a revisão à parte.
 
     O JSON da extração continua com a resposta do modelo; cada revisão vira
@@ -387,6 +387,10 @@ def aplicar_edicao(registro: dict, edicao: dict) -> dict:
     atualizado["minuta"] = montar_minuta(valores)
     atualizado["minuta_gerada_de_campos"] = True
     atualizado["requer_revisao"] = True
+    if dados_conferidos is None:
+        atualizado.pop("dados_conferidos", None)
+    else:
+        atualizado["dados_conferidos"] = list(dados_conferidos)
     atualizado["arquivo_revisao"] = _gravar_revisao(atualizado)
     return atualizado
 
@@ -416,7 +420,10 @@ def _gravar_revisao(atualizado: dict) -> str | None:
         principal.parent.glob(f"{prefixo}*.json"),
         key=lambda arquivo: int(arquivo.stem.rsplit("_", 1)[-1]),
     )
-    conteudo = {chave: atualizado.get(chave) for chave in ("categoria", "assunto", "pedido", "campos", "minuta")}
+    conteudo = {
+        chave: atualizado.get(chave)
+        for chave in ("categoria", "assunto", "pedido", "campos", "minuta", "dados_conferidos")
+    }
     if existentes:
         ultima = json.loads(existentes[-1].read_text(encoding="utf-8"))
         if {chave: ultima.get(chave) for chave in conteudo} == conteudo:
@@ -428,7 +435,9 @@ def _gravar_revisao(atualizado: dict) -> str | None:
     destino.write_text(json.dumps(gravado, ensure_ascii=False, indent=2), encoding="utf-8")
     relativo = destino.relative_to(BASE_DIR).as_posix()
     if id_execucao:
-        registrar_revisao(id_execucao, atualizado["campos_alterados"], relativo)
+        registrar_revisao(
+            id_execucao, atualizado["campos_alterados"], relativo, atualizado.get("dados_conferidos"),
+        )
     return relativo
 
 

@@ -308,28 +308,58 @@ class TestDecisaoInterface(unittest.TestCase):
 
         self.assertEqual(tela.text_input(key="revisor").value, "Ana Beatriz")
 
-    def test_audio_exige_os_quatro_dados_conferidos(self):
+    def _caixas_conferencia(self, tela):
+        return [caixa for caixa in tela.checkbox if caixa.key.startswith("conferido_")]
+
+    def test_audio_confere_os_dados_na_etapa_3_antes_da_minuta(self):
         self.registro["modalidade"] = "audio"
-        tela = self._ate_minuta()
-        caixas = [caixa for caixa in tela.checkbox if caixa.key.startswith("conferido_")]
+        tela = self._ate_revisao()
+        caixas = self._caixas_conferencia(tela)
         self.assertEqual(len(caixas), 4)
-        self.assertNotIn("conferencia_critica", [caixa.key for caixa in tela.checkbox])
         self.assertIn("Nome do solicitante: Ana", [caixa.label for caixa in caixas])
         self.assertIn("Ouvir o áudio original", [item.label for item in tela.expander])
 
-        tela.text_input(key="revisor").set_value("Ana").run()
-        tela.text_input(key="cargo_setor").set_value("Secretaria").run()
         caixas[0].check().run()
-        tela.button(key="aprovar").click().run()
+        tela.button(key="prosseguir").click().run()
+        self.assertIn("Avaliação humana", _texto(tela))
         self.assertIn("Confira com o original: Protocolo, Data da solicitação, Data de início.", _texto(tela))
-        self.assertEqual(self._eventos(), [])
+        self.assertEqual(self._revisoes(), [])
 
-        for caixa in [caixa for caixa in tela.checkbox if caixa.key.startswith("conferido_")]:
+        for caixa in self._caixas_conferencia(tela):
             caixa.check()
         tela.run()
+        tela.button(key="prosseguir").click().run()
+        self.assertIn("Rascunho montado com os campos revisados.", _texto(tela))
+        self.assertEqual(self._caixas_conferencia(tela), [])
+        self.assertIn("conferidos com o original antes de montar a minuta", "\n".join(c.value for c in tela.caption))
+        revisao = self._revisoes()[0]
+        self.assertEqual(revisao["dados_conferidos"], ["solicitante", "protocolo", "data_solicitacao", "data_inicio"])
+
+        tela.text_input(key="revisor").set_value("Ana").run()
+        tela.text_input(key="cargo_setor").set_value("Secretaria").run()
         tela.button(key="aprovar").click().run()
         decisao = self._eventos()[0]
         self.assertEqual(decisao["dados_conferidos"], ["solicitante", "protocolo", "data_solicitacao", "data_inicio"])
+
+    def test_corrigir_campo_desmarca_so_a_conferencia_dele(self):
+        self.registro["modalidade"] = "imagem"
+        tela = self._ate_revisao()
+        self.assertIn("Ver a ficha original", [item.label for item in tela.expander])
+        for caixa in self._caixas_conferencia(tela):
+            caixa.check()
+        tela.run()
+        tela.text_input(key="edit_protocolo").set_value("2026-000143").run()
+
+        marcadas = {caixa.label: caixa.value for caixa in self._caixas_conferencia(tela)}
+        self.assertFalse(marcadas["Protocolo: 2026-000143"])
+        self.assertTrue(marcadas["Nome do solicitante: Ana"])
+
+    def test_texto_nao_tem_conferencia_na_etapa_3(self):
+        tela = self._ate_revisao()
+        self.assertEqual(self._caixas_conferencia(tela), [])
+        tela.button(key="prosseguir").click().run()
+        self.assertIn("conferencia_critica", [caixa.key for caixa in tela.checkbox])
+        self.assertNotIn("dados_conferidos", self._revisoes()[0])
 
     def test_alerta_mostra_cartao_e_exige_justificativa(self):
         self.registro["alertas_seguranca"] = ["Tentativa de ignorar instruções."]

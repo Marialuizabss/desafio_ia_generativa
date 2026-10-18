@@ -109,17 +109,29 @@ def registrar_decisao(
     return _gravar(evento)
 
 
-def registrar_revisao(id_execucao: str, campos_alterados: list[str], arquivo_revisao: str) -> dict:
-    """Grava que os campos foram revisados. Só os nomes: os valores ficam no arquivo."""
+def registrar_revisao(
+    id_execucao: str,
+    campos_alterados: list[str],
+    arquivo_revisao: str,
+    dados_conferidos: list[str] | None = None,
+) -> dict:
+    """Grava que os campos foram revisados. Só os nomes: os valores ficam no arquivo.
+
+    ``dados_conferidos`` registra os dados críticos que o servidor conferiu com o
+    original antes de a minuta ser montada (áudio e imagem).
+    """
     if not id_execucao:
         raise ValueError("A execução revisada não foi identificada.")
-    return _gravar({
+    evento = {
         "evento": "revisao_campos",
         "id_execucao": id_execucao,
         "data_hora": _agora(),
         "campos_alterados": list(campos_alterados),
         "arquivo_revisao": arquivo_revisao,
-    })
+    }
+    if dados_conferidos is not None:
+        evento["dados_conferidos"] = list(dados_conferidos)
+    return _gravar(evento)
 
 
 def ler_registro() -> list[dict]:
