@@ -1,7 +1,7 @@
 {
   "categoria": "matricula",
-  "assunto": "Solicitação de efetivação de matrícula no curso técnico em enfermagem",
-  "pedido": "Solicitação de efetivação da matrícula e informação sobre os documentos ainda necessários para apresentação.",
+  "assunto": "Solicitação de efetivação de matrícula e informação sobre documentos pendentes",
+  "pedido": "Solicita a efetivação da matrícula no curso técnico em enfermagem e informa que deseja saber quais documentos ainda precisa apresentar.",
   "campos": {
     "solicitante": {
       "valor": "Marcos Vinícius de Almeida Santos",
@@ -16,16 +16,16 @@
       "fonte": "dados/originais/entrada_audio.mp3"
     },
     "curso": {
-      "valor": "Técnico em enfermagem",
+      "valor": "Curso técnico em enfermagem",
       "fonte": "dados/originais/entrada_audio.mp3"
     },
     "eixo": {
-      "valor": "Saúdes",
-      "fonte": "edicao"
+      "valor": "Saúde",
+      "fonte": "dados/originais/entrada_audio.mp3"
     },
     "carga_horaria": {
-      "valor": "1.300 horas",
-      "fonte": "edicao"
+      "valor": "1.200 horas",
+      "fonte": "dados/originais/entrada_audio.mp3"
     },
     "turno": {
       "valor": "Noturno",
@@ -36,7 +36,7 @@
       "fonte": "nenhuma"
     },
     "regras_ciencia": {
-      "valor": "O(a) solicitante declarou estar ciente de que a matrícula será cancelada automaticamente se faltar sem justificativa comprovada nos dois primeiros dias de aula consecutivos ou em três dias de aula consecutivos ou não nos dez primeiros dias de aula.",
+      "valor": "O(a) solicitante declarou estar ciente de que a matrícula será cancelada automaticamente se faltar sem justificativa comprovada nos dois primeiros dias de aula consecutivos, em três dias de aula consecutivos ou não nos dez primeiros dias de aula.",
       "fonte": "dados/originais/entrada_audio.mp3"
     },
     "documentos_necessarios": {
@@ -60,15 +60,14 @@
   ],
   "alertas_seguranca": [],
   "requer_revisao": true,
-  "minuta": "[CABEÇALHO COM BRASÃO — dados/originais/brasao.png]\n\nPrezado(a) Marcos Vinícius de Almeida Santos,\n\nRecebemos sua solicitação de matrícula, registrada sob o protocolo 2026-000142.\n\n**Dados informados na solicitação**\n- Curso: Técnico em enfermagem\n- Eixo tecnológico: Saúdes\n- Carga horária: 1.300 horas\n- Turno: Noturno\n- Início do curso: não localizado\n\n**Orientações**\n- Documentos necessários: não localizado\n- Prazo para apresentação: não localizado\n- Local e horário de atendimento: não localizado\n\n**Ciência das regras de matrícula**\nO(a) solicitante declarou estar ciente de que a matrícula será cancelada automaticamente se faltar sem justificativa comprovada nos dois primeiros dias de aula consecutivos ou em três dias de aula consecutivos ou não nos dez primeiros dias de aula.\n\nPermanecemos à disposição para esclarecimentos.\n\nAtenciosamente, \n[NOME DO SERVIDOR RESPONSÁVEL] \n[CARGO / SETOR]\n\n*Minuta elaborada com apoio de IA. Documento sujeito a revisão e aprovação do servidor responsável antes de qualquer envio.*",
+  "minuta": "[CABEÇALHO COM BRASÃO — dados/originais/brasao.png]\n\nPrezado(a) Marcos Vinícius de Almeida Santos,\n\nRecebemos sua solicitação de matrícula, registrada sob o protocolo 2026-000142.\n\n**Dados informados na solicitação**\n- Curso: Curso técnico em enfermagem\n- Eixo tecnológico: Saúde\n- Carga horária: 1.200 horas\n- Turno: Noturno\n- Início do curso: não localizado\n\n**Orientações**\n- Documentos necessários: não localizado\n- Prazo para apresentação: não localizado\n- Local e horário de atendimento: não localizado\n\n**Ciência das regras de matrícula**\nO(a) solicitante declarou estar ciente de que a matrícula será cancelada automaticamente se faltar sem justificativa comprovada nos dois primeiros dias de aula consecutivos, em três dias de aula consecutivos ou não nos dez primeiros dias de aula.\n\nPermanecemos à disposição para esclarecimentos.\n\nAtenciosamente, \n[NOME DO SERVIDOR RESPONSÁVEL] \n[CARGO / SETOR]\n\n*Minuta elaborada com apoio de IA. Documento sujeito a revisão e aprovação do servidor responsável antes de qualquer envio.*",
   "modalidade": "audio",
   "arquivo_origem": "dados/originais/entrada_audio.mp3",
   "modelo": "gpt-5.6-luna",
-  "texto_extraido": "Bom dia, meu protocolo é 2026-000142 de 14 de outubro de 2026. Meu nome é Marcos Vinícius de Almeida Santos, nasci em [DATA DE NASCIMENTO REMOVIDA], em [NATURALIDADE REMOVIDA], e quero pedir a efetivação da minha matrícula no curso técnico em enfermagem do eixo tecnológico de saúde, com carga horária de 1.200 horas noturno. Meu CPF é [CPF REMOVIDO], meu RG é [RG REMOVIDO], o nome da minha mãe é [FILIAÇÃO REMOVIDA], e o meu e-mail é [E-MAIL REMOVIDO]. Declaro estar ciente de que a matrícula será cancelada automaticamente se eu faltar sem justificativa comprovada nos dois primeiros dias de aula consecutivos ou em três dias de aula consecutivos ou não nos dez primeiros dias de aula. Peço que informem quais os documentos ainda preciso apresentar. Muito obrigado.",
+  "texto_extraido": "Bom dia, meu protocolo é 2026-000142 de 14 de outubro de 2026. Meu nome é Marcos Vinícius de Almeida Santos, nasci em [DATA DE NASCIMENTO REMOVIDA] em [NATURALIDADE REMOVIDA] e quero pedir a efetivação da minha matrícula no curso técnico em enfermagem do eixo tecnológico de saúde com carga horária de 1.200 horas noturno, noturno. Meu CPF é [CPF REMOVIDO], meu RG é [RG REMOVIDO], o nome da minha mãe é [FILIAÇÃO REMOVIDA]. Declaro estar ciente de que a matrícula será cancelada automaticamente se eu faltar sem justificativa comprovada nos dois primeiros dias de aula consecutivos ou em três dias de aula consecutivos ou não nos dez primeiros dias de aula. Peço que informem quais os documentos ainda preciso apresentar. Muito obrigado.",
   "dados_removidos": {
     "cpf": 1,
     "rg": 1,
-    "email": 1,
     "data_nascimento": 1,
     "naturalidade": 1,
     "filiacao": 1
@@ -78,13 +77,13 @@
     "temperatura": null,
     "idioma": "pt",
     "timeout_segundos": 120.0,
-    "tempo_resposta_segundos": 6.22,
-    "tokens_entrada": 1963,
-    "tokens_saida": 692,
-    "tokens_total": 2655,
-    "tokens_raciocinio": 0,
+    "tempo_resposta_segundos": 7.2,
+    "tokens_entrada": 1951,
+    "tokens_saida": 782,
+    "tokens_total": 2733,
+    "tokens_raciocinio": 81,
     "tokens_cache": 0,
-    "custo_estimado_usd": 0.001223,
+    "custo_estimado_usd": 0.001329,
     "preco_usd_por_milhao_tokens": {
       "entrada": 0.2,
       "saida": 1.2
@@ -98,7 +97,7 @@
       "store": false
     }
   },
-  "id_execucao": "d52c1ff0-4977-4ad8-9951-a57de5ccc537",
+  "id_execucao": "74efc93b-bc89-4b8c-8e79-b29ebfd802ca",
   "arquivo_extracao": "dados/processados/extracao_entrada_audio.json",
   "minuta_gerada_de_campos": true
 }

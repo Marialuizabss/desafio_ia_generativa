@@ -27,8 +27,10 @@ from pathlib import Path
 import streamlit as st
 
 try:
+    from audit import registrar_decisao
     from fluxo import aplicar_edicao, processar_entrada
 except ImportError:
+    from src.audit import registrar_decisao
     from src.fluxo import aplicar_edicao, processar_entrada
 
 try:
@@ -326,7 +328,16 @@ ESTILOS = """
   .st-key-escolher_audio [data-testid="stBaseButton-primary"],
   .st-key-escolher_imagem [data-testid="stBaseButton-primary"],
   .st-key-prosseguir [data-testid="stBaseButton-primary"],
-  .st-key-voltar [data-testid="stBaseButton-secondary"] {
+  .st-key-aprovar [data-testid="stBaseButton-primary"],
+  .st-key-voltar [data-testid="stBaseButton-secondary"],
+  .st-key-rejeitar [data-testid="stBaseButton-secondary"],
+  .st-key-confirmar_rejeicao [data-testid="stBaseButton-secondary"],
+  .st-key-cancelar_rejeicao [data-testid="stBaseButton-secondary"],
+  .st-key-corrigir_campos [data-testid="stBaseButton-primary"],
+  .st-key-corrigir_campos [data-testid="stBaseButton-secondary"],
+  .st-key-gerar_de_novo [data-testid="stBaseButton-primary"],
+  .st-key-gerar_de_novo [data-testid="stBaseButton-secondary"],
+  .st-key-encerrar_caso [data-testid="stBaseButton-secondary"] {
     border-radius: 10px !important;
     min-height: 2.35rem;
     font-size: 0.84rem;
@@ -508,13 +519,19 @@ ESTILOS = """
     color: var(--verde-escuro) !important;
   }
 
-  .st-key-prosseguir [data-testid="stBaseButton-primary"] {
+  .st-key-prosseguir [data-testid="stBaseButton-primary"],
+  .st-key-aprovar [data-testid="stBaseButton-primary"],
+  .st-key-corrigir_campos [data-testid="stBaseButton-primary"],
+  .st-key-gerar_de_novo [data-testid="stBaseButton-primary"] {
     border: none !important;
     background: var(--verde) !important;
     color: #FFFFFF !important;
   }
 
-  .st-key-prosseguir [data-testid="stBaseButton-primary"]:hover {
+  .st-key-prosseguir [data-testid="stBaseButton-primary"]:hover,
+  .st-key-aprovar [data-testid="stBaseButton-primary"]:hover,
+  .st-key-corrigir_campos [data-testid="stBaseButton-primary"]:hover,
+  .st-key-gerar_de_novo [data-testid="stBaseButton-primary"]:hover {
     background: var(--verde-escuro) !important;
     color: #FFFFFF !important;
   }
@@ -525,15 +542,36 @@ ESTILOS = """
     color: #8A97B0 !important;
   }
 
-  .st-key-voltar [data-testid="stBaseButton-secondary"] {
+  .st-key-voltar [data-testid="stBaseButton-secondary"],
+  .st-key-cancelar_rejeicao [data-testid="stBaseButton-secondary"],
+  .st-key-corrigir_campos [data-testid="stBaseButton-secondary"],
+  .st-key-gerar_de_novo [data-testid="stBaseButton-secondary"],
+  .st-key-encerrar_caso [data-testid="stBaseButton-secondary"] {
     border: 1px solid var(--linha) !important;
     background: transparent !important;
     color: var(--verde) !important;
   }
 
-  .st-key-voltar [data-testid="stBaseButton-secondary"]:hover {
+  .st-key-voltar [data-testid="stBaseButton-secondary"]:hover,
+  .st-key-cancelar_rejeicao [data-testid="stBaseButton-secondary"]:hover,
+  .st-key-corrigir_campos [data-testid="stBaseButton-secondary"]:hover,
+  .st-key-gerar_de_novo [data-testid="stBaseButton-secondary"]:hover,
+  .st-key-encerrar_caso [data-testid="stBaseButton-secondary"]:hover {
     border-color: var(--verde) !important;
     color: var(--verde-escuro) !important;
+  }
+
+  .st-key-rejeitar [data-testid="stBaseButton-secondary"],
+  .st-key-confirmar_rejeicao [data-testid="stBaseButton-secondary"] {
+    border: 1px solid #E4C8BC !important;
+    background: transparent !important;
+    color: #8A4B32 !important;
+  }
+
+  .st-key-rejeitar [data-testid="stBaseButton-secondary"]:hover,
+  .st-key-confirmar_rejeicao [data-testid="stBaseButton-secondary"]:hover {
+    border-color: #8A4B32 !important;
+    color: #6E3A26 !important;
   }
 
   .st-key-edicao [data-baseweb="select"] > div {
@@ -678,6 +716,10 @@ def _iniciar_estado() -> None:
     st.session_state.setdefault("extracao_forcar", False)
     st.session_state.setdefault("edicao_id", None)
     st.session_state.setdefault("minuta_erro", None)
+    st.session_state.setdefault("decisao_estado", None)
+    st.session_state.setdefault("decisao_erro", None)
+    st.session_state.setdefault("decisao_etapa", None)
+    st.session_state.setdefault("decisao_justificativa", "")
 
 
 def _ajustar_etapa() -> None:
@@ -697,6 +739,9 @@ def _ir(destino: int) -> None:
     atual = int(st.session_state.get("etapa") or 1)
     if destino == atual:
         return
+    if destino < atual and st.session_state.get("decisao_estado"):
+        st.session_state.decisao_estado = None
+        st.session_state.decisao_erro = None
     st.session_state.animacao = "avancar" if destino > atual else "voltar"
     st.session_state.etapa = destino
 
@@ -866,7 +911,13 @@ def _etapa_revisao() -> None:
             unsafe_allow_html=True,
         )
     pronto = bool(st.session_state.extracao_registro) and not st.session_state.extracao_erro
+    if pronto and _decisao_em_curso():
+        _navegacao(None)
+        _painel_decisao()
+        return
     _navegacao(_prosseguir_revisao if pronto else None, desabilitado=not pronto)
+    if pronto:
+        _painel_decisao()
 
 
 def _etapa_minuta() -> None:
@@ -877,7 +928,250 @@ def _etapa_minuta() -> None:
         st.image(str(BRASAO), width=88)
     st.markdown(texto)
     st.caption("Revisão humana obrigatória antes de qualquer envio.")
+    if _decisao_em_curso():
+        _navegacao(None)
+        _painel_decisao()
+        return
+    _acoes_da_minuta()
     _navegacao(None)
+
+
+def _decisao_em_curso() -> bool:
+    return st.session_state.get("decisao_estado") in {"rejeitando", "rejeitada", "aprovada"}
+
+
+def _painel_decisao() -> None:
+    estado = st.session_state.get("decisao_estado")
+    if estado == "rejeitando":
+        _formulario_rejeicao()
+        return
+    if estado == "rejeitada":
+        _passos_apos_rejeicao()
+        return
+    if estado == "aprovada":
+        _passo_apos_aprovacao()
+        return
+    if st.session_state.etapa == 3:
+        st.markdown(
+            "<p class=\"orientacao\">Rejeite se a extração não servir: pessoa errada, "
+            "protocolo inventado, transcrição ilegível ou alerta de manipulação.</p>",
+            unsafe_allow_html=True,
+        )
+        st.button("Rejeitar", key="rejeitar", width="stretch", on_click=_abrir_rejeicao)
+
+
+def _acoes_da_minuta() -> None:
+    st.markdown(
+        "<p class=\"orientacao\">A minuta é o modelo preenchido com os campos confirmados. "
+        "Se algo estiver errado, rejeite e corrija os campos. Uma nova chamada ao modelo "
+        "só entra se a falha foi a extração.</p>",
+        unsafe_allow_html=True,
+    )
+    st.checkbox(
+        "Conferi nome, protocolo e datas.",
+        key="conferencia_critica",
+    )
+    aprovar, rejeitar = st.columns(2, gap="small")
+    with aprovar:
+        st.button("Aprovar", key="aprovar", type="primary", width="stretch", on_click=_aprovar)
+    with rejeitar:
+        st.button("Rejeitar", key="rejeitar", width="stretch", on_click=_abrir_rejeicao)
+
+
+def _formulario_rejeicao() -> None:
+    if st.session_state.etapa == 4:
+        texto = (
+            "Diga o que está errado. Sem a justificativa, a rejeição não é gravada. "
+            "A minuta não será refeita e nenhum áudio será gerado."
+        )
+    else:
+        texto = (
+            "Diga o que está errado na extração. Sem a justificativa, a rejeição não é gravada. "
+            "A minuta não será montada e nenhum áudio será gerado."
+        )
+    st.markdown(f'<p class="orientacao">{escape(texto)}</p>', unsafe_allow_html=True)
+    st.text_area(
+        "Justificativa",
+        key="justificativa_rejeicao",
+        height=88,
+        placeholder="Ex.: protocolo inventado, pessoa errada, transcrição ilegível.",
+    )
+    if st.session_state.decisao_erro:
+        st.markdown(
+            f'<p class="aviso">{escape(st.session_state.decisao_erro)}</p>',
+            unsafe_allow_html=True,
+        )
+    cancelar, confirmar = st.columns(2, gap="small")
+    with cancelar:
+        st.button("Cancelar", key="cancelar_rejeicao", width="stretch", on_click=_cancelar_rejeicao)
+    with confirmar:
+        st.button(
+            "Registrar rejeição",
+            key="confirmar_rejeicao",
+            width="stretch",
+            on_click=_rejeitar,
+        )
+
+
+def _passos_apos_rejeicao() -> None:
+    etapa = st.session_state.get("decisao_etapa") or st.session_state.etapa
+    if etapa == 4:
+        texto = (
+            "A rejeição ficou no registro, ligada a esta execução. "
+            "A minuta não foi refeita e nenhum áudio foi gerado. "
+            "O arquivo original e o JSON da extração continuam no lugar. "
+            "Se os campos estão errados, corrija na etapa anterior. "
+            "Gerar de novo chama o modelo outra vez e só cabe quando a falha foi a extração, "
+            "não um ajuste que você já pode fazer na tela."
+        )
+    else:
+        texto = (
+            "A rejeição ficou no registro, ligada a esta execução. "
+            "A minuta não foi montada e nenhum áudio foi gerado. "
+            "O arquivo original e o JSON da extração continuam no lugar. "
+            "Você pode corrigir os campos, gerar a extração de novo ou encerrar e escolher outra entrada. "
+            "Gerar de novo chama o modelo outra vez."
+        )
+    st.markdown(f'<p class="orientacao">{escape(texto)}</p>', unsafe_allow_html=True)
+    st.button(
+        "Corrigir campos",
+        key="corrigir_campos",
+        type="primary" if etapa == 4 else "secondary",
+        width="stretch",
+        on_click=_corrigir_campos,
+    )
+    st.button(
+        "Gerar extração de novo",
+        key="gerar_de_novo",
+        type="primary" if etapa == 3 else "secondary",
+        width="stretch",
+        on_click=_gerar_extracao_de_novo,
+    )
+    st.button(
+        "Escolher outra entrada",
+        key="encerrar_caso",
+        width="stretch",
+        on_click=_encerrar_caso,
+    )
+
+
+def _passo_apos_aprovacao() -> None:
+    st.markdown(
+        "<p class=\"orientacao\">A aprovação ficou no registro, ligada a esta execução. "
+        "Nenhum áudio foi gerado.</p>",
+        unsafe_allow_html=True,
+    )
+    st.button(
+        "Escolher outra entrada",
+        key="encerrar_caso",
+        width="stretch",
+        on_click=_encerrar_caso,
+    )
+
+
+def _abrir_rejeicao() -> None:
+    st.session_state.decisao_estado = "rejeitando"
+    st.session_state.decisao_erro = None
+    st.session_state.decisao_etapa = st.session_state.etapa
+
+
+def _cancelar_rejeicao() -> None:
+    st.session_state.decisao_estado = None
+    st.session_state.decisao_erro = None
+
+
+def _rejeitar() -> None:
+    justificativa = (st.session_state.get("justificativa_rejeicao") or "").strip()
+    if not justificativa:
+        st.session_state.decisao_erro = "Informe a justificativa para rejeitar."
+        return
+    registro = st.session_state.get("extracao_registro") or {}
+    try:
+        registrar_decisao(
+            registro.get("id_execucao") or "",
+            "rejeitado",
+            justificativa=justificativa,
+        )
+    except ValueError as erro:
+        st.session_state.decisao_erro = str(erro)
+        return
+    st.session_state.decisao_erro = None
+    st.session_state.decisao_justificativa = justificativa
+    st.session_state.decisao_estado = "rejeitada"
+    st.session_state.decisao_etapa = st.session_state.etapa
+
+
+def _aprovar() -> None:
+    registro = st.session_state.get("extracao_registro") or {}
+    try:
+        registrar_decisao(
+            registro.get("id_execucao") or "",
+            "aprovado",
+            conferencia_dados_criticos=bool(st.session_state.get("conferencia_critica")),
+        )
+    except ValueError as erro:
+        st.session_state.decisao_erro = str(erro)
+        return
+    st.session_state.decisao_erro = None
+    st.session_state.decisao_estado = "aprovada"
+    st.session_state.decisao_etapa = st.session_state.etapa
+
+
+def _corrigir_campos() -> None:
+    st.session_state.decisao_estado = None
+    st.session_state.decisao_erro = None
+    if st.session_state.etapa != 3:
+        _ir(3)
+
+
+def _gerar_extracao_de_novo() -> None:
+    registro = st.session_state.get("extracao_registro") or {}
+    justificativa = (st.session_state.get("decisao_justificativa") or "").strip()
+    try:
+        registrar_decisao(
+            registro.get("id_execucao") or "",
+            "nova_geracao",
+            justificativa=justificativa,
+        )
+    except ValueError as erro:
+        st.session_state.decisao_erro = str(erro)
+        return
+    st.session_state.decisao_erro = None
+    st.session_state.decisao_estado = None
+    st.session_state.extracao_registro = None
+    st.session_state.extracao_erro = None
+    st.session_state.extracao_forcar = True
+    st.session_state.minuta_erro = None
+    if st.session_state.etapa != 3:
+        _ir(3)
+    st.session_state.edicao_id = None
+    st.session_state.edicao_guardada = None
+    st.session_state.edicao_id_guardada = None
+
+
+def _encerrar_caso() -> None:
+    st.session_state.entrada = None
+    st.session_state.confirmada = False
+    st.session_state.erro = None
+    st.session_state.extracao_chave = None
+    st.session_state.extracao_registro = None
+    st.session_state.extracao_erro = None
+    st.session_state.extracao_forcar = False
+    st.session_state.edicao_id = None
+    st.session_state.edicao_guardada = None
+    st.session_state.edicao_id_guardada = None
+    st.session_state.minuta_erro = None
+    st.session_state.decisao_estado = None
+    st.session_state.decisao_erro = None
+    st.session_state.decisao_etapa = None
+    st.session_state.decisao_justificativa = ""
+    st.session_state.texto_guardado = ""
+    if "rascunho_texto" in st.session_state:
+        st.session_state.rascunho_texto = ""
+    _ir(2)
+    st.session_state.edicao_id = None
+    st.session_state.edicao_guardada = None
+    st.session_state.edicao_id_guardada = None
 
 
 def _secao_modelo() -> None:
