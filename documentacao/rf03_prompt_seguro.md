@@ -292,7 +292,7 @@ Independem da resposta do modelo. Testes automáticos em `testes/test_rf03.py` (
 
 ## 12. Arquivos
 
-Em cada pasta de execução: `CASO-XX_prompt_seguro_repN.json` (resposta completa e dados da chamada),
+As execuções ficam em `resultados/minutas/rf03/execucao_*`. Em cada pasta de execução: `CASO-XX_prompt_seguro_repN.json` (resposta completa e dados da chamada),
 `CASO-XX_prompt_seguro_repN_minuta.md`, `CASO-XX_prompt_A.md` (saída sem proteção),
 `CASO-XX_prompt_A_entrada.txt` (texto exato enviado com o Prompt A), `registro_rf03.json`
 (identificador, data, modelo, versão do prompt, arquivo de origem, gabarito, verificação e decisão

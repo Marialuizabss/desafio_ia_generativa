@@ -3,7 +3,7 @@
 Processa os 7 casos pelo mesmo fluxo da interface (minimização, prompt de
 produção e configuração padrão de config/modelos.json), compara cada saída
 com o gabarito e aplica a parte automática do protocolo
-(documentacao/rf13_protocolo_avaliacao.md): fidelidade, completude, formato e
+(documentacao/rf13_avaliacao_qualidade.md, Apêndice A): fidelidade, completude, formato e
 segurança. Linguagem e decisão final ficam para a revisão humana.
 
 A minuta avaliada é a que o sistema entrega para a revisão: o modelo

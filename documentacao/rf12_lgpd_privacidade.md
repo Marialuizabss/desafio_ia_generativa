@@ -128,7 +128,7 @@ projeto: 48 testes.
 ### 5.2 Outras evidências
 
 - **Minutas sem dados pessoais:** as 21 minutas do prompt seguro no RF03 não contêm CPF, RG, e-mail,
-  data de nascimento, naturalidade nem nome da mãe (`resultados/minutas/rf03/relatorio_rf03.md`).
+  data de nascimento, naturalidade nem nome da mãe (`documentacao/rf03_prompt_seguro.md`).
   A minuta é protegida por duas camadas: o dado não é enviado (minimização) e, se for, o prompt
   proíbe reproduzi-lo.
 - **Leitura da ficha (RF08):** o pedido atual ao modelo solicita apenas os 12 campos da minuta; CPF,

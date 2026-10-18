@@ -11,7 +11,7 @@
   "observacao": "Metadados da primeira transcricao, sem medicao de tempo.",
   "arquivo_transcricao_original": "transcricao_rf06_original.txt",
   "arquivo_transcricao_revisada": "transcricao_rf06_revisada.txt",
-  "arquivo_validacao": "validacao_rf06.txt",
+  "arquivo_validacao": "documentacao/rf06_transcricao.md",
   "revisao_humana": "concluida",
   "divergencias_corrigidas": [
     "Turno: no turno noturno",

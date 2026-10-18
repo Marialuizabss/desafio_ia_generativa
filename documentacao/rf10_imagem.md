@@ -1,4 +1,3 @@
-
 # Validação — RF10: Geração e edição de imagens
 
 Responsável pela revisão humana: Maria Luiza
