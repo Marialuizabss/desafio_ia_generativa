@@ -48,9 +48,9 @@ Os testes automatizados específicos do RF08 verificam:
 - Resposta vazia da API: a função lança `ValueError`.
 - Extração simulada com sucesso: o resultado é validado conforme o formato esperado pela implementação atual.
 
-**Resultado dos testes:** os três testes específicos do RF08 passaram na última execução.
+**Resultado dos testes:** os testes específicos do RF08 (`testes/test_vision.py`) passaram na última execução.
 
-## Falhas da API (RF04)
+### Falhas da API (RF04)
 
 Quando a chamada à API falha, o módulo traduz o erro em uma mensagem em português que diz o motivo e
 o que fazer, em vez de mostrar o erro técnico em inglês. As mensagens ficam em `src/erros_api.py` e
@@ -67,6 +67,7 @@ nunca citam a chave de acesso.
 | Erro do servidor | O serviço respondeu com erro (código). Tente de novo em instantes. |
 
 Cada mensagem começa com o que não foi possível fazer ("a leitura do documento" ou "a leitura da ficha").
+Os testes dessas mensagens, com a API simulada, estão em `testes/test_erros_api.py`.
 
 ## 5. Segurança e revisão humana
 
@@ -157,3 +158,4 @@ continua obrigatória em qualquer rota.
 | `dados/gabaritos/gabarito_entrada_pdf-imagem.json` | Gabarito, com a revisão do nome |
 | `resultados/avaliacao/execucao_20261018_184910/CASO-06_*` | Avaliação final |
 | `testes/test_vision.py` | Testes de leitura e tratamento de erros |
+| `src/erros_api.py` e `testes/test_erros_api.py` | Mensagens em português para falhas da API e seus testes |
