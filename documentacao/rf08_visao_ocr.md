@@ -50,6 +50,24 @@ Os testes automatizados específicos do RF08 verificam:
 
 **Resultado dos testes:** os três testes específicos do RF08 passaram na última execução.
 
+## Falhas da API (RF04)
+
+Quando a chamada à API falha, o módulo traduz o erro em uma mensagem em português que diz o motivo e
+o que fazer, em vez de mostrar o erro técnico em inglês. As mensagens ficam em `src/erros_api.py` e
+nunca citam a chave de acesso.
+
+| Falha | Mensagem mostrada ao servidor |
+|---|---|
+| Chave recusada ou ausente | A chave de acesso não foi aceita (ou encontrada). Confira o arquivo `.env`. |
+| Limite de uso da conta | O limite de uso foi atingido. Aguarde um pouco e tente de novo. |
+| Tempo esgotado | O serviço demorou demais para responder. Tente de novo. |
+| Sem conexão | Falha de conexão com o serviço. Confira a internet. |
+| Modelo indisponível | O modelo configurado não está disponível para esta conta. Confira o `config.json`. |
+| Arquivo ou texto recusado | O serviço recusou o arquivo ou o texto enviado. Confira o formato e o tamanho. |
+| Erro do servidor | O serviço respondeu com erro (código). Tente de novo em instantes. |
+
+Cada mensagem começa com o que não foi possível fazer ("a leitura do documento" ou "a leitura da ficha").
+
 ## 5. Segurança e revisão humana
 
 A implementação atual instrui o modelo a não incluir CPF, RG, data de nascimento, nomes dos pais ou e-mail no resultado compartilhado com a minuta. Também trata instruções presentes no documento como conteúdo não confiável.

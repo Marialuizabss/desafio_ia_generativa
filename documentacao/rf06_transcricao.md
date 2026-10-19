@@ -50,6 +50,24 @@ A transcrição foi avaliada e foram identificadas divergências. O campo de tur
 - Não foi realizada nova chamada à API.
 - Revisão textual concluída, com as duas divergências identificadas e corrigidas.
 
+## Falhas da API (RF04)
+
+Quando a chamada à API falha, o módulo traduz o erro em uma mensagem em português que diz o motivo e
+o que fazer, em vez de mostrar o erro técnico em inglês. As mensagens ficam em `src/erros_api.py` e
+nunca citam a chave de acesso.
+
+| Falha | Mensagem mostrada ao servidor |
+|---|---|
+| Chave recusada ou ausente | A chave de acesso não foi aceita (ou encontrada). Confira o arquivo `.env`. |
+| Limite de uso da conta | O limite de uso foi atingido. Aguarde um pouco e tente de novo. |
+| Tempo esgotado | O serviço demorou demais para responder. Tente de novo. |
+| Sem conexão | Falha de conexão com o serviço. Confira a internet. |
+| Modelo indisponível | O modelo configurado não está disponível para esta conta. Confira o `config.json`. |
+| Arquivo ou texto recusado | O serviço recusou o arquivo ou o texto enviado. Confira o formato e o tamanho. |
+| Erro do servidor | O serviço respondeu com erro (código). Tente de novo em instantes. |
+
+Cada mensagem começa com o que não foi possível fazer ("a transcrição do áudio").
+
 ## No sistema entregue
 
 - **Duração, idioma e modelo:** `entrada_audio.mp3` tem 89,16 s (medido do arquivo com `mutagen`, sem
