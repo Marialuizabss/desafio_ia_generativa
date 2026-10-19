@@ -1,14 +1,13 @@
 # RF12 — Varredura de credenciais e dados pessoais
 
-- Data: 18/10/2026 20:25
-- Commit: `33112e6`
-- Arquivos verificados: 264 (14 binários, verificados só quanto ao nome)
-- Resultado: **1 pendência(s)**
+- Data: 18/10/2026 21:46
+- Commit: `c128bdc`
+- Arquivos verificados: 265 (14 binários, verificados só quanto ao nome)
+- Resultado: **aprovado**
 
 ## Credenciais
 - Chaves de API nos arquivos: **nenhum**
-- Variáveis de credencial preenchidas: **1**
-  - `src/audit.py:29` — re.c…(12 caracteres)
+- Variáveis de credencial preenchidas: **nenhum**
 - Arquivo .env versionado: **nenhum**
 - Chaves de API no histórico do git (todas as branches): **nenhuma**
 

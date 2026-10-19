@@ -85,6 +85,7 @@ def processar_entrada(
             registro["id_execucao_origem"] = origem
             if audio:
                 registro["duracao_audio_segundos"] = audio["duracao_segundos"]
+            chamada = registro.get("chamada") or {}
             registro["id_execucao"] = registrar_execucao({
                 "tipo": "extracao_reaproveitada",
                 "modalidade": modalidade,
@@ -92,7 +93,13 @@ def processar_entrada(
                 "arquivo_extracao": registro["arquivo_extracao"],
                 "id_execucao_origem": origem,
                 "modelo": modelo_id,
-                "versao_prompt": (registro.get("chamada") or {}).get("versao_prompt"),
+                "provedor": chamada.get("provedor"),
+                "versao_prompt": chamada.get("versao_prompt"),
+                "parametros": {
+                    "temperatura": temperatura,
+                    "idioma": idioma,
+                    **(chamada.get("parametros") or {}),
+                },
                 "resultado": "reaproveitada",
                 "categoria": registro.get("categoria"),
                 "campos_ausentes": registro.get("campos_ausentes"),
