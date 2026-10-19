@@ -48,8 +48,39 @@ erros encontrados e como validou.]
 
 ## 3. Felipe Ferreira Aguiar
 
-[A preencher: ferramenta e modelo, para que usou, sugestões aceitas, modificadas ou rejeitadas,
-erros encontrados e como validou.]
+**Ferramenta:** Cursor, agente no editor, modelo Grok 4.7, em 17 e 18/10/2026.
+
+**Finalidade:** auxiliar o núcleo dele — interface, chamada à API (RF04), extração (RF05), minuta e
+primeira versão do PDF (RF09) — e o fluxo de revisão e decisão na tela. Além de analisar se o que era desenvolvido deixava de contemplar o solicitado pelos requisitos funcionais.
+
+**Forma de trabalho:** Felipe pedia a análise ou a mudança; a IA lia o código, explicava e aplicava;
+Felipe testava na interface, apontava o que falhava e pedia correção.
+
+**Principais solicitações**
+
+- Mapa do que já existia (áudio, visão, imagem e gabaritos)
+- Interface web aberta, com texto, áudio e imagem.
+- Objeto da extração, chamada ao modelo e gravação do JSON em `dados/processados/`.
+- Parâmetros do modelo na tela e registro de tempo, tokens e custo.
+
+**Sugestões**
+
+- **Aceitas:** Streamlit, uma etapa por tela; modelos limitados a `gpt-5.6-luna`, `gpt-5.6-terra`,
+  `o4-mini` e `gpt-4o-mini`; aprovar e rejeitar separados da edição; justificativa obrigatória e fora
+  do próximo prompt; nome e cargo do servidor na assinatura; PDF com o brasão.
+- **Modificadas:** a minuta deixou de ser reescrita pelo modelo a cada edição e passou a ser montada
+  localmente com os campos confirmados; a temperatura só é enviada aos modelos que aceitam o
+  parâmetro.
+- **Rejeitadas:** Gradio no lugar da interface web; tratar a edição dos campos como substituta de
+  aprovar e rejeitar; mandar a justificativa da rejeição como instrução da nova extração.
+
+**Erros encontrados:** classe descrita com 13 campos, e o contrato tem 12; voltar de etapa apagava a
+entrada e a edição; aprovação com "não localizado" gravada como aprovado, conferência que não
+bloqueava e revisor vazio; nova extração gravava por cima do JSON rejeitado. Todos corrigidos e
+testados.
+
+**Validação:** testes da edição, da decisão e do PDF, uso da interface pelo Felipe e revisão do fluxo
+contra o enunciado.
 
 ## 4. Declaração de responsabilidade
 
