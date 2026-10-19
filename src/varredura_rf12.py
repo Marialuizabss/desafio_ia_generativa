@@ -71,6 +71,15 @@ def cpf_valido(numero):
     return True
 
 
+def credenciais_da_linha(linha):
+    """Valores preenchidos que parecem credencial.
+
+    Código Python não conta: uma chave real não tem parêntese, e expressões
+    como ``re.compile(`` ou ``os.getenv(`` geravam falso positivo.
+    """
+    return [valor for valor in CREDENCIAL_PREENCHIDA.findall(linha) if "(" not in valor]
+
+
 def mascarar(valor):
     return f"{valor[:4]}…({len(valor)} caracteres)"
 
@@ -101,7 +110,7 @@ def varrer():
 
             for chave in CHAVE.findall(linha):
                 achados["chaves"].append((local, mascarar(chave)))
-            for valor in CREDENCIAL_PREENCHIDA.findall(linha):
+            for valor in credenciais_da_linha(linha):
                 achados["credenciais"].append((local, mascarar(valor)))
 
             for cpf in CPF.findall(UUID.sub(" ", linha)):

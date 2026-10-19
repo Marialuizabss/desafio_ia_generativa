@@ -7,6 +7,7 @@ from unittest.mock import patch
 from src import audit, fluxo, llm_client
 from src.extracao import resultado_de_dict
 from src.privacidade import MARCADORES, contar_remocoes, minimizar_texto
+from src.varredura_rf12 import credenciais_da_linha
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -248,6 +249,24 @@ class TestRF12Fluxo(unittest.TestCase):
         fluxo.processar_entrada(self.entrada)
 
         self.assertEqual(len(self.enviados), 1)
+
+
+class TestRF12Varredura(unittest.TestCase):
+    """Código que menciona segredo não é credencial; variável preenchida é."""
+
+    def test_codigo_que_mascara_segredo_nao_e_credencial(self):
+        linha = (
+            '_NOME_SECRETO = re.compile(r"api_?key|secret|senha|password|authorization", '
+            "re.IGNORECASE)"
+        )
+
+        self.assertEqual(credenciais_da_linha(linha), [])
+
+    def test_variavel_preenchida_continua_credencial(self):
+        valor = "sk-" + "abcdefghijklmnop"
+        linha = f'OPENAI_API_KEY = "{valor}"'
+
+        self.assertEqual(credenciais_da_linha(linha), [valor])
 
 
 if __name__ == "__main__":

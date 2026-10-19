@@ -265,8 +265,12 @@ class TestRF11Fluxo(BaseRegistro):
         self.assertEqual(reaproveitada["id_execucao"], segunda["id_execucao"])
         self.assertEqual(reaproveitada["id_execucao_origem"], sucesso["id_execucao"])
         self.assertEqual(reaproveitada["versao_prompt"], llm_client.versao_do_prompt(None))
+        self.assertEqual(reaproveitada["provedor"], "OpenAI")
+        self.assertEqual(reaproveitada["parametros"], sucesso["parametros"])
         self.assertEqual(reaproveitada["categoria"], "matricula")
         self.assertNotIn("texto_extraido", reaproveitada)
+        self.assertNotIn("tokens_entrada", reaproveitada)
+        self.assertNotIn("custo_estimado_usd", reaproveitada)
 
     def test_rejeicao_num_reaproveitamento_impede_novo_reaproveitamento(self):
         self.simular(side_effect=self.extrair_simulado)
