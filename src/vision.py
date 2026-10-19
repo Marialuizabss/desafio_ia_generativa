@@ -1,16 +1,20 @@
-
 import base64
 import json
 from datetime import datetime, timezone
 from pathlib import Path
 
 from dotenv import load_dotenv
-from openai import OpenAI
+from openai import OpenAI, OpenAIError
 
 try:
     from configuracao import MODELOS, PARAMETROS_GERAIS
 except ImportError:
     from src.configuracao import MODELOS, PARAMETROS_GERAIS
+
+try:
+    from erros_api import mensagem_de_falha
+except ImportError:
+    from src.erros_api import mensagem_de_falha
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
@@ -73,30 +77,33 @@ Regras:
 - Não inclua campos adicionais.
 """
 
-    client = OpenAI(timeout=TIMEOUT_SEGUNDOS, max_retries=2)
+    try:
+        client = OpenAI(timeout=TIMEOUT_SEGUNDOS, max_retries=2)
 
-    print("Iniciando análise da ficha de matrícula...")
+        print("Iniciando análise da ficha de matrícula...")
 
-    resposta = client.chat.completions.create(
-        model=MODELO_VISUAL,
-        messages=[
-            {
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": prompt},
-                    {
-                        "type": "image_url",
-                        "image_url": {
-                            "url": f"data:image/png;base64,{imagem_base64}",
-                            "detail": "high",
+        resposta = client.chat.completions.create(
+            model=MODELO_VISUAL,
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": prompt},
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/png;base64,{imagem_base64}",
+                                "detail": "high",
+                            },
                         },
-                    },
-                ],
-            }
-        ],
-        response_format={"type": "json_object"},
-        temperature=0,
-    )
+                    ],
+                }
+            ],
+            response_format={"type": "json_object"},
+            temperature=0,
+        )
+    except OpenAIError as erro:
+        raise ValueError(mensagem_de_falha(erro, "a leitura da ficha")) from erro
 
     conteudo = resposta.choices[0].message.content
 
@@ -184,29 +191,32 @@ def ler_texto_visual(caminho):
 
     imagem, mime = _bytes_visuais(entrada)
     imagem_base64 = base64.b64encode(imagem).decode("ascii")
-    client = OpenAI(timeout=TIMEOUT_SEGUNDOS, max_retries=2)
+    try:
+        client = OpenAI(timeout=TIMEOUT_SEGUNDOS, max_retries=2)
 
-    print("Lendo o texto do documento...")
+        print("Lendo o texto do documento...")
 
-    resposta = client.chat.completions.create(
-        model=MODELO_VISUAL,
-        messages=[
-            {
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": PROMPT_LEITURA},
-                    {
-                        "type": "image_url",
-                        "image_url": {
-                            "url": f"data:{mime};base64,{imagem_base64}",
-                            "detail": "high",
+        resposta = client.chat.completions.create(
+            model=MODELO_VISUAL,
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": PROMPT_LEITURA},
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:{mime};base64,{imagem_base64}",
+                                "detail": "high",
+                            },
                         },
-                    },
-                ],
-            }
-        ],
-        temperature=0,
-    )
+                    ],
+                }
+            ],
+            temperature=0,
+        )
+    except OpenAIError as erro:
+        raise ValueError(mensagem_de_falha(erro, "a leitura do documento")) from erro
 
     conteudo = resposta.choices[0].message.content
     texto = (conteudo or "").strip()

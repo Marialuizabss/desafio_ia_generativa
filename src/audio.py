@@ -1,4 +1,3 @@
-
 from pathlib import Path
 from datetime import datetime
 from time import perf_counter
@@ -6,12 +5,17 @@ import json
 import re
 
 from dotenv import load_dotenv
-from openai import BadRequestError, NotFoundError, OpenAI
+from openai import BadRequestError, NotFoundError, OpenAI, OpenAIError
 
 try:
     from configuracao import CAMINHOS, CUSTOS, MODELOS, PARAMETROS_GERAIS
 except ImportError:
     from src.configuracao import CAMINHOS, CUSTOS, MODELOS, PARAMETROS_GERAIS
+
+try:
+    from erros_api import mensagem_de_falha
+except ImportError:
+    from src.erros_api import mensagem_de_falha
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
@@ -123,6 +127,9 @@ def transcrever_audio(caminho, destino_texto=None, idioma=None):
         print(f"Tempo de execução: {duracao} segundos")
         return texto
 
+    except OpenAIError as erro:
+        print(f"Erro na transcrição: {type(erro).__name__}")
+        raise ValueError(mensagem_de_falha(erro, "a transcrição do áudio")) from erro
     except Exception as erro:
         print(f"Erro na transcrição: {type(erro).__name__}")
         raise
@@ -175,15 +182,18 @@ def sintetizar_minuta(minuta: str, destino: Path) -> dict:
     destino.parent.mkdir(parents=True, exist_ok=True)
     texto_falado = destino.with_name(f"{destino.stem}_texto_falado.txt")
 
-    cliente = OpenAI(timeout=TIMEOUT_SEGUNDOS, max_retries=2)
     inicio = perf_counter()
     try:
-        _falar(cliente, MODELO_VOZ, texto, destino, INSTRUCOES_VOZ)
-        modelo, instrucoes = MODELO_VOZ, INSTRUCOES_VOZ
-    except (NotFoundError, BadRequestError):
-        # Chave sem acesso ao modelo com instruções: usa o anterior e registra
-        _falar(cliente, MODELO_VOZ_ALTERNATIVO, texto, destino, None)
-        modelo, instrucoes = MODELO_VOZ_ALTERNATIVO, None
+        cliente = OpenAI(timeout=TIMEOUT_SEGUNDOS, max_retries=2)
+        try:
+            _falar(cliente, MODELO_VOZ, texto, destino, INSTRUCOES_VOZ)
+            modelo, instrucoes = MODELO_VOZ, INSTRUCOES_VOZ
+        except (NotFoundError, BadRequestError):
+            # Chave sem acesso ao modelo com instruções: usa o anterior e registra
+            _falar(cliente, MODELO_VOZ_ALTERNATIVO, texto, destino, None)
+            modelo, instrucoes = MODELO_VOZ_ALTERNATIVO, None
+    except OpenAIError as erro:
+        raise ValueError(mensagem_de_falha(erro, "a geração da voz")) from erro
     texto_falado.write_text(texto + "\n", encoding="utf-8")
 
     duracao = duracao_do_audio(destino)
