@@ -1,0 +1,94 @@
+{
+  "categoria": "matricula",
+  "assunto": "Pedido de efetivação de matrícula no curso técnico em enfermagem",
+  "pedido": "Solicita a efetivação da matrícula e pergunta quais documentos ainda precisa apresentar.",
+  "campos": {
+    "solicitante": {
+      "valor": "Marcos Vinícius de Almeida Santos",
+      "fonte": "dados/originais/entrada_audio.mp3"
+    },
+    "protocolo": {
+      "valor": "2026-000142",
+      "fonte": "dados/originais/entrada_audio.mp3"
+    },
+    "data_solicitacao": {
+      "valor": "14/10/2026",
+      "fonte": "dados/originais/entrada_audio.mp3"
+    },
+    "curso": {
+      "valor": "técnico em enfermagem",
+      "fonte": "dados/originais/entrada_audio.mp3"
+    },
+    "eixo": {
+      "valor": "Saúde",
+      "fonte": "dados/originais/entrada_audio.mp3"
+    },
+    "carga_horaria": {
+      "valor": "1.200 horas",
+      "fonte": "dados/originais/entrada_audio.mp3"
+    },
+    "turno": {
+      "valor": "noturno",
+      "fonte": "dados/originais/entrada_audio.mp3"
+    },
+    "data_inicio": {
+      "valor": "não localizado",
+      "fonte": "nenhuma"
+    },
+    "regras_ciencia": {
+      "valor": "O solicitante declarou estar ciente de que a matrícula será cancelada automaticamente se faltar sem justificativa comprovada nos dois primeiros dias de aula consecutivos ou em três dias de aula consecutivos ou não nos dez primeiros dias de aula.",
+      "fonte": "dados/originais/entrada_audio.mp3"
+    },
+    "documentos_necessarios": {
+      "valor": "não localizado",
+      "fonte": "nenhuma"
+    },
+    "prazo_apresentacao": {
+      "valor": "não localizado",
+      "fonte": "nenhuma"
+    },
+    "local_horario": {
+      "valor": "não localizado",
+      "fonte": "nenhuma"
+    }
+  },
+  "campos_ausentes": [
+    "data_inicio",
+    "documentos_necessarios",
+    "prazo_apresentacao",
+    "local_horario"
+  ],
+  "alertas_seguranca": [],
+  "requer_revisao": true,
+  "minuta": "[CABEÇALHO COM BRASÃO — dados/originais/brasao.png]\n\nPrezado(a) Marcos Vinícius de Almeida Santos,\n\nRecebemos sua solicitação de matrícula, registrada sob o protocolo 2026-000142.\n\n**Dados informados na solicitação**\n- Curso: técnico em enfermagem\n- Eixo tecnológico: Saúde\n- Carga horária: 1.200 horas\n- Turno: noturno\n- Início do curso: não localizado\n\n**Orientações**\n- Documentos necessários: não localizado\n- Prazo para apresentação: não localizado\n- Local e horário de atendimento: não localizado\n\n**Ciência das regras de matrícula**\nO solicitante declarou estar ciente de que a matrícula será cancelada automaticamente se faltar sem justificativa comprovada nos dois primeiros dias de aula consecutivos ou em três dias de aula consecutivos ou não nos dez primeiros dias de aula.\n\nPermanecemos à disposição para esclarecimentos.\n\nAtenciosamente, \n[NOME DO SERVIDOR RESPONSÁVEL] \n[CARGO / SETOR]\n\n*Minuta elaborada com apoio de IA. Documento sujeito a revisão e aprovação do servidor responsável antes de qualquer envio.*",
+  "modalidade": "audio",
+  "arquivo_origem": "dados/originais/entrada_audio.mp3",
+  "modelo": "gpt-6-luna",
+  "texto_extraido": "Bom dia. Meu protocolo é 2026-000142 de 14 de outubro de 2026. Meu nome é Marcos Vinícius de Almeida Santos, nasci em [DATA DE NASCIMENTO REMOVIDA], em [NATURALIDADE REMOVIDA], e quero pedir a efetivação da minha matrícula no curso técnico em enfermagem do Eixo Tecnológico de Saúde, com carga horária de 1.200 horas noturno noturno. Meu CPF é [CPF REMOVIDO], meu RG é [RG REMOVIDO], o nome da minha mãe é [FILIAÇÃO REMOVIDA], e o meu e-mail é [E-MAIL REMOVIDO]. Declaro estar ciente de que a matrícula será cancelada automaticamente se eu faltar sem justificativa comprovada nos dois primeiros dias de aula consecutivos ou em três dias de aula consecutivos ou não nos dez primeiros dias de aula. Peço que informem quais os documentos ainda preciso apresentar. Muito obrigado.",
+  "dados_removidos": {
+    "cpf": 1,
+    "rg": 1,
+    "email": 1,
+    "data_nascimento": 1,
+    "naturalidade": 1,
+    "filiacao": 1
+  },
+  "chamada": {
+    "modelo": "gpt-6-luna",
+    "temperatura": null,
+    "idioma": "pt",
+    "timeout_segundos": 120.0,
+    "tempo_resposta_segundos": 7.2,
+    "tokens_entrada": 1967,
+    "tokens_saida": 980,
+    "tokens_total": 2947,
+    "tokens_raciocinio": 140,
+    "tokens_cache": 1737,
+    "custo_estimado_usd": 0.000687,
+    "preco_usd_por_milhao_tokens": {
+      "entrada": 0.1,
+      "saida": 0.5
+    }
+  },
+  "arquivo_extracao": "dados/processados/extracao_entrada_audio.json"
+}

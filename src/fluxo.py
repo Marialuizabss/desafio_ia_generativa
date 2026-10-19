@@ -1,0 +1,305 @@
+"""Lê a entrada confirmada, extrai o texto e grava o objeto em processados.
+
+A minuta não entra nessa gravação como texto definitivo: depois da extração,
+a interface deixa os campos editáveis e só monta a minuta quando o usuário pede.
+"""
+
+import json
+from pathlib import Path
+from time import perf_counter
+from uuid import uuid4
+
+try:
+    from audit import historico, registrar_execucao
+    from audio import MODELO as MODELO_TRANSCRICAO
+    from audio import transcrever_audio
+    from extracao import CAMPOS, CATEGORIAS, FONTE_AUSENTE, VALOR_AUSENTE
+    from llm_client import extrair_campos, montar_minuta
+    from privacidade import contar_remocoes, minimizar_texto
+    from vision import ler_texto_visual
+except ImportError:
+    from src.audit import historico, registrar_execucao
+    from src.audio import MODELO as MODELO_TRANSCRICAO
+    from src.audio import transcrever_audio
+    from src.extracao import CAMPOS, CATEGORIAS, FONTE_AUSENTE, VALOR_AUSENTE
+    from src.llm_client import extrair_campos, montar_minuta
+    from src.privacidade import contar_remocoes, minimizar_texto
+    from src.vision import ler_texto_visual
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+PASTA_PROCESSADOS = BASE_DIR / "dados" / "processados"
+
+
+MODELOS_ANALISE = {"gpt-5.6-luna", "gpt-5.6-terra", "o4-mini", "gpt-4o-mini"}
+
+# Modelo que lê a entrada antes da extração (o texto digitado não passa por modelo;
+# PDF com camada de texto é lido localmente, sem modelo)
+MODELOS_LEITURA = {"audio": MODELO_TRANSCRICAO, "imagem": "gpt-4o"}
+
+
+def processar_entrada(
+    entrada: dict,
+    forcar: bool = False,
+    configuracao: dict | None = None,
+    id_execucao_anterior: str | None = None,
+) -> dict:
+    """Extrai o texto da entrada, monta o objeto e salva o JSON.
+
+    ``entrada`` é o material confirmado na interface, com ``modalidade``,
+    ``caminho_copia`` e, no texto, o próprio ``texto``.
+    """
+
+    arquivo = (entrada.get("caminho_copia") or "").strip()
+    modalidade = entrada.get("modalidade")
+    if not arquivo:
+        raise ValueError("A cópia da entrada não foi encontrada.")
+    if modalidade not in {"texto", "audio", "imagem"}:
+        raise ValueError("Forma de envio desconhecida.")
+
+    caminho = BASE_DIR / arquivo
+    if not caminho.is_file():
+        raise FileNotFoundError(f"Arquivo não encontrado: {caminho}")
+
+    PASTA_PROCESSADOS.mkdir(parents=True, exist_ok=True)
+    saida = PASTA_PROCESSADOS / f"extracao_{caminho.stem}.json"
+    modelo_id, temperatura, idioma = _configuracao(configuracao)
+    if saida.is_file() and not forcar:
+        registro = json.loads(saida.read_text(encoding="utf-8"))
+        if _pode_reaproveitar(registro, arquivo, modelo_id, temperatura, idioma):
+            registro["arquivo_extracao"] = saida.relative_to(BASE_DIR).as_posix()
+            if not registro.get("id_execucao"):
+                # Extração anterior ao registro (RF11): a reutilização ganha um identificador
+                registro["id_execucao"] = registrar_execucao({
+                    "tipo": "extracao_reaproveitada",
+                    "modalidade": modalidade,
+                    "arquivo_origem": arquivo,
+                    "arquivo_extracao": registro["arquivo_extracao"],
+                    "modelo": modelo_id,
+                    "resultado": "reaproveitada",
+                    "versao_prompt": (registro.get("chamada") or {}).get("versao_prompt"),
+                })
+            return registro
+
+    anterior_id = (id_execucao_anterior or "").strip() or None
+    arquivo_anterior = None
+    if saida.is_file():
+        antigo = json.loads(saida.read_text(encoding="utf-8"))
+        arquivo_anterior = _arquivar_extracao(saida, antigo.get("id_execucao"))
+        if not anterior_id:
+            anterior_id = (antigo.get("id_execucao") or "").strip() or None
+
+    base_registro = {
+        "tipo": "extracao_e_minuta",
+        "modalidade": modalidade,
+        "arquivo_origem": arquivo,
+        "modelo": modelo_id,
+        "modelo_leitura": MODELOS_LEITURA.get(modalidade),
+    }
+    if anterior_id:
+        base_registro["id_execucao_anterior"] = anterior_id
+    if arquivo_anterior:
+        base_registro["arquivo_extracao_anterior"] = arquivo_anterior
+    inicio = perf_counter()
+    try:
+        texto = minimizar_texto(_extrair_texto(modalidade, caminho, entrada, idioma))
+        resultado, chamada = extrair_campos(
+            texto,
+            arquivo,
+            modelo=modelo_id,
+            temperatura=temperatura,
+            idioma=idioma,
+        )
+    except Exception as erro:
+        registrar_execucao({
+            **base_registro,
+            "resultado": "erro",
+            "erro": f"{type(erro).__name__}: {erro}",
+            "duracao_total_segundos": round(perf_counter() - inicio, 2),
+        })
+        raise
+
+    registro = resultado.para_dict()
+    registro["modalidade"] = modalidade
+    registro["arquivo_origem"] = arquivo
+    registro["modelo"] = modelo_id
+    if anterior_id:
+        registro["id_execucao_anterior"] = anterior_id
+    if arquivo_anterior:
+        registro["arquivo_extracao_anterior"] = arquivo_anterior
+    registro["texto_extraido"] = texto
+    registro["dados_removidos"] = contar_remocoes(texto)
+    registro["chamada"] = chamada
+    registro["id_execucao"] = registrar_execucao({
+        **base_registro,
+        "resultado": "sucesso",
+        "arquivo_extracao": saida.relative_to(BASE_DIR).as_posix(),
+        "provedor": chamada.get("provedor"),
+        "versao_prompt": chamada.get("versao_prompt"),
+        "parametros": {"temperatura": temperatura, "idioma": idioma, **(chamada.get("parametros") or {})},
+        "duracao_total_segundos": round(perf_counter() - inicio, 2),
+        "tempo_resposta_segundos": chamada.get("tempo_resposta_segundos"),
+        "tokens_entrada": chamada.get("tokens_entrada"),
+        "tokens_saida": chamada.get("tokens_saida"),
+        "custo_estimado_usd": chamada.get("custo_estimado_usd"),
+        "categoria": registro["categoria"],
+        "campos_ausentes": registro["campos_ausentes"],
+        "alertas_seguranca": registro["alertas_seguranca"],
+        "dados_removidos": registro["dados_removidos"],
+        "requer_revisao": True,
+    })
+
+    saida.write_text(
+        json.dumps(registro, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+    registro["arquivo_extracao"] = saida.relative_to(BASE_DIR).as_posix()
+    return registro
+
+
+def decisao_de_aprovacao(registro: dict) -> str:
+    """Aprovado com revisão quando algum campo da minuta ficou não localizado."""
+    campos = (registro or {}).get("campos") or {}
+    for nome in CAMPOS:
+        item = campos.get(nome) or {}
+        valor = (item.get("valor") if isinstance(item, dict) else "") or ""
+        if not valor.strip() or valor.strip() == VALOR_AUSENTE:
+            return "aprovado_com_revisao"
+    return "aprovado"
+
+
+def preservar_extracao(registro: dict) -> str:
+    """Copia o JSON atual para um arquivo que a geração seguinte não sobrescreve."""
+    caminho = (registro.get("arquivo_extracao") or "").strip()
+    if not caminho:
+        raise ValueError("A extração rejeitada não tem arquivo.")
+    origem = BASE_DIR / caminho
+    if not origem.is_file():
+        raise FileNotFoundError(f"Arquivo não encontrado: {origem}")
+    return _arquivar_extracao(origem, registro.get("id_execucao"))
+
+
+def _arquivar_extracao(origem: Path, id_execucao: str | None) -> str:
+    marca = (id_execucao or "").strip() or uuid4().hex
+    destino = origem.with_name(f"{origem.stem}__{marca}{origem.suffix}")
+    if not destino.exists():
+        destino.write_bytes(origem.read_bytes())
+    return destino.relative_to(BASE_DIR).as_posix()
+
+
+def _pode_reaproveitar(registro: dict, arquivo: str, modelo_id: str, temperatura, idioma) -> bool:
+    chamada = registro.get("chamada") or {}
+    return (
+        registro.get("arquivo_origem") == arquivo
+        and registro.get("modelo") == modelo_id
+        and chamada.get("temperatura") == temperatura
+        and chamada.get("idioma") == idioma
+        and "dados_removidos" in registro
+        and chamada.get("versao_prompt") == _versao_prompt(idioma)
+        and not _decisao_impede_reuso(registro.get("id_execucao"))
+    )
+
+
+def _decisao_impede_reuso(id_execucao: str | None) -> bool:
+    if not id_execucao:
+        return False
+    decisoes = historico(id_execucao)["decisoes"]
+    if not decisoes:
+        return False
+    return decisoes[-1].get("decisao") in {"rejeitado", "nova_geracao"}
+
+
+def _versao_prompt(idioma: str | None) -> str:
+    try:
+        from src import llm_client as cliente
+    except ImportError:
+        import llm_client as cliente
+    return cliente.versao_do_prompt(idioma)
+
+
+def aplicar_edicao(registro: dict, edicao: dict) -> dict:
+    """Grava os campos editados e monta a minuta a partir deles.
+
+    O objeto original não é alterado. A cópia gravada em processados passa a
+    ser a versão revisada, com ``minuta_gerada_de_campos`` marcado.
+    """
+
+    atualizado = dict(registro)
+    categoria = str(edicao.get("categoria") or "").strip()
+    if categoria not in CATEGORIAS:
+        categoria = str(registro.get("categoria") or "").strip()
+    atualizado["categoria"] = categoria if categoria in CATEGORIAS else "outros"
+    atualizado["assunto"] = _texto_editado(edicao.get("assunto"))
+    atualizado["pedido"] = _texto_editado(edicao.get("pedido"))
+
+    anteriores = registro.get("campos") or {}
+    campos = {}
+    ausentes = []
+    valores = {}
+    for nome in CAMPOS:
+        valor = _texto_editado(edicao.get(nome))
+        anterior = anteriores.get(nome) or {}
+        if valor == VALOR_AUSENTE:
+            fonte = FONTE_AUSENTE
+            ausentes.append(nome)
+        elif valor == (anterior.get("valor") or ""):
+            fonte = anterior.get("fonte") or FONTE_AUSENTE
+        else:
+            fonte = "edicao"
+        campos[nome] = {"valor": valor, "fonte": fonte}
+        valores[nome] = valor
+
+    atualizado["campos"] = campos
+    atualizado["campos_ausentes"] = ausentes
+    atualizado["minuta"] = montar_minuta(valores)
+    atualizado["minuta_gerada_de_campos"] = True
+    atualizado["requer_revisao"] = True
+
+    caminho = (atualizado.get("arquivo_extracao") or "").strip()
+    if caminho:
+        destino = BASE_DIR / caminho
+        destino.parent.mkdir(parents=True, exist_ok=True)
+        destino.write_text(
+            json.dumps(atualizado, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+    return atualizado
+
+
+def _texto_editado(valor) -> str:
+    texto = "" if valor is None else str(valor).strip()
+    return texto or VALOR_AUSENTE
+
+
+def _configuracao(configuracao: dict | None) -> tuple[str, float | None, str | None]:
+    try:
+        from llm_client import MODELO
+    except ImportError:
+        from src.llm_client import MODELO
+
+    dados = configuracao or {}
+    modelo = str(dados.get("modelo") or MODELO).strip()
+    if modelo not in MODELOS_ANALISE:
+        modelo = MODELO
+    parametros = dados.get("parametros") or {}
+    temperatura = parametros.get("temperatura")
+    if temperatura is not None:
+        temperatura = round(float(temperatura), 1)
+    idioma = parametros.get("idioma") or None
+    return modelo, temperatura, idioma
+
+
+def _extrair_texto(modalidade: str, caminho: Path, entrada: dict, idioma: str | None) -> str:
+    if modalidade == "texto":
+        texto = (entrada.get("texto") or "").strip()
+        if not texto:
+            texto = caminho.read_text(encoding="utf-8").strip()
+    elif modalidade == "audio":
+        destino = PASTA_PROCESSADOS / f"transcricao_{caminho.stem}.txt"
+        texto = transcrever_audio(caminho, destino_texto=destino, idioma=idioma)
+    else:
+        texto = ler_texto_visual(caminho)
+
+    texto = (texto or "").strip()
+    if not texto:
+        raise ValueError("Não foi possível extrair texto desta entrada.")
+    return texto

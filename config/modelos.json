@@ -1,0 +1,71 @@
+{
+  "modelo_padrao": "gpt-5.6-luna",
+  "opcoes": {
+    "idioma": [
+      {"valor": "pt", "rotulo": "Português"},
+      {"valor": "en", "rotulo": "Inglês"},
+      {"valor": "es", "rotulo": "Espanhol"}
+    ],
+    "tamanho": [
+      {"valor": "1024x1024", "rotulo": "1024 × 1024"},
+      {"valor": "1024x1536", "rotulo": "1024 × 1536"},
+      {"valor": "1536x1024", "rotulo": "1536 × 1024"}
+    ],
+    "qualidade": [
+      {"valor": "low", "rotulo": "Baixa"},
+      {"valor": "medium", "rotulo": "Média"},
+      {"valor": "high", "rotulo": "Alta"}
+    ]
+  },
+  "temperatura": {
+    "minimo": 0.0,
+    "maximo": 2.0,
+    "passo": 0.1
+  },
+  "modelos": [
+    {
+      "id": "gpt-5.6-luna",
+      "nome": "5.6 Luna",
+      "descricao": "Analisa a solicitação e redige a minuta. Este modelo não aceita temperatura.",
+      "padroes": {
+        "idioma": "pt",
+        "temperatura": null,
+        "tamanho": null,
+        "qualidade": null
+      }
+    },
+    {
+      "id": "gpt-5.6-terra",
+      "nome": "5.6 Terra",
+      "descricao": "Analisa a solicitação e redige a minuta. Este modelo não aceita temperatura.",
+      "padroes": {
+        "idioma": "pt",
+        "temperatura": null,
+        "tamanho": null,
+        "qualidade": null
+      }
+    },
+    {
+      "id": "o4-mini",
+      "nome": "o4-mini",
+      "descricao": "Analisa a solicitação e redige a minuta. Este modelo não aceita temperatura.",
+      "padroes": {
+        "idioma": "pt",
+        "temperatura": null,
+        "tamanho": null,
+        "qualidade": null
+      }
+    },
+    {
+      "id": "gpt-4o-mini",
+      "nome": "gpt-4o-mini",
+      "descricao": "Analisa a solicitação e redige a minuta.",
+      "padroes": {
+        "idioma": "pt",
+        "temperatura": 0.0,
+        "tamanho": null,
+        "qualidade": null
+      }
+    }
+  ]
+}

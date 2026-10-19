@@ -1,0 +1,103 @@
+{
+  "categoria": "matricula",
+  "assunto": "Solicitação de matrícula no curso Técnico em Enfermagem",
+  "pedido": "Registrar e analisar a ficha de matrícula apresentada para o curso Técnico em Enfermagem.",
+  "campos": {
+    "solicitante": {
+      "valor": "MARCUS VINICIUS DE ALMEIDA SANTOS",
+      "fonte": "dados/originais/entrada_pdf-imagem.pdf"
+    },
+    "protocolo": {
+      "valor": "2024-000142",
+      "fonte": "dados/originais/entrada_pdf-imagem.pdf"
+    },
+    "data_solicitacao": {
+      "valor": "17/01/2026",
+      "fonte": "dados/originais/entrada_pdf-imagem.pdf"
+    },
+    "curso": {
+      "valor": "TÉCNICO EM ENFERMAGEM",
+      "fonte": "dados/originais/entrada_pdf-imagem.pdf"
+    },
+    "eixo": {
+      "valor": "SAÚDE",
+      "fonte": "dados/originais/entrada_pdf-imagem.pdf"
+    },
+    "carga_horaria": {
+      "valor": "1200 HORAS",
+      "fonte": "dados/originais/entrada_pdf-imagem.pdf"
+    },
+    "turno": {
+      "valor": "NOTURNO",
+      "fonte": "dados/originais/entrada_pdf-imagem.pdf"
+    },
+    "data_inicio": {
+      "valor": "01/02/2027",
+      "fonte": "dados/originais/entrada_pdf-imagem.pdf"
+    },
+    "regras_ciencia": {
+      "valor": "O(a) solicitante declarou estar ciente de que a matrícula será automaticamente cancelada se faltar, sem justificativa comprovada, nos dois primeiros dias de aula consecutivos ou em três dias de aula, consecutivos ou não, no período dos dez primeiros dias de aula.",
+      "fonte": "dados/originais/entrada_pdf-imagem.pdf"
+    },
+    "documentos_necessarios": {
+      "valor": "não localizado",
+      "fonte": "nenhuma"
+    },
+    "prazo_apresentacao": {
+      "valor": "não localizado",
+      "fonte": "nenhuma"
+    },
+    "local_horario": {
+      "valor": "não localizado",
+      "fonte": "nenhuma"
+    }
+  },
+  "campos_ausentes": [
+    "documentos_necessarios",
+    "prazo_apresentacao",
+    "local_horario"
+  ],
+  "alertas_seguranca": [],
+  "requer_revisao": true,
+  "minuta": "[CABEÇALHO COM BRASÃO — dados/originais/brasao.png]\n\nPrezado(a) MARCUS VINICIUS DE ALMEIDA SANTOS,\n\nRecebemos sua solicitação de matrícula, registrada sob o protocolo 2024-000142.\n\n**Dados informados na solicitação**\n- Curso: TÉCNICO EM ENFERMAGEM\n- Eixo tecnológico: SAÚDE\n- Carga horária: 1200 HORAS\n- Turno: NOTURNO\n- Início do curso: 01/02/2027\n\n**Orientações**\n- Documentos necessários: não localizado\n- Prazo para apresentação: não localizado\n- Local e horário de atendimento: não localizado\n\n**Ciência das regras de matrícula**\nO(a) solicitante declarou estar ciente de que a matrícula será automaticamente cancelada se faltar, sem justificativa comprovada, nos dois primeiros dias de aula consecutivos ou em três dias de aula, consecutivos ou não, no período dos dez primeiros dias de aula.\n\nPermanecemos à disposição para esclarecimentos.\n\nAtenciosamente, \n[NOME DO SERVIDOR RESPONSÁVEL] \n[CARGO / SETOR]\n\n*Minuta elaborada com apoio de IA. Documento sujeito a revisão e aprovação do servidor responsável antes de qualquer envio.*",
+  "modalidade": "imagem",
+  "arquivo_origem": "dados/originais/entrada_pdf-imagem.pdf",
+  "modelo": "gpt-5.6-luna",
+  "texto_extraido": "GOVERNO DE MATO GROSSO  \nSECRETARIA DE ESTADO DE CIÊNCIA, TECNOLOGIA E INOVAÇÃO - SECTECI/MT  \nESCOLA TÉCNICA ESTADUAL DE CUIABÁ  \n\nFICHA DE MATRÍCULA  \n\nCÓDIGO: 2024-000142  \nNOME: MARCUS VINICIUS DE ALMEIDA SANTOS  \nDATA DE NASCIMENTO: [DATA DE NASCIMENTO REMOVIDA]  CPF: [CPF REMOVIDO]  \nRG: [RG REMOVIDO]  ÓRGÃO EXPEDIDOR: [ilegível]  UF: [ilegível]  \nNATURALIDADE: [NATURALIDADE REMOVIDA]\nNOME DA MÃE: [FILIAÇÃO REMOVIDA]\nNOME DO PAI: [ilegível]  \n\nCURSO: TÉCNICO EM ENFERMAGEM  CH: 1200 HORAS  \nEIXO TECNOLÓGICO: SAÚDE  TURNO: NOTURNO  TURMA: [ilegível]  \nMUNICÍPIO: [ilegível]  \nINÍCIO DO CURSO: 01/02/2027  TÉRMINO DO CURSO: [ilegível]  \n\nTEL. CELULAR: [ilegível]  TELEFONE RESIDENCIAL: [ilegível]  \nE-MAIL: [E-MAIL REMOVIDO]  \n\nDATA MATRÍCULA: 17/01/2026  \n\nEstou ciente que minha matrícula será automaticamente cancelada se faltar, sem justificativa comprovada:  \n- nos 02 (dois) primeiros dias de aula consecutivos;  \n- 03 (três) dias de aula, consecutivos ou não, no período dos 10 (dez) primeiros dias de aula.  \n\n[Assinatura]  \nASSINATURA DO ALUNO OU RESPONSÁVEL  \n\n[Assinatura]  \nASSINATURA DA SECRETARIA ESCOLAR",
+  "dados_removidos": {
+    "cpf": 1,
+    "rg": 1,
+    "email": 1,
+    "data_nascimento": 1,
+    "naturalidade": 1,
+    "filiacao": 1
+  },
+  "chamada": {
+    "modelo": "gpt-5.6-luna",
+    "temperatura": null,
+    "idioma": "pt",
+    "timeout_segundos": 120.0,
+    "tempo_resposta_segundos": 7.83,
+    "tokens_entrada": 2185,
+    "tokens_saida": 817,
+    "tokens_total": 3002,
+    "tokens_raciocinio": 70,
+    "tokens_cache": 1737,
+    "custo_estimado_usd": 0.001417,
+    "preco_usd_por_milhao_tokens": {
+      "entrada": 0.2,
+      "saida": 1.2
+    },
+    "provedor": "OpenAI",
+    "versao_prompt": "f3b898dff42f",
+    "parametros": {
+      "reasoning": {
+        "effort": "low"
+      },
+      "store": false
+    }
+  },
+  "id_execucao": "455edb46-90d3-49e2-85ab-512816ea2b7d",
+  "arquivo_extracao": "dados/processados/extracao_entrada_pdf-imagem.json",
+  "minuta_gerada_de_campos": true
+}

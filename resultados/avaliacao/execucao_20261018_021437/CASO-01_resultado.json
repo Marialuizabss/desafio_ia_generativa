@@ -1,0 +1,89 @@
+{
+  "categoria": "matricula",
+  "assunto": "Efetivação de matrícula",
+  "pedido": "Solicita a efetivação da matrícula no curso Técnico em Informática e pergunta quais documentos ainda precisa apresentar.",
+  "campos": {
+    "solicitante": {
+      "valor": "Juliana Ferreira Campos",
+      "fonte": "dados/originais/caso1_solicitacao_completa.txt"
+    },
+    "protocolo": {
+      "valor": "2026-000157",
+      "fonte": "dados/originais/caso1_solicitacao_completa.txt"
+    },
+    "data_solicitacao": {
+      "valor": "15/10/2026",
+      "fonte": "dados/originais/caso1_solicitacao_completa.txt"
+    },
+    "curso": {
+      "valor": "Técnico em Informática",
+      "fonte": "dados/originais/caso1_solicitacao_completa.txt"
+    },
+    "eixo": {
+      "valor": "Informação e Comunicação",
+      "fonte": "dados/originais/caso1_solicitacao_completa.txt"
+    },
+    "carga_horaria": {
+      "valor": "1.200 horas",
+      "fonte": "dados/originais/caso1_solicitacao_completa.txt"
+    },
+    "turno": {
+      "valor": "vespertino",
+      "fonte": "dados/originais/caso1_solicitacao_completa.txt"
+    },
+    "data_inicio": {
+      "valor": "01/02/2027",
+      "fonte": "dados/originais/caso1_solicitacao_completa.txt"
+    },
+    "regras_ciencia": {
+      "valor": "O(a) solicitante declarou estar ciente de que a matrícula será cancelada automaticamente se faltar, sem justificativa comprovada, nos 2 (dois) primeiros dias de aula consecutivos, ou em 3 (três) dias de aula, consecutivos ou não, nos 10 (dez) primeiros dias de aula.",
+      "fonte": "dados/originais/caso1_solicitacao_completa.txt"
+    },
+    "documentos_necessarios": {
+      "valor": "não localizado",
+      "fonte": "nenhuma"
+    },
+    "prazo_apresentacao": {
+      "valor": "não localizado",
+      "fonte": "nenhuma"
+    },
+    "local_horario": {
+      "valor": "não localizado",
+      "fonte": "nenhuma"
+    }
+  },
+  "campos_ausentes": [
+    "documentos_necessarios",
+    "prazo_apresentacao",
+    "local_horario"
+  ],
+  "alertas_seguranca": [],
+  "requer_revisao": true,
+  "minuta": "[CABEÇALHO COM BRASÃO — dados/originais/brasao.png]\n\nPrezado(a) Juliana Ferreira Campos,\n\nRecebemos sua solicitação de matrícula, registrada sob o protocolo 2026-000157.\n\n**Dados informados na solicitação**\n- Curso: Técnico em Informática\n- Eixo tecnológico: Informação e Comunicação\n- Carga horária: 1.200 horas\n- Turno: vespertino\n- Início do curso: 01/02/2027\n\n**Orientações**\n- Documentos necessários: não localizado\n- Prazo para apresentação: não localizado\n- Local e horário de atendimento: não localizado\n\n**Ciência das regras de matrícula**\nO(a) solicitante declarou estar ciente de que a matrícula será cancelada automaticamente se faltar, sem justificativa comprovada, nos 2 (dois) primeiros dias de aula consecutivos, ou em 3 (três) dias de aula, consecutivos ou não, nos 10 (dez) primeiros dias de aula.\n\nPermanecemos à disposição para esclarecimentos.\n\nAtenciosamente, \n[NOME DO SERVIDOR RESPONSÁVEL] \n[CARGO / SETOR]\n\n*Minuta elaborada com apoio de IA. Documento sujeito a revisão e aprovação do servidor responsável antes de qualquer envio.*",
+  "modalidade": "texto",
+  "arquivo_origem": "dados/originais/caso1_solicitacao_completa.txt",
+  "modelo": "gpt-6-luna",
+  "texto_extraido": "Assunto: Efetivação de matrícula\n\nBoa tarde. Meu protocolo é 2026-000157, aberto em 15/10/2026.\nMeu nome é Juliana Ferreira Campos, CPF [CPF REMOVIDO], e-mail [E-MAIL REMOVIDO].\n\nFui selecionada para o curso Técnico em Informática, do eixo tecnológico Informação e Comunicação, com carga horária de 1.200 horas, no turno vespertino, com início previsto para 01/02/2027, e gostaria de efetivar minha matrícula.\n\nDeclaro estar ciente de que minha matrícula será cancelada automaticamente se eu faltar, sem justificativa comprovada,\nnos 2 (dois) primeiros dias de aula consecutivos, ou em 3 (três) dias de aula, consecutivos ou não, nos 10 (dez) primeiros dias de aula.\n\nPoderiam me informar quais documentos ainda preciso apresentar?\n\nObrigada.",
+  "dados_removidos": {
+    "cpf": 1,
+    "email": 1
+  },
+  "chamada": {
+    "modelo": "gpt-6-luna",
+    "temperatura": null,
+    "idioma": "pt",
+    "timeout_segundos": 120.0,
+    "tempo_resposta_segundos": 8.44,
+    "tokens_entrada": 1962,
+    "tokens_saida": 921,
+    "tokens_total": 2883,
+    "tokens_raciocinio": 138,
+    "tokens_cache": 0,
+    "custo_estimado_usd": 0.000657,
+    "preco_usd_por_milhao_tokens": {
+      "entrada": 0.1,
+      "saida": 0.5
+    }
+  },
+  "arquivo_extracao": "dados/processados/extracao_caso1_solicitacao_completa.json"
+}
