@@ -43,8 +43,42 @@ com os gabaritos (RF13), revisão humana de cada saída e varredura de dados pes
 
 ## 2. Maria Luiza Batista de Souza
 
-[A preencher: ferramenta e modelo, para que usou, sugestões aceitas, modificadas ou rejeitadas,
-erros encontrados e como validou.]
+**Ferramentas:** ChatGPT (OpenAI), durante a construção dos RF06, RF07, RF08 e RF10 em 17/17/1072026; e Claude (Anthropic), em 18/10/2026, na verificação final.
+
+**Finalidade:** auxiliar o desenvolvimento dos requisitos dela (transcrição, voz, visão e imagem),
+analisar erros, revisar o código, escrever testes e documentar; e, com o Claude, conferir o projeto
+contra o enunciado, analisar as branches e corrigir o tratamento de falhas da API.
+
+**Forma de trabalho:** a IA propunha e explicava; Maria decidia, aplicava no VS Code, rodava os
+testes, testava pela interface com a chave real e fez os commits na branch `alteracoes-maria`. O
+Claude preparava os arquivos numa cópia e testava sem chamar a API.
+
+**Principais solicitações**
+
+- Transcrição do áudio (RF06), voz da minuta (RF07), leitura da ficha em imagem (RF08) e peça visual
+  (RF10), com testes e documentação de cada um.
+- Conferência do projeto contra o enunciado e análise do que faltava em cada requisito.
+- Comandos de Git para manter a branch atualizada sem criar branches novas.
+- Mensagens claras em português para falhas da API (RF04) em áudio, voz e visão.
+
+**Sugestões**
+
+- **Aceitas:** voz `nova` e aviso de campos não localizados (RF07); instruções contra dados pessoais e
+  contra comandos escritos na ficha (RF08); módulo `src/erros_api.py` com mensagens que não citam a
+  chave; documentação só depois da funcionalidade.
+- **Modificadas:** o RF07 passou do `tts-1-hd` para o `gpt-4o-mini-tts` com instruções de entonação,
+  mantendo o `tts-1-hd` como alternativa; a escolha da versão do áudio veio da escuta de cada versão.
+- **Rejeitadas:** peça do RF10 gerada e editada só pela IA (textos e brasão saíam distorcidos),
+  trocada por textos diagramados por código; criar branches novas; enviar a chave ao chat.
+
+**Erros encontrados:** transcrição repetindo "noturno" e sem o "@" do e-mail (RF06); pronúncia do
+protocolo e naturalidade da voz (RF07); seis divergências na primeira leitura da ficha (RF08); erros de
+texto, brasão e rodapé nas imagens (RF10); e, na orientação do Claude, análise feita só na `main`
+desatualizada e comando de testes sem o `.` depois do `-t`. Todos corrigidos.
+
+**Validação:** 173 testes automatizados (164 anteriores e 9 novos do tratamento de falhas), revisão
+humana de cada transcrição, áudio e extração contra o original, e teste real pela interface com a
+chave, conferindo os campos, a minuta aprovada, o PDF e o áudio.
 
 ## 3. Felipe Ferreira Aguiar
 
