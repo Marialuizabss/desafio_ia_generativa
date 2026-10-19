@@ -120,6 +120,11 @@ imagem ampliada para o RF13, a letra depois de "MARC" foi lida como "U", e o gab
 "Marcus" (registrado em `revisao_gabarito` no `gabarito_entrada_pdf-imagem.json`). O texto do
 professor traz "Marcos": a diferença entre os canais é justamente o que a conferência humana resolve.
 
+**Limitação aceita:** a ficha foi preenchida à mão, com traços ambíguos nos dígitos, e a visão
+multimodal não lê esses campos de forma confiável. Por isso o sistema não trata a leitura de
+protocolo e datas como definitiva: a conferência humana na etapa 3 é obrigatória, e a minuta só é
+montada depois dela.
+
 ## 9. Quando o processamento local seria preferível
 
 O enunciado pede justificar quando seria preferível processar localmente por soberania ou
