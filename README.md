@@ -129,7 +129,7 @@ As saídas ficam em `resultados/minutas/aprovadas/` (minuta e PDF), `resultados/
 
 | O quê | Comando | Chama a API? |
 |---|---|---|
-| Todos os testes (173) | `python -m unittest discover -s testes -t .` | Não |
+| Todos os testes (181) | `python -m unittest discover -s testes -t .` | Não |
 | Versões do Python e das bibliotecas | `python -m src.versoes` | Não |
 | Varredura de credenciais e dados pessoais (RF12) | `python -m src.varredura_rf12` | Não |
 | Avaliação dos 7 casos (RF13) | `python -m src.avaliacao_rf13 --todos` | Sim, ~US$ 0,03 |
