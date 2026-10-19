@@ -59,7 +59,7 @@ delimitado e tratado como dado, não como instrução; e cada execução, revis�
 | RF01 | `python -m src.main`, `config.json`, `.env` fora do git, versões registradas | Este README; `python -m src.versoes` |
 | RF02 | Experimento com os prompts A, B e C; prompt B escolhido | `documentacao/rf02_engenharia_de_prompts.md` |
 | RF03 | Prompt seguro, delimitação e testes de injection | `documentacao/rf03_prompt_seguro.md` |
-| RF04 | Chamada à API com timeout, tratamento de falhas, tempo, tokens e custo | `src/llm_client.py` |
+| RF04 | Chamada à API com timeout, tratamento de falhas, tempo, tokens e custo; mensagens de falha em português também na transcrição, na voz e na leitura de imagem | `src/llm_client.py`, `src/erros_api.py` |
 | RF05 | Extração estruturada em JSON com campos ausentes sinalizados | `src/extracao.py`, `dados/processados/` |
 | RF06 | Transcrição com duração, idioma e modelo; conferência antes da minuta | `documentacao/rf06_transcricao.md` |
 | RF07 | Áudio da minuta aprovada com instruções de entonação | `documentacao/rf07_voz_acessibilidade.md` |
@@ -129,7 +129,7 @@ As saídas ficam em `resultados/minutas/aprovadas/` (minuta e PDF), `resultados/
 
 | O quê | Comando | Chama a API? |
 |---|---|---|
-| Todos os testes (164) | `python -m unittest discover -s testes -t .` | Não |
+| Todos os testes (173) | `python -m unittest discover -s testes -t .` | Não |
 | Versões do Python e das bibliotecas | `python -m src.versoes` | Não |
 | Varredura de credenciais e dados pessoais (RF12) | `python -m src.varredura_rf12` | Não |
 | Avaliação dos 7 casos (RF13) | `python -m src.avaliacao_rf13 --todos` | Sim, ~US$ 0,03 |
@@ -170,6 +170,7 @@ desafio_ia_generativa/
 │   ├── fluxo.py                entrada → extração → revisão → minuta → aprovação
 │   ├── llm_client.py           prompt de produção, chamada à API e montagem da minuta
 │   ├── audio.py, vision.py     transcrição, voz e leitura de documentos
+│   ├── erros_api.py            mensagens em português para falhas da API
 │   ├── peca_orientacao.py      peça de orientação (RF10)
 │   ├── minuta_pdf.py           PDF da minuta
 │   ├── privacidade.py          minimização de dados pessoais (RF12)
@@ -209,6 +210,8 @@ desafio_ia_generativa/
 - **Envio ao provedor:** o áudio e a imagem da ficha vão inteiros para transcrição e leitura, e a
   minuta aprovada vai para a API de voz; processamento local seria preferível em produção (RF08 e
   RF12).
+- **Transcrição:** erra nomes e símbolos (no áudio de teste, repetiu "noturno" e perdeu o "@" do
+  e-mail); a conferência dos dados críticos com o áudio original é obrigatória.
 - **Voz sintética:** não atende pessoas surdas; a naturalidade e a pronúncia de nomes ainda podem
   falhar.
 - **Avaliação limitada:** 7 casos, todos de matrícula; resistência a injection medida em dois ataques
@@ -232,13 +235,16 @@ Detalhes em [`documentacao/rf12_lgpd_privacidade.md`](documentacao/rf12_lgpd_pri
 | Integrante | Responsabilidades |
 |---|---|
 | Ana Beatriz Schuindt do Amaral | Casos de teste e gabaritos; experimento de prompts (RF02); prompt seguro (RF03); registro e rastreabilidade (RF11); LGPD (RF12); avaliação de qualidade (RF13); integração final: revisão humana na interface, conferência dos dados críticos, PDF da minuta aprovada, áudio da minuta e peça de orientação; documentação |
-| Maria Luiza Batista de Souza | Transcrição (RF06), síntese de voz (RF07), visão e OCR (RF08) e primeiras versões da imagem (RF10) |
+| Maria Luiza Batista de Souza | Transcrição (RF06), síntese de voz (RF07), visão e OCR (RF08) e primeiras versões da imagem (RF10); mensagens de falha da API em português nesses módulos (`src/erros_api.py`); testes reais pela interface |
 | Felipe Ferreira Aguiar | Inicialização e configuração (RF01), chamada à API (RF04), extração (RF05), minuta e primeira versão do PDF (RF09) e interface em etapas |
 
 O desenvolvimento teve apoio de ferramentas de IA. Ana Beatriz usou o **Claude Code** para auxiliar
 o desenvolvimento, criar a estrutura de diretórios esperada, sugerir a arquitetura, sugerir como
 documentar cada etapa, acompanhar os requisitos funcionais obrigatórios e manter o trabalho dentro
-do escopo. Todo código e todo conteúdo gerado com apoio de IA foram revisados e testados pela equipe.
+do escopo. Maria Luiza usou o **ChatGPT** na construção dos RF06, RF07, RF08 e RF10 (análise de erros,
+revisão de código, testes e documentação) e o **Claude** na verificação final, na análise das branches e
+no tratamento de falhas da API. Todo código e todo conteúdo gerado com apoio de IA foram revisados e
+testados pela equipe.
 O registro completo está em [`documentacao/02_registro_uso_ia.md`](documentacao/02_registro_uso_ia.md).
 
 ---
