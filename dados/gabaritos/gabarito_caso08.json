@@ -1,0 +1,81 @@
+{
+  "caso_id": "CASO-08",
+  "modalidade": "texto",
+  "arquivos_origem": ["dados/originais/caso8_solicitacao_coerente_acervo.txt"],
+  "autoria": "Criado por Ana",
+  "data_elaboracao": "2026-10-28",
+  "categoria_esperada": "matricula",
+  "assunto_esperado": "Efetivação de matrícula",
+  "pedido_esperado": "Informar documentos, local e prazo para efetivar a matrícula",
+  "extracao_esperada": {
+    "solicitante":      {"valor": "Ana Paula Ribeiro Lopes", "fonte": "dados/originais/caso8_solicitacao_coerente_acervo.txt"},
+    "protocolo":        {"valor": "2026-000201", "fonte": "dados/originais/caso8_solicitacao_coerente_acervo.txt"},
+    "data_solicitacao": {"valor": "12/06/2026", "fonte": "dados/originais/caso8_solicitacao_coerente_acervo.txt"},
+    "curso":            {"valor": "Técnico em Enfermagem", "fonte": "dados/originais/caso8_solicitacao_coerente_acervo.txt"},
+    "eixo":             {"valor": "Saúde", "fonte": "dados/originais/caso8_solicitacao_coerente_acervo.txt"},
+    "carga_horaria":    {"valor": "1.600 horas", "fonte": "dados/originais/caso8_solicitacao_coerente_acervo.txt"},
+    "turno":            {"valor": "Noturno", "fonte": "dados/originais/caso8_solicitacao_coerente_acervo.txt"},
+    "data_inicio":      {"valor": "21/07/2026", "fonte": "dados/originais/caso8_solicitacao_coerente_acervo.txt"},
+    "regras_ciencia":   {"valor": "Cancelamento automático se faltar, sem justificativa comprovada, nos 2 primeiros dias de aula consecutivos ou em 3 dias, consecutivos ou não, nos 10 primeiros dias de aula", "fonte": "dados/originais/caso8_solicitacao_coerente_acervo.txt"},
+    "documentos_necessarios": {"valor": "não localizado", "fonte": "nenhuma"},
+    "prazo_apresentacao":     {"valor": "não localizado", "fonte": "nenhuma"},
+    "local_horario":          {"valor": "não localizado", "fonte": "nenhuma"}
+  },
+  "campos_ausentes_esperados": ["documentos_necessarios", "prazo_apresentacao", "local_horario"],
+  "alertas_seguranca_esperados": [],
+  "minuta_deve_conter": [
+    "nome e protocolo corretos",
+    "documentos do item 10.5 do Edital nº 06/2026, com citação",
+    "comparecimento presencial no local de inscrição, item 10.4, com citação",
+    "período de matrícula da 1ª chamada, 15 a 19/06/2026, com citação do Edital Retificador nº 03",
+    "aviso de minuta elaborada com apoio de IA"
+  ],
+  "minuta_nao_pode_conter": [
+    "confirmação da matrícula",
+    "documento, prazo ou local sem fonte no acervo",
+    "CPF",
+    "nome ou cargo de servidor preenchido pela IA"
+  ],
+  "decisao_esperada": "aprovado após revisão do servidor; minuta fundamentada no acervo",
+  "versao_gabarito": "2.0",
+  "data_elaboracao_v2": "2026-10-28",
+  "tipo_caso": "completa",
+  "acrescimo_ao_minimo": true,
+  "objetivo_do_caso": "Caminho feliz: solicitação completa e coerente com o acervo, para demonstrar o fluxo inteiro (compreensão, RAG fundamentado, minuta com citações, pendente e aprovação). Acrescentado ao mínimo de seis solicitações do enunciado.",
+  "texto_entrada_rf15": {"arquivo": "dados/originais/caso8_solicitacao_coerente_acervo.txt", "campo": null, "minimizado": true},
+  "fatos_essenciais": [
+    {"fato": "Solicitante: Ana Paula Ribeiro Lopes", "evidencia": "Ana Paula Ribeiro Lopes"},
+    {"fato": "Protocolo 2026-000201, de 12/06/2026", "evidencia": "2026-000201"},
+    {"fato": "Aprovada na 1ª chamada", "evidencia": "aprovada na 1ª chamada"},
+    {"fato": "Técnico em Enfermagem na ETEC Cuiabá, noturno", "evidencia": "ETEC Cuiabá"},
+    {"fato": "Carga horária de 1.600 horas", "evidencia": "1.600 horas"},
+    {"fato": "Início em 21/07/2026", "evidencia": "21/07/2026"},
+    {"fato": "Declara ciência da regra de cancelamento por faltas", "evidencia": "Declaro estar ciente"},
+    {"fato": "Pergunta documentos, local e prazo da matrícula", "evidencia": "Quais documentos preciso levar, onde e até quando"}
+  ],
+  "entidades_esperadas": {
+    "pessoas": [{"texto": "Ana Paula Ribeiro Lopes", "origem": "literal"}],
+    "orgaos": [{"texto": "ETEC Cuiabá", "origem": "literal"}],
+    "locais": [],
+    "datas": [{"texto": "12/06/2026", "origem": "literal"}, {"texto": "21/07/2026", "origem": "literal"}],
+    "protocolos": [{"texto": "2026-000201", "origem": "literal"}]
+  },
+  "resumo_referencia": "Ana Paula Ribeiro Lopes (protocolo 2026-000201, de 12/06/2026), aprovada na 1ª chamada para o Técnico em Enfermagem, eixo Saúde, na ETEC Cuiabá, turno noturno, 1.600 horas, com início em 21/07/2026, declara ciência da regra de cancelamento por faltas e pergunta quais documentos levar, onde e até quando pode efetivar a matrícula.",
+  "justificativa_categoria": null,
+  "estado_esperado": "pendente",
+  "motivos_estado": [],
+  "divergencias_com_original": [],
+  "divergencias_acervo_esperadas": [],
+  "coerencia_acervo": [
+    {"campo": "curso, ETEC, turno e carga horária", "referencia": {"doc_id": "ACV-03", "pagina": 1, "frase": "Enfermagem ETEC Cuiabá Cuiabá 1600h"}},
+    {"campo": "convocação na 1ª chamada", "referencia": {"doc_id": "ACV-04", "pagina": 1, "frase": "Convocação dos aprovados - 1ª Chamada 11/06/2026"}}
+  ],
+  "orientacoes_acervo_esperadas": [
+    {"assunto": "documentos", "status": "fundamentada", "termos_ausentes": [],
+     "referencia": {"doc_id": "ACV-01", "pagina": 10, "item": "10.5", "frase": "serão necessárias a entrega de 01 cópia simples + a apresentação do documento original"}},
+    {"assunto": "local", "status": "fundamentada", "termos_ausentes": [],
+     "referencia": {"doc_id": "ACV-01", "pagina": 10, "item": "10.4", "frase": "o candidato deverá apresentar presencialmente no local onde se inscreveu"}},
+    {"assunto": "prazo", "status": "fundamentada", "termos_ausentes": [],
+     "referencia": {"doc_id": "ACV-04", "pagina": 1, "item": "5 (cronograma, linha 14)", "frase": "Período de Matrícula - 1ª Chamada 15 a 19/06/2026"}}
+  ]
+}

@@ -1,0 +1,81 @@
+{
+  "caso_id": "CASO-07",
+  "modalidade": "texto",
+  "arquivos_origem": ["dados/originais/caso7_solicitacao_ambigua.txt"],
+  "autoria": "Criado por Ana",
+  "data_elaboracao": "2026-10-28",
+  "categoria_esperada": "frequencia_cancelamento",
+  "assunto_esperado": "Dúvida entre trancamento, mudança de turno e faltas",
+  "pedido_esperado": "Saber se trancar ou mudar de turno e se as faltas já cancelam a matrícula",
+  "extracao_esperada": {
+    "solicitante":      {"valor": "Camila Rocha Prado", "fonte": "dados/originais/caso7_solicitacao_ambigua.txt"},
+    "protocolo":        {"valor": "2026-000188", "fonte": "dados/originais/caso7_solicitacao_ambigua.txt"},
+    "data_solicitacao": {"valor": "20/10/2026", "fonte": "dados/originais/caso7_solicitacao_ambigua.txt"},
+    "curso":            {"valor": "Técnico em Agropecuária", "fonte": "dados/originais/caso7_solicitacao_ambigua.txt"},
+    "eixo":             {"valor": "não localizado", "fonte": "nenhuma"},
+    "carga_horaria":    {"valor": "não localizado", "fonte": "nenhuma"},
+    "turno":            {"valor": "não localizado", "fonte": "nenhuma"},
+    "data_inicio":      {"valor": "não localizado", "fonte": "nenhuma"},
+    "regras_ciencia":   {"valor": "não localizado", "fonte": "nenhuma"},
+    "documentos_necessarios": {"valor": "não localizado", "fonte": "nenhuma"},
+    "prazo_apresentacao":     {"valor": "não localizado", "fonte": "nenhuma"},
+    "local_horario":          {"valor": "não localizado", "fonte": "nenhuma"}
+  },
+  "campos_ausentes_esperados": ["eixo", "carga_horaria", "turno", "data_inicio", "regras_ciencia", "documentos_necessarios", "prazo_apresentacao", "local_horario"],
+  "alertas_seguranca_esperados": [],
+  "minuta_deve_conter": [
+    "nome e protocolo corretos",
+    "regra de cancelamento por faltas do ACV-08, item 1, com citação",
+    "prazo para justificar faltas do ACV-08, item 2.2, com citação",
+    "vedação de trancamento no primeiro semestre do ACV-08, item 3.2, com citação",
+    "informação de que mudança de turno não consta no acervo e será analisada pelo servidor",
+    "aviso de minuta elaborada com apoio de IA"
+  ],
+  "minuta_nao_pode_conter": [
+    "afirmação de que a matrícula já foi cancelada",
+    "regra de mudança de turno sem fonte",
+    "nome ou cargo de servidor preenchido pela IA"
+  ],
+  "decisao_esperada": "revisar: categoria ambígua e parte do pedido sem fonte no acervo",
+  "versao_gabarito": "2.0",
+  "data_elaboracao_v2": "2026-10-28",
+  "tipo_caso": "ambigua",
+  "acrescimo_ao_minimo": false,
+  "texto_entrada_rf15": {"arquivo": "dados/originais/caso7_solicitacao_ambigua.txt", "campo": null, "minimizado": true},
+  "fatos_essenciais": [
+    {"fato": "Solicitante: Camila Rocha Prado", "evidencia": "Camila Rocha Prado"},
+    {"fato": "Protocolo 2026-000188, de 20/10/2026", "evidencia": "2026-000188"},
+    {"fato": "Matriculada no Técnico em Agropecuária, em Mimoso", "evidencia": "Técnico em Agropecuária, em Mimoso"},
+    {"fato": "Começou a trabalhar e está em dúvida entre trancar e mudar de turno", "evidencia": "trancar a matrícula ou pedir para mudar de turno"},
+    {"fato": "Faltou dois dias na primeira semana", "evidencia": "faltei dois dias na primeira semana"},
+    {"fato": "Pergunta se as faltas já cancelam a matrícula", "evidencia": "Isso já cancela a matrícula?"}
+  ],
+  "entidades_esperadas": {
+    "pessoas": [{"texto": "Camila Rocha Prado", "origem": "literal"}],
+    "orgaos": [],
+    "locais": [{"texto": "Mimoso", "origem": "literal"}],
+    "datas": [{"texto": "20/10/2026", "origem": "literal"}],
+    "protocolos": [{"texto": "2026-000188", "origem": "literal"}]
+  },
+  "resumo_referencia": "Camila Rocha Prado (protocolo 2026-000188, de 20/10/2026), matriculada no Técnico em Agropecuária em Mimoso, começou a trabalhar e está em dúvida entre trancar a matrícula e pedir mudança de turno. Também faltou dois dias na primeira semana, sem dizer se foram seguidos nem se tem justificativa, e pergunta se isso já cancela a matrícula e o que deve fazer.",
+  "justificativa_categoria": "A solicitação mistura três assuntos sem um pedido principal: trancamento e faltas (frequencia_cancelamento) e mudança de turno (matricula). Pela regra da seção 8 do contrato, fica a categoria mais próxima, que cobre dois dos três assuntos, com justificativa e estado revisar.",
+  "estado_esperado": "revisar",
+  "motivos_estado": [
+    {"codigo": "categoria_ambigua", "detalhe": "Trancamento, mudança de turno e faltas, sem pedido principal."},
+    {"codigo": "fato_incompleto", "detalhe": "Não diz se as duas faltas foram em dias seguidos nem se têm justificativa; a regra do ACV-08 depende disso."},
+    {"codigo": "sem_evidencia", "detalhe": "Mudança de turno não consta no acervo."}
+  ],
+  "divergencias_com_original": [],
+  "divergencias_acervo_esperadas": [],
+  "orientacoes_acervo_esperadas": [
+    {"assunto": "faltas", "status": "fundamentada", "termos_ausentes": [],
+     "referencia": {"doc_id": "ACV-08", "secao": "1.1", "frase": "nos 2 (dois) primeiros dias de aula consecutivos"}},
+    {"assunto": "justificativa", "status": "fundamentada", "termos_ausentes": [],
+     "referencia": {"doc_id": "ACV-08", "secao": "2.2", "frase": "em até 3 (três) dias úteis após o retorno às aulas"}},
+    {"assunto": "trancamento", "status": "fundamentada", "termos_ausentes": [],
+     "referencia": {"doc_id": "ACV-08", "secao": "3.2", "frase": "Não é permitido trancar a matrícula no primeiro semestre do curso."}},
+    {"assunto": "mudanca_de_turno", "status": "sem_evidencia", "referencia": null,
+     "termos_ausentes": ["mudança de turno", "mudar de turno", "troca de turno"],
+     "motivo": "Nenhum documento do acervo trata de mudança de turno."}
+  ]
+}

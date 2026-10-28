@@ -94,5 +94,157 @@
     "fundamento legal",
     "nome ou cargo de servidor preenchido pela IA"
   ],
-  "decisao_esperada": "aprovado somente após confirmação humana dos dados críticos extraídos da imagem"
+  "decisao_esperada": "aprovado somente após confirmação humana dos dados críticos extraídos da imagem",
+  "versao_gabarito": "2.0",
+  "data_elaboracao_v2": "2026-10-28",
+  "tipo_caso": "completa",
+  "acrescimo_ao_minimo": false,
+  "texto_entrada_rf15": {
+    "arquivo": "dados/processados/extracao_entrada_pdf-imagem.json",
+    "campo": "texto_extraido",
+    "minimizado": true
+  },
+  "fatos_essenciais": [
+    {
+      "fato": "Código lido na ficha: 2024-000142",
+      "evidencia": "2024-000142"
+    },
+    {
+      "fato": "Nome na ficha: Marcus Vinicius de Almeida Santos",
+      "evidencia": "MARCUS VINICIUS DE ALMEIDA SANTOS"
+    },
+    {
+      "fato": "Ficha da Escola Técnica Estadual de Cuiabá",
+      "evidencia": "ESCOLA TÉCNICA ESTADUAL DE CUIABÁ"
+    },
+    {
+      "fato": "Curso Técnico em Enfermagem, 1.200 horas, noturno",
+      "evidencia": "TÉCNICO EM ENFERMAGEM"
+    },
+    {
+      "fato": "Início do curso em 01/02/2027",
+      "evidencia": "01/02/2027"
+    },
+    {
+      "fato": "Data da matrícula lida como 17/01/2026",
+      "evidencia": "17/01/2026"
+    },
+    {
+      "fato": "Termo de ciência da regra de cancelamento por faltas",
+      "evidencia": "Estou ciente"
+    }
+  ],
+  "entidades_esperadas": {
+    "pessoas": [
+      {
+        "texto": "MARCUS VINICIUS DE ALMEIDA SANTOS",
+        "origem": "literal"
+      }
+    ],
+    "orgaos": [
+      {
+        "texto": "GOVERNO DE MATO GROSSO",
+        "origem": "literal"
+      },
+      {
+        "texto": "SECRETARIA DE ESTADO DE CIÊNCIA, TECNOLOGIA E INOVAÇÃO - SECTECI/MT",
+        "origem": "literal"
+      },
+      {
+        "texto": "ESCOLA TÉCNICA ESTADUAL DE CUIABÁ",
+        "origem": "literal"
+      }
+    ],
+    "locais": [],
+    "datas": [
+      {
+        "texto": "01/02/2027",
+        "origem": "literal"
+      },
+      {
+        "texto": "17/01/2026",
+        "origem": "literal"
+      }
+    ],
+    "protocolos": [
+      {
+        "texto": "2024-000142",
+        "origem": "literal"
+      }
+    ]
+  },
+  "resumo_referencia": "Ficha de matrícula da Escola Técnica Estadual de Cuiabá em nome de Marcus Vinicius de Almeida Santos, código 2024-000142, para o Técnico em Enfermagem, eixo Saúde, 1.200 horas, turno noturno, com início em 01/02/2027 e data de matrícula 17/01/2026. Há termo de ciência da regra de cancelamento por faltas. A ficha não traz pedido escrito.",
+  "justificativa_categoria": null,
+  "estado_esperado": "revisar",
+  "motivos_estado": [
+    {
+      "codigo": "conferencia_ocr",
+      "detalhe": "Leitura de letra manuscrita: código lido como 2024-000142 e data da matrícula como 17/01/2026; a leitura humana indica 2026-000142 e 14/10/2026."
+    },
+    {
+      "codigo": "data_incoerente",
+      "detalhe": "A data da matrícula lida (17/01/2026) é anterior à publicação do edital (31/03/2026)."
+    },
+    {
+      "codigo": "semestre_fora_do_edital",
+      "detalhe": "Início em 01/02/2027 (2027/1); o acervo trata do processo seletivo 2026/2."
+    },
+    {
+      "codigo": "carga_horaria_diferente",
+      "detalhe": "Enfermagem na ETEC Cuiabá tem 1.600 h no quadro de vagas vigente; a ficha diz 1.200 horas."
+    }
+  ],
+  "divergencias_com_original": [
+    {
+      "campo": "protocolo",
+      "no_texto": "2024-000142",
+      "no_original": "2026-000142",
+      "fonte_original": "ocr_esperado.codigo.valor"
+    },
+    {
+      "campo": "data_solicitacao",
+      "no_texto": "17/01/2026",
+      "no_original": "14/10/2026",
+      "fonte_original": "ocr_esperado.data_matricula.valor"
+    }
+  ],
+  "divergencias_acervo_esperadas": [
+    {
+      "tipo": "semestre_fora_do_edital",
+      "campo": "data_inicio",
+      "na_solicitacao": "01/02/2027",
+      "no_acervo": "2026/2",
+      "termos_ausentes": [],
+      "referencia": {
+        "doc_id": "ACV-01",
+        "pagina": 1,
+        "frase": "PROCESSO SELETIVO DE ALUNOS PARA CURSOS TÉCNICOS NAS ETECS 2026/2"
+      }
+    },
+    {
+      "tipo": "data_incoerente",
+      "campo": "data_solicitacao",
+      "na_solicitacao": "17/01/2026",
+      "no_acervo": "edital de 31/03/2026",
+      "termos_ausentes": [],
+      "referencia": {
+        "doc_id": "ACV-01",
+        "pagina": 13,
+        "frase": "Cuiabá, 31 de março de 2026."
+      }
+    },
+    {
+      "tipo": "carga_horaria_diferente",
+      "campo": "carga_horaria",
+      "na_solicitacao": "1.200 HORAS",
+      "no_acervo": "1600h",
+      "termos_ausentes": [],
+      "referencia": {
+        "doc_id": "ACV-03",
+        "pagina": 1,
+        "frase": "Enfermagem ETEC Cuiabá Cuiabá 1600h"
+      }
+    }
+  ],
+  "orientacoes_acervo_esperadas": []
 }

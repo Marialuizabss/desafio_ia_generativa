@@ -38,5 +38,113 @@
     "fundamento legal",
     "nome ou cargo de servidor preenchido pela IA"
   ],
-  "decisao_esperada": "aprovado"
+  "decisao_esperada": "aprovado",
+  "versao_gabarito": "2.0",
+  "data_elaboracao_v2": "2026-10-28",
+  "tipo_caso": "completa",
+  "acrescimo_ao_minimo": false,
+  "texto_entrada_rf15": {
+    "arquivo": "dados/originais/caso1_solicitacao_completa.txt",
+    "campo": null,
+    "minimizado": true
+  },
+  "fatos_essenciais": [
+    {
+      "fato": "Protocolo 2026-000157, aberto em 15/10/2026",
+      "evidencia": "2026-000157"
+    },
+    {
+      "fato": "Solicitante: Juliana Ferreira Campos",
+      "evidencia": "Juliana Ferreira Campos"
+    },
+    {
+      "fato": "Curso Técnico em Informática, turno vespertino",
+      "evidencia": "Técnico em Informática"
+    },
+    {
+      "fato": "Início previsto em 01/02/2027",
+      "evidencia": "01/02/2027"
+    },
+    {
+      "fato": "Declara ciência da regra de cancelamento por faltas",
+      "evidencia": "Declaro estar ciente"
+    },
+    {
+      "fato": "Pede a lista de documentos que ainda precisa apresentar",
+      "evidencia": "quais documentos ainda preciso apresentar"
+    }
+  ],
+  "entidades_esperadas": {
+    "pessoas": [
+      {
+        "texto": "Juliana Ferreira Campos",
+        "origem": "literal"
+      }
+    ],
+    "orgaos": [],
+    "locais": [],
+    "datas": [
+      {
+        "texto": "15/10/2026",
+        "origem": "literal"
+      },
+      {
+        "texto": "01/02/2027",
+        "origem": "literal"
+      }
+    ],
+    "protocolos": [
+      {
+        "texto": "2026-000157",
+        "origem": "literal"
+      }
+    ]
+  },
+  "resumo_referencia": "Juliana Ferreira Campos (protocolo 2026-000157, de 15/10/2026) pede a efetivação da matrícula no Técnico em Informática, eixo Informação e Comunicação, 1.200 horas, turno vespertino, com início previsto em 01/02/2027. Declara ciência da regra de cancelamento por faltas e pergunta quais documentos ainda precisa apresentar.",
+  "justificativa_categoria": null,
+  "estado_esperado": "revisar",
+  "motivos_estado": [
+    {
+      "codigo": "semestre_fora_do_edital",
+      "detalhe": "Início em 01/02/2027 (2027/1); o acervo trata do processo seletivo 2026/2."
+    },
+    {
+      "codigo": "curso_nao_ofertado",
+      "detalhe": "Técnico em Informática não consta no edital nem nas retificações."
+    }
+  ],
+  "divergencias_com_original": [],
+  "divergencias_acervo_esperadas": [
+    {
+      "tipo": "semestre_fora_do_edital",
+      "campo": "data_inicio",
+      "na_solicitacao": "01/02/2027",
+      "no_acervo": "2026/2",
+      "termos_ausentes": [],
+      "referencia": {
+        "doc_id": "ACV-01",
+        "pagina": 1,
+        "frase": "PROCESSO SELETIVO DE ALUNOS PARA CURSOS TÉCNICOS NAS ETECS 2026/2"
+      }
+    },
+    {
+      "tipo": "curso_nao_ofertado",
+      "campo": "curso",
+      "na_solicitacao": "Técnico em Informática",
+      "no_acervo": null,
+      "referencia": null,
+      "termos_ausentes": [
+        "Informática"
+      ]
+    }
+  ],
+  "orientacoes_acervo_esperadas": [
+    {
+      "assunto": "documentos",
+      "status": "sem_evidencia",
+      "referencia": null,
+      "termos_ausentes": [],
+      "motivo": "O acervo só traz os documentos da matrícula do processo seletivo 2026/2."
+    }
+  ]
 }

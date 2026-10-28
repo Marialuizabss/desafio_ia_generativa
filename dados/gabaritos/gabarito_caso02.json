@@ -50,5 +50,117 @@
     "fundamento legal",
     "nome ou cargo de servidor preenchido pela IA"
   ],
-  "decisao_esperada": "aprovado com revisão"
+  "decisao_esperada": "aprovado com revisão",
+  "versao_gabarito": "2.0",
+  "data_elaboracao_v2": "2026-10-28",
+  "tipo_caso": "incompleta",
+  "acrescimo_ao_minimo": false,
+  "texto_entrada_rf15": {
+    "arquivo": "dados/originais/caso2_solicitacao_incompleta.txt",
+    "campo": null,
+    "minimizado": true
+  },
+  "fatos_essenciais": [
+    {
+      "fato": "Solicitante: Roberto Alves Nunes",
+      "evidencia": "Roberto Alves Nunes"
+    },
+    {
+      "fato": "Curso Técnico em Administração",
+      "evidencia": "Técnico em Administração"
+    },
+    {
+      "fato": "Carga horária declarada de 1.000 horas",
+      "evidencia": "1.000 horas"
+    },
+    {
+      "fato": "Início em 01/02/2027",
+      "evidencia": "01/02/2027"
+    },
+    {
+      "fato": "Não informa o protocolo",
+      "evidencia": "Não lembro o número do protocolo"
+    },
+    {
+      "fato": "Pergunta o que levar e o prazo",
+      "evidencia": "O que eu preciso levar e até quando?"
+    }
+  ],
+  "entidades_esperadas": {
+    "pessoas": [
+      {
+        "texto": "Roberto Alves Nunes",
+        "origem": "literal"
+      }
+    ],
+    "orgaos": [],
+    "locais": [],
+    "datas": [
+      {
+        "texto": "01/02/2027",
+        "origem": "literal"
+      }
+    ],
+    "protocolos": []
+  },
+  "resumo_referencia": "Roberto Alves Nunes quer fazer a matrícula no Técnico em Administração, eixo Gestão e Negócios, 1.000 horas, com início em 01/02/2027. Não informa o protocolo, que diz não lembrar, nem o turno ou a ETEC. Pergunta o que precisa levar e até quando.",
+  "justificativa_categoria": null,
+  "estado_esperado": "revisar",
+  "motivos_estado": [
+    {
+      "codigo": "campos_ausentes",
+      "detalhe": "Sem protocolo, data da solicitação, turno, ETEC e declaração de ciência."
+    },
+    {
+      "codigo": "semestre_fora_do_edital",
+      "detalhe": "Início em 01/02/2027 (2027/1); o acervo trata do processo seletivo 2026/2."
+    },
+    {
+      "codigo": "carga_horaria_diferente",
+      "detalhe": "Todas as ofertas de Administração no quadro de vagas vigente têm 800 h; a solicitação diz 1.000 horas."
+    }
+  ],
+  "divergencias_com_original": [],
+  "divergencias_acervo_esperadas": [
+    {
+      "tipo": "semestre_fora_do_edital",
+      "campo": "data_inicio",
+      "na_solicitacao": "01/02/2027",
+      "no_acervo": "2026/2",
+      "termos_ausentes": [],
+      "referencia": {
+        "doc_id": "ACV-01",
+        "pagina": 1,
+        "frase": "PROCESSO SELETIVO DE ALUNOS PARA CURSOS TÉCNICOS NAS ETECS 2026/2"
+      }
+    },
+    {
+      "tipo": "carga_horaria_diferente",
+      "campo": "carga_horaria",
+      "na_solicitacao": "1.000 horas",
+      "no_acervo": "800h em todas as ofertas de Administração",
+      "termos_ausentes": [],
+      "referencia": {
+        "doc_id": "ACV-03",
+        "pagina": 1,
+        "frase": "Administração ETEC Cáceres Cáceres 800h"
+      }
+    }
+  ],
+  "orientacoes_acervo_esperadas": [
+    {
+      "assunto": "documentos",
+      "status": "sem_evidencia",
+      "referencia": null,
+      "termos_ausentes": [],
+      "motivo": "O acervo só traz os documentos da matrícula do processo seletivo 2026/2."
+    },
+    {
+      "assunto": "prazo",
+      "status": "sem_evidencia",
+      "referencia": null,
+      "termos_ausentes": [],
+      "motivo": "O acervo só traz prazos de matrícula do processo seletivo 2026/2."
+    }
+  ]
 }

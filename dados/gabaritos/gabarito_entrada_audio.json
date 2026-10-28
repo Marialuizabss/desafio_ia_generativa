@@ -58,5 +58,93 @@
     "fundamento legal",
     "nome ou cargo de servidor preenchido pela IA"
   ],
-  "decisao_esperada": "aprovado após conferência humana de nome, protocolo e data"
+  "decisao_esperada": "aprovado após conferência humana de nome, protocolo e data",
+  "versao_gabarito": "2.0",
+  "data_elaboracao_v2": "2026-10-28",
+  "tipo_caso": "completa",
+  "acrescimo_ao_minimo": false,
+  "texto_entrada_rf15": {
+    "arquivo": "dados/processados/transcricao_entrada_audio.txt",
+    "campo": null,
+    "minimizado": true
+  },
+  "fatos_essenciais": [
+    {
+      "fato": "Protocolo 2026-000142, de 14 de outubro de 2026",
+      "evidencia": "2026-000142"
+    },
+    {
+      "fato": "Solicitante: Marcos Vinícius de Almeida Santos",
+      "evidencia": "Marcos Vinícius de Almeida Santos"
+    },
+    {
+      "fato": "Curso Técnico em Enfermagem, turno noturno",
+      "evidencia": "técnico em enfermagem"
+    },
+    {
+      "fato": "Declara ciência da regra de cancelamento por faltas",
+      "evidencia": "Declaro estar ciente"
+    },
+    {
+      "fato": "Pede a lista de documentos que ainda precisa apresentar",
+      "evidencia": "quais os documentos ainda preciso apresentar"
+    }
+  ],
+  "entidades_esperadas": {
+    "pessoas": [
+      {
+        "texto": "Marcos Vinícius de Almeida Santos",
+        "origem": "literal"
+      }
+    ],
+    "orgaos": [],
+    "locais": [],
+    "datas": [
+      {
+        "texto": "14 de outubro de 2026",
+        "origem": "literal"
+      }
+    ],
+    "protocolos": [
+      {
+        "texto": "2026-000142",
+        "origem": "literal"
+      }
+    ]
+  },
+  "resumo_referencia": "Em mensagem de voz, Marcos Vinícius de Almeida Santos (protocolo 2026-000142, de 14 de outubro de 2026) pede a efetivação da matrícula no Técnico em Enfermagem, eixo Saúde, 1.200 horas, turno noturno. Não informa a data de início. Declara ciência da regra de cancelamento por faltas e pergunta quais documentos ainda precisa apresentar.",
+  "justificativa_categoria": null,
+  "estado_esperado": "revisar",
+  "motivos_estado": [
+    {
+      "codigo": "conferencia_transcricao",
+      "detalhe": "Transcrição automática: conferir nome, protocolo e data com o áudio; o turno saiu como \"noturno noturno\"."
+    },
+    {
+      "codigo": "semestre_nao_informado",
+      "detalhe": "A data de início não é dita; o protocolo é de 14/10/2026, depois do início das aulas de 2026/2, e o acervo não trata de outro semestre."
+    },
+    {
+      "codigo": "etec_nao_informada",
+      "detalhe": "Enfermagem é ofertada em várias ETECs, com 1.200 h (Diamantino) ou 1.600 h (as demais); sem a ETEC não há oferta nem local para citar."
+    }
+  ],
+  "divergencias_com_original": [
+    {
+      "campo": "turno",
+      "no_texto": "noturno noturno",
+      "no_original": "no turno noturno",
+      "fonte_original": "transcricao_referencia"
+    }
+  ],
+  "divergencias_acervo_esperadas": [],
+  "orientacoes_acervo_esperadas": [
+    {
+      "assunto": "documentos",
+      "status": "sem_evidencia",
+      "referencia": null,
+      "termos_ausentes": [],
+      "motivo": "O acervo só traz os documentos da matrícula do processo seletivo 2026/2."
+    }
+  ]
 }

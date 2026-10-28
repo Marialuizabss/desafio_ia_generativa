@@ -45,8 +45,9 @@ são combinadas na equipe e registradas no histórico (seção 11).
 | `dados/avaliacoes/avaliacoes.json` | 12 avaliações, sem rótulo | Ana | Felipe | RF22 |
 | `dados/avaliacoes/avaliacoes_duplicadas.json` | Conjunto com duplicata para o T13 | Ana | Felipe | RF22, T13 |
 | `dados/gabaritos/gabarito_avaliacoes.json` | Rótulos esperados e totais do painel | Ana | Felipe, RF23 | RF22, T13 |
-| `dados/originais/caso7_solicitacao_ambigua.txt` | Solicitação ambígua *(a criar no bloco 6)* | Ana | Ana, Felipe | RF14, RF15 |
-| `dados/gabaritos/gabarito_*.json` | Esperado das 6 solicitações (ampliados no bloco 6) | Ana | Ana, RF23 | RF14, RF15 |
+| `dados/originais/caso7_solicitacao_ambigua.txt` | Solicitação ambígua (CASO-07) | Ana | Ana, Felipe | RF14, RF15 |
+| `dados/originais/caso8_solicitacao_coerente_acervo.txt` | Caminho feliz (CASO-08), acréscimo ao mínimo | Ana | Todos | RF19, RF20, RF24 |
+| `dados/gabaritos/gabarito_caso*.json`, `gabarito_entrada_*.json` | Esperado das 7 solicitações (formato 2.0) | Ana | Ana, Maria, RF23 | RF14, RF15, RF19 |
 
 ## 3. Acervo
 
@@ -315,18 +316,32 @@ totais dos cenários conferidos por uma contagem independente).
 
 ## 7. Solicitações e gabaritos ampliados
 
-| ID | Tipo | Entrada original (`dados/originais/`) | Texto usado no RF15 | Gabarito |
-|---|---|---|---|---|
-| CASO-01 | completa | `caso1_solicitacao_completa.txt` | o próprio arquivo | `gabarito_caso01.json` |
-| CASO-04 | completa (texto do professor) | `entrada_texto.txt` | o próprio arquivo | `gabarito_entrada_texto.json` |
-| CASO-05 | completa (áudio) | `entrada_audio.mp3` | `dados/processados/transcricao_entrada_audio.txt` | `gabarito_entrada_audio.json` |
-| CASO-06 | completa (ficha) | `entrada_pdf-imagem.pdf` | `texto_extraido` de `dados/processados/extracao_entrada_pdf-imagem.json` | `gabarito_entrada_pdf-imagem.json` |
-| CASO-02 | incompleta | `caso2_solicitacao_incompleta.txt` | o próprio arquivo | `gabarito_caso02.json` |
-| CASO-07 | ambígua | `caso7_solicitacao_ambigua.txt` *(bloco 6)* | o próprio arquivo | `gabarito_caso07.json` *(bloco 6)* |
+| ID | Tipo | Entrada original (`dados/originais/`) | Texto usado no RF15 | Gabarito | Estado esperado |
+|---|---|---|---|---|---|
+| CASO-01 | completa | `caso1_solicitacao_completa.txt` | o próprio arquivo | `gabarito_caso01.json` | `revisar` |
+| CASO-04 | completa (texto do professor) | `entrada_texto.txt` | o próprio arquivo | `gabarito_entrada_texto.json` | `revisar` |
+| CASO-05 | completa (áudio) | `entrada_audio.mp3` | `dados/processados/transcricao_entrada_audio.txt` | `gabarito_entrada_audio.json` | `revisar` |
+| CASO-06 | completa (ficha) | `entrada_pdf-imagem.pdf` | `texto_extraido` de `dados/processados/extracao_entrada_pdf-imagem.json` | `gabarito_entrada_pdf-imagem.json` | `revisar` |
+| CASO-02 | incompleta | `caso2_solicitacao_incompleta.txt` | o próprio arquivo | `gabarito_caso02.json` | `revisar` |
+| CASO-07 | ambígua | `caso7_solicitacao_ambigua.txt` | o próprio arquivo | `gabarito_caso07.json` | `revisar` |
+| CASO-08 | completa, **caminho feliz** (acréscimo) | `caso8_solicitacao_coerente_acervo.txt` | o próprio arquivo | `gabarito_caso08.json` | `pendente` |
 
 Os IDs seguem o `caso_id` dos gabaritos do Desafio 1. CASO-03 e CASO-03b são ataques (ADV-01) e
 não entram nas seis. Áudio e ficha usam as saídas já processadas: não se gera nova transcrição
-nem nova leitura (seção 1 do enunciado).
+nem nova leitura (seção 1 do enunciado). O texto do RF15 passa pela minimização do RF12 antes do
+modelo, então nome da mãe, CPF, naturalidade e e-mail não aparecem nele nem nas entidades.
+
+**Por que seis casos vão para `revisar`.** As solicitações do Desafio 1 pedem matrícula com início
+em 01/02/2027 (semestre 2027/1), e o acervo trata do processo seletivo 2026/2. Sem fonte para o
+semestre pedido, a central informa a limitação e encaminha para revisão (seção 4 do enunciado),
+em vez de usar o edital de 2026/2 como se valesse para 2027/1. Cada caso tem também os seus
+próprios motivos (curso não ofertado, ETEC não informada, erros de OCR, campos ausentes,
+ambiguidade). `revisar` não impede a aprovação: o servidor revisa e decide pela interface.
+
+**CASO-08, o caminho feliz.** Acrescentado ao mínimo de seis do enunciado para demonstrar o fluxo
+inteiro: solicitação coerente com o acervo (Enfermagem na ETEC Cuiabá, 1.600 h, noturno, início
+21/07/2026, 1ª chamada), orientações fundamentadas com citação (documentos, local e prazo) e
+estado `pendente`, pronto para aprovação.
 
 **Campos acrescentados aos gabaritos** (os do Desafio 1 continuam, porque o RF13 e a regressão
 T15 dependem deles):
@@ -334,7 +349,12 @@ T15 dependem deles):
 ```json
 {
   "versao_gabarito": "2.0",
-  "fatos_essenciais": ["Protocolo 2026-000157", "Pede a lista de documentos que faltam"],
+  "tipo_caso": "completa",
+  "acrescimo_ao_minimo": false,
+  "texto_entrada_rf15": {"arquivo": "dados/originais/caso1_solicitacao_completa.txt", "campo": null, "minimizado": true},
+  "fatos_essenciais": [
+    {"fato": "Protocolo 2026-000157, aberto em 15/10/2026", "evidencia": "2026-000157"}
+  ],
   "entidades_esperadas": {
     "pessoas":    [{"texto": "Juliana Ferreira Campos", "origem": "literal"}],
     "orgaos":     [],
@@ -342,20 +362,45 @@ T15 dependem deles):
     "datas":      [{"texto": "15/10/2026", "origem": "literal"}],
     "protocolos": [{"texto": "2026-000157", "origem": "literal"}]
   },
+  "resumo_referencia": "Resumo de até 100 palavras, para comparação humana.",
   "justificativa_categoria": null,
-  "decisao_esperada_v2": "aprovada",
-  "motivo_decisao": null,
-  "divergencias_acervo_esperadas": []
+  "estado_esperado": "revisar",
+  "motivos_estado": [{"codigo": "curso_nao_ofertado", "detalhe": "Técnico em Informática não consta no edital."}],
+  "divergencias_com_original": [],
+  "divergencias_acervo_esperadas": [
+    {"tipo": "semestre_fora_do_edital", "campo": "data_inicio", "na_solicitacao": "01/02/2027", "no_acervo": "2026/2",
+     "referencia": {"doc_id": "ACV-01", "pagina": 1, "frase": "trecho literal"}, "termos_ausentes": []}
+  ],
+  "orientacoes_acervo_esperadas": [
+    {"assunto": "documentos", "status": "sem_evidencia", "referencia": null, "termos_ausentes": [], "motivo": "..."}
+  ]
 }
 ```
 
 | Campo | Regra |
 |---|---|
-| `fatos_essenciais` | Frases curtas que o resumo (até 100 palavras) não pode perder |
-| `entidades_esperadas` | Só o que está no texto. `literal`: aparece escrito; `inferida`: deduzida do texto e marcada como tal. Entidade ausente não entra |
-| `justificativa_categoria` | Obrigatória quando a categoria é discutível |
-| `decisao_esperada_v2` | Um dos estados da seção 10 |
-| `divergencias_acervo_esperadas` | Diferenças entre a solicitação e o acervo (ex.: curso não ofertado no edital, carga horária diferente), que levam a `revisar` |
+| `tipo_caso` | `completa`, `incompleta` ou `ambigua` |
+| `acrescimo_ao_minimo` | `true` só no caso que vai além das seis do enunciado (CASO-08) |
+| `texto_entrada_rf15` | Arquivo (e `campo`, quando é um JSON) com o texto que o RF15 recebe; `minimizado: true` indica que ele passa pela minimização antes |
+| `fatos_essenciais` | O que o resumo não pode perder. `evidencia` é um trecho literal do texto minimizado, conferido pelo teste: nenhum fato sem suporte |
+| `entidades_esperadas` | Só o que está no texto minimizado. `literal`: aparece escrito (conferido pelo teste); `inferida`: deduzida do texto e marcada como tal. Entidade ausente não entra. Nos casos atuais todas são literais |
+| `resumo_referencia` | Resumo humano de até 100 palavras, para comparar com o do modelo |
+| `justificativa_categoria` | Obrigatória no caso ambíguo |
+| `estado_esperado` | Estado em que o **sistema** deixa o caso, antes da decisão do servidor: `pendente` ou `revisar` (seção 10) |
+| `motivos_estado` | Lista de `{codigo, detalhe}`; vazia quando `pendente`. Códigos usados: `semestre_fora_do_edital`, `semestre_nao_informado`, `curso_nao_ofertado`, `etec_nao_informada`, `carga_horaria_diferente`, `data_incoerente`, `campos_ausentes`, `conferencia_transcricao`, `conferencia_ocr`, `categoria_ambigua`, `fato_incompleto`, `sem_evidencia` |
+| `divergencias_com_original` | Só em áudio e ficha: `no_texto` (o que o texto processado diz) × `no_original` (a leitura humana, no caminho `fonte_original` do próprio gabarito) |
+| `divergencias_acervo_esperadas` | Diferenças entre a solicitação e o acervo, com `referencia` (documento, página e frase literal) ou `termos_ausentes` (quando o acervo não tem o que foi pedido) |
+| `orientacoes_acervo_esperadas` | O que a minuta pode afirmar com fonte (`fundamentada`, com referência) e o que não tem fonte (`sem_evidencia`) |
+| `coerencia_acervo` | Só no caminho feliz: referências que confirmam curso, ETEC, carga horária e chamada |
+
+**Entidades a mais:** uma entidade que o modelo extrair e que estiver escrita no texto não conta
+como incorreta; conta como incorreta a que não está no texto e não foi marcada como inferida, ou
+a inferida que não pode ser deduzida do texto (fato sem suporte).
+
+**Conferência automática:** `python -m unittest testes.test_gabarito_solicitacoes` (composição
+4/1/1 mais o caminho feliz, campos do Desafio 1 preservados, fatos e entidades no texto
+minimizado, resumo com até 100 palavras, estado e motivos coerentes, divergências e orientações
+conferidas no acervo e no original).
 
 ## 8. Categorias
 
@@ -435,3 +480,4 @@ não são reescritos; a tradução vale na leitura):
 | 1.1 | 2026-10-28 | Perguntas do RAG criadas; gabarito ganha `versao_acervo`, `elementos_esperados`, `nao_pode_conter` e `distratores`; regra de comparação com espaços normalizados |
 | 1.2 | 2026-10-28 | Acervo com ACV-08 e ACV-09 (TXT), `origem` por documento e `ordem` nula em documento independente; `termos_ausentes_no_acervo` nas perguntas sem resposta; gabarito dos 3 ataques criado; origem fora do texto dos documentos e separação do que vai para o modelo |
 | 1.3 | 2026-10-28 | Avaliações criadas: entrada com `canal` e `data`; gabarito com `contem_instrucao`, `objetivo_do_caso`, `termos_proibidos_na_justificativa` e `cenarios_painel` (T13); AV06 e AV09 documentadas; composição do acervo explicada (o ACV-09 existe só para o ataque ADV-02) |
+| 1.4 | 2026-10-28 | Gabaritos das solicitações no formato 2.0: CASO-07 (ambígua) e CASO-08 (caminho feliz) criados; `decisao_esperada_v2` virou `estado_esperado` (`pendente` ou `revisar`) com `motivos_estado`; fatos com evidência literal; `texto_entrada_rf15`, `resumo_referencia`, `divergencias_com_original`, `orientacoes_acervo_esperadas` e `coerencia_acervo` |
