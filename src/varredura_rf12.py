@@ -45,9 +45,14 @@ def git(*argumentos):
 
 
 def arquivos_da_entrega():
-    versionados = git("ls-files").splitlines()
-    novos = git("ls-files", "--others", "--exclude-standard").splitlines()
-    caminhos = sorted(set(versionados + novos))
+    # -z: nomes separados por NUL e sem escape, inclusive os acentuados ("Nº", "TÉCNICOS")
+    versionados = git("ls-files", "-z").split("\0")
+    novos = git("ls-files", "-z", "--others", "--exclude-standard").split("\0")
+    # Arquivo versionado já apagado do disco não vai para a entrega
+    caminhos = sorted(
+        caminho for caminho in set(versionados + novos)
+        if caminho and (BASE_DIR / caminho).exists()
+    )
     relatorio = RELATORIO.relative_to(BASE_DIR).as_posix()
     return [caminho for caminho in caminhos if caminho != relatorio]
 
