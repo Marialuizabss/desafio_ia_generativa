@@ -53,5 +53,103 @@
     "fundamento legal",
     "nome ou cargo de servidor preenchido pela IA"
   ],
-  "decisao_esperada": "aprovado"
+  "decisao_esperada": "aprovado",
+  "versao_gabarito": "2.0",
+  "data_elaboracao_v2": "2026-10-28",
+  "tipo_caso": "completa",
+  "acrescimo_ao_minimo": false,
+  "texto_entrada_rf15": {
+    "arquivo": "dados/originais/entrada_texto.txt",
+    "campo": null,
+    "minimizado": true
+  },
+  "fatos_essenciais": [
+    {
+      "fato": "Protocolo 2026-000142, de 14/10/2026",
+      "evidencia": "2026-000142"
+    },
+    {
+      "fato": "Solicitante: Marcos Vinícius de Almeida Santos",
+      "evidencia": "Marcos Vinícius de Almeida Santos"
+    },
+    {
+      "fato": "Curso Técnico em Enfermagem, turno noturno",
+      "evidencia": "Técnico em Enfermagem"
+    },
+    {
+      "fato": "Início em 01/02/2027",
+      "evidencia": "01/02/2027"
+    },
+    {
+      "fato": "Declara ciência da regra de cancelamento por faltas",
+      "evidencia": "Declaro estar ciente"
+    },
+    {
+      "fato": "Pede a lista de documentos que ainda precisa apresentar",
+      "evidencia": "quais documentos ainda preciso apresentar"
+    }
+  ],
+  "entidades_esperadas": {
+    "pessoas": [
+      {
+        "texto": "Marcos Vinícius de Almeida Santos",
+        "origem": "literal"
+      }
+    ],
+    "orgaos": [],
+    "locais": [],
+    "datas": [
+      {
+        "texto": "14/10/2026",
+        "origem": "literal"
+      },
+      {
+        "texto": "01/02/2027",
+        "origem": "literal"
+      }
+    ],
+    "protocolos": [
+      {
+        "texto": "2026-000142",
+        "origem": "literal"
+      }
+    ]
+  },
+  "resumo_referencia": "Marcos Vinícius de Almeida Santos (protocolo 2026-000142, de 14/10/2026, por e-mail) pede a efetivação da matrícula no Técnico em Enfermagem, eixo Saúde, 1.200 horas, turno noturno, com início em 01/02/2027. Declara ciência da regra de cancelamento por faltas e pergunta quais documentos ainda precisa apresentar.",
+  "justificativa_categoria": null,
+  "estado_esperado": "revisar",
+  "motivos_estado": [
+    {
+      "codigo": "semestre_fora_do_edital",
+      "detalhe": "Início em 01/02/2027 (2027/1); o acervo trata do processo seletivo 2026/2."
+    },
+    {
+      "codigo": "etec_nao_informada",
+      "detalhe": "Enfermagem é ofertada em várias ETECs, com 1.200 h (Diamantino) ou 1.600 h (as demais); sem a ETEC não há oferta nem local para citar."
+    }
+  ],
+  "divergencias_com_original": [],
+  "divergencias_acervo_esperadas": [
+    {
+      "tipo": "semestre_fora_do_edital",
+      "campo": "data_inicio",
+      "na_solicitacao": "01/02/2027",
+      "no_acervo": "2026/2",
+      "termos_ausentes": [],
+      "referencia": {
+        "doc_id": "ACV-01",
+        "pagina": 1,
+        "frase": "PROCESSO SELETIVO DE ALUNOS PARA CURSOS TÉCNICOS NAS ETECS 2026/2"
+      }
+    }
+  ],
+  "orientacoes_acervo_esperadas": [
+    {
+      "assunto": "documentos",
+      "status": "sem_evidencia",
+      "referencia": null,
+      "termos_ausentes": [],
+      "motivo": "O acervo só traz os documentos da matrícula do processo seletivo 2026/2."
+    }
+  ]
 }

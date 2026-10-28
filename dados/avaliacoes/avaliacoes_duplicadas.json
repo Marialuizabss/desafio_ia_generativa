@@ -1,0 +1,10 @@
+{
+  "versao": "1.0",
+  "descricao": "Conjunto pequeno para o teste T13 (duplicata no painel): repete a AV04 com o mesmo id e o mesmo texto. Não faz parte das 12 avaliações oficiais.",
+  "avaliacoes": [
+    {"id": "AV01", "canal": "presencial", "data": "2026-06-15", "texto": "Fui muito bem atendida na secretaria da ETEC. A servidora conferiu todos os meus documentos e explicou cada etapa da matrícula com paciência."},
+    {"id": "AV04", "canal": "presencial", "data": "2026-06-18", "texto": "Esperei mais de duas horas para ser atendido e no fim disseram que faltava um documento que não estava na lista."},
+    {"id": "AV07", "canal": "presencial", "data": "2026-06-16", "texto": "Fui à secretaria entregar a cópia do histórico escolar e recebi o protocolo de entrega."},
+    {"id": "AV04", "canal": "presencial", "data": "2026-06-18", "texto": "Esperei mais de duas horas para ser atendido e no fim disseram que faltava um documento que não estava na lista."}
+  ]
+}
