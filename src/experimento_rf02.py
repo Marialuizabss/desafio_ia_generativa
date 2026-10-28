@@ -37,7 +37,7 @@ PRECO_SAIDA = None
 CASO_ID = "CASO-04"
 ENTRADA = BASE_DIR / "dados" / "originais" / "entrada_texto.txt"
 MODELO_MINUTA = BASE_DIR / "prompts" / "modelo_minuta.md"
-PASTA_PROMPTS = BASE_DIR / "prompts" / "rf02"
+PASTA_PROMPTS = BASE_DIR / "prompts" / "desafio1" / "rf02"
 PASTA_SAIDA = BASE_DIR / "resultados" / "minutas" / "rf02"
 
 # O Prompt C é gerado pelo próprio modelo, então cada modelo tem o seu arquivo

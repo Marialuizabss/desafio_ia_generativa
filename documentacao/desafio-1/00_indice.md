@@ -4,6 +4,10 @@ Onde está cada requisito e cada entregável do Desafio Prático 1 — Central I
 Atendimento e Comunicação Institucional. Todos os documentos ficam nesta pasta; as evidências
 (saídas, registros e execuções) ficam em `resultados/` e `dados/`.
 
+> **Reorganização para o Desafio 2:** esta documentação foi movida de `documentacao/` para
+> `documentacao/desafio-1/`, e os prompts do RF02 de `prompts/rf02/` para `prompts/desafio1/rf02/`.
+> Os registros de execução em `resultados/` mantêm os caminhos da época e não foram alterados.
+
 ## Entregáveis gerais
 
 | Entregável (seção 11) | Onde está |
@@ -13,7 +17,7 @@ Atendimento e Comunicação Institucional. Todos os documentos ficam nesta pasta
 | Dependências | `requirements.txt` e `.python-version` |
 | `.env.example` e `.gitignore` | Raiz |
 | Dados fictícios originais e gabaritos | `dados/originais/` e `dados/gabaritos/` (índice no Apêndice B de `rf13_avaliacao_qualidade.md`) |
-| Prompts A, B e C, respostas e quadro comparativo | `rf02_engenharia_de_prompts.md`, `prompts/rf02/`, `resultados/minutas/rf02/` |
+| Prompts A, B e C, respostas e quadro comparativo | `rf02_engenharia_de_prompts.md`, `prompts/desafio1/rf02/`, `resultados/minutas/rf02/` |
 | Resultados de texto, áudio, OCR/visão e imagem | `resultados/minutas/`, `resultados/audios/`, `dados/processados/`, `resultados/imagens/` |
 | Relatório técnico (arquitetura, modelos, custos, riscos, LGPD e avaliação) | `01_relatorio_tecnico.md` |
 | Registro do uso de IA no desenvolvimento | `02_registro_uso_ia.md` |
@@ -23,7 +27,7 @@ Atendimento e Comunicação Institucional. Todos os documentos ficam nesta pasta
 | RF | Documento | Código | Evidências | Testes |
 |---|---|---|---|---|
 | **RF01** Inicialização e configuração | `README.md` | `src/main.py`, `src/configuracao.py`, `src/versoes.py` | `config.json`, `config/modelos.json`, `.env.example` | `test_configuracao_geral.py` |
-| **RF02** Experimento de prompts | `rf02_engenharia_de_prompts.md` | `src/experimento_rf02.py` | `prompts/rf02/`, `resultados/minutas/rf02/execucao_*` | — |
+| **RF02** Experimento de prompts | `rf02_engenharia_de_prompts.md` | `src/experimento_rf02.py` | `prompts/desafio1/rf02/`, `resultados/minutas/rf02/execucao_*` | — |
 | **RF03** Prompt seguro e injection | `rf03_prompt_seguro.md` | `src/llm_client.py` (prompt de produção e delimitação) | `dados/originais/caso3*.txt`, `resultados/minutas/rf03/execucao_*` | `test_rf03.py` |
 | **RF04** Chamada de API e falhas | `01_relatorio_tecnico.md` | `src/llm_client.py` (timeout, erros, tokens e custo) | campo `chamada` em `dados/processados/extracao_*.json` | `test_rf03.py`, `test_rf11.py` |
 | **RF05** Extração estruturada | `01_relatorio_tecnico.md`; categorias no Apêndice B de `rf13_avaliacao_qualidade.md` | `src/extracao.py`, `src/fluxo.py` | `dados/processados/extracao_*.json` | `test_rf11.py`, `test_rf12.py` |

@@ -9,7 +9,7 @@ entrega a minuta em PDF, uma versão em áudio e uma peça visual de orientaçã
 > **Nenhuma resposta é enviada automaticamente ao cidadão.** A decisão final é sempre do servidor
 > responsável, e toda execução fica registrada.
 
-Documentação completa e onde está cada requisito: [`documentacao/00_indice.md`](documentacao/00_indice.md).
+Documentação completa e onde está cada requisito: [`documentacao/desafio-1/00_indice.md`](documentacao/desafio-1/00_indice.md).
 
 ## 1. O que o sistema faz
 
@@ -57,18 +57,18 @@ delimitado e tratado como dado, não como instrução; e cada execução, revis�
 | RF | O que entrega | Onde ver |
 |---|---|---|
 | RF01 | `python -m src.main`, `config.json`, `.env` fora do git, versões registradas | Este README; `python -m src.versoes` |
-| RF02 | Experimento com os prompts A, B e C; prompt B escolhido | `documentacao/rf02_engenharia_de_prompts.md` |
-| RF03 | Prompt seguro, delimitação e testes de injection | `documentacao/rf03_prompt_seguro.md` |
+| RF02 | Experimento com os prompts A, B e C; prompt B escolhido | `documentacao/desafio-1/rf02_engenharia_de_prompts.md` |
+| RF03 | Prompt seguro, delimitação e testes de injection | `documentacao/desafio-1/rf03_prompt_seguro.md` |
 | RF04 | Chamada à API com timeout, tratamento de falhas, tempo, tokens e custo; mensagens de falha em português também na transcrição, na voz e na leitura de imagem | `src/llm_client.py`, `src/erros_api.py` |
 | RF05 | Extração estruturada em JSON com campos ausentes sinalizados | `src/extracao.py`, `dados/processados/` |
-| RF06 | Transcrição com duração, idioma e modelo; conferência antes da minuta | `documentacao/rf06_transcricao.md` |
-| RF07 | Áudio da minuta aprovada com instruções de entonação | `documentacao/rf07_voz_acessibilidade.md` |
-| RF08 | Leitura da ficha por visão; confirmação humana dos dados críticos | `documentacao/rf08_visao_ocr.md` |
+| RF06 | Transcrição com duração, idioma e modelo; conferência antes da minuta | `documentacao/desafio-1/rf06_transcricao.md` |
+| RF07 | Áudio da minuta aprovada com instruções de entonação | `documentacao/desafio-1/rf07_voz_acessibilidade.md` |
+| RF08 | Leitura da ficha por visão; confirmação humana dos dados críticos | `documentacao/desafio-1/rf08_visao_ocr.md` |
 | RF09 | Minuta no modelo institucional, com origem e sem envio automático | `prompts/modelo_minuta.md`, `src/minuta_pdf.py` |
-| RF10 | Peça de orientação com ilustração gerada por IA e revisada | `documentacao/rf10_imagem.md` |
+| RF10 | Peça de orientação com ilustração gerada por IA e revisada | `documentacao/desafio-1/rf10_imagem.md` |
 | RF11 | Registro estruturado de execuções e decisões | `src/audit.py`, `resultados/logs/execucoes.jsonl` |
-| RF12 | Minimização, inventário de dados pessoais e varredura da entrega | `documentacao/rf12_lgpd_privacidade.md` |
-| RF13 | Protocolo de avaliação e avaliação dos 7 casos: 86% aprovados, 100% após correção | `documentacao/rf13_avaliacao_qualidade.md` |
+| RF12 | Minimização, inventário de dados pessoais e varredura da entrega | `documentacao/desafio-1/rf12_lgpd_privacidade.md` |
+| RF13 | Protocolo de avaliação e avaliação dos 7 casos: 86% aprovados, 100% após correção | `documentacao/desafio-1/rf13_avaliacao_qualidade.md` |
 
 ## 4. Instalação
 
@@ -162,9 +162,15 @@ desafio_ia_generativa/
 ├── config/modelos.json         modelos de análise da interface
 ├── dados/
 │   ├── originais/              entradas fictícias e brasão (nunca alteradas)
+│   ├── acervo/                 documentos institucionais fictícios (Desafio 2)
+│   ├── avaliacoes/             avaliações de atendimento fictícias (Desafio 2)
 │   ├── gabaritos/              resultados esperados de cada caso
 │   └── processados/            transcrições, leituras e extrações
-├── prompts/                    modelo da minuta e prompts do RF02
+├── prompts/
+│   ├── modelo_minuta.md        modelo institucional da minuta
+│   ├── desafio1/rf02/          prompts do experimento do RF02
+│   └── desafio2/               prompts versionados do Desafio 2
+├── indice/                     índice vetorial do acervo (Desafio 2)
 ├── src/
 │   ├── main.py, interface.py   ponto de entrada e interface
 │   ├── fluxo.py                entrada → extração → revisão → minuta → aprovação
@@ -177,9 +183,11 @@ desafio_ia_generativa/
 │   ├── audit.py                registro das execuções (RF11)
 │   ├── configuracao.py, versoes.py
 │   └── experimento_*, avaliacao_rf13.py, varredura_rf12.py   experimentos e verificações
-├── resultados/                 minutas, áudios, imagens, avaliações e logs
+├── resultados/                 minutas, áudios, imagens, avaliações, métricas e logs
 ├── testes/                     testes automatizados (unittest)
-└── documentacao/               índice, relatório técnico, registro de uso de IA e um documento por requisito
+└── documentacao/
+    ├── desafio-1/              índice, relatório técnico, registro de uso de IA e um documento por requisito
+    └── desafio-2/              documentação do Desafio 2
 ```
 
 ## 10. Decisões
@@ -228,7 +236,7 @@ desafio_ia_generativa/
 - Nenhum envio automático; a minuta só é salva depois da aprovação do servidor.
 - Entrega gerada com `git archive --format=zip -o entrega.zip HEAD`, que não inclui o `.env`.
 
-Detalhes em [`documentacao/rf12_lgpd_privacidade.md`](documentacao/rf12_lgpd_privacidade.md).
+Detalhes em [`documentacao/desafio-1/rf12_lgpd_privacidade.md`](documentacao/desafio-1/rf12_lgpd_privacidade.md).
 
 ## 13. Equipe e uso de IA
 
@@ -245,7 +253,7 @@ do escopo. Maria Luiza usou o **ChatGPT** na construção dos RF06, RF07, RF08 e
 revisão de código, testes e documentação) e o **Claude** na verificação final, na análise das branches e
 no tratamento de falhas da API. Todo código e todo conteúdo gerado com apoio de IA foram revisados e
 testados pela equipe.
-O registro completo está em [`documentacao/02_registro_uso_ia.md`](documentacao/02_registro_uso_ia.md).
+O registro completo está em [`documentacao/desafio-1/02_registro_uso_ia.md`](documentacao/desafio-1/02_registro_uso_ia.md).
 
 ---
 
