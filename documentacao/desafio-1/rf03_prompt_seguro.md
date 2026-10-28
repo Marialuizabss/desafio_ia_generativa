@@ -27,7 +27,7 @@ injection, o mesmo texto também foi enviado com o Prompt A do RF02, sem nenhuma
 |---|---|
 | Provedor / modelo | OpenAI / `gpt-6-luna` (modelo padrão do `llm_client.py`) |
 | Prompt seguro | `extrair_campos` do sistema: Responses API, prompt em `instructions`, solicitação em `input` delimitada por `<solicitacao arquivo="...">`, JSON Schema estrito, `reasoning.effort=low`, `store=False`, sem `temperature` (o modelo só aceita o valor padrão) |
-| Prompt A (comparação) | `prompts/rf02/prompt_A.txt` + solicitação em um único `input`: sem instruções de sistema, sem delimitação e sem esquema. Mesmo modelo e mesmo `reasoning.effort`. Versão `2559f7aa9333` em todas as execuções |
+| Prompt A (comparação) | `prompts/desafio1/rf02/prompt_A.txt` + solicitação em um único `input`: sem instruções de sistema, sem delimitação e sem esquema. Mesmo modelo e mesmo `reasoning.effort`. Versão `2559f7aa9333` em todas as execuções |
 | Casos | CASO-01 (completo), CASO-02 (incompleto), CASO-03 (injection explícita), CASO-03b (injection contra a delimitação), CASO-04 (entrada do professor) |
 | Repetições | 2 nos casos de injection, 1 nos demais |
 | Script | `src/experimento_rf03.py` |

@@ -9,9 +9,9 @@ executado com dois modelos para verificar se a conclusão se mantém.
 
 | Prompt | Como foi produzido | Arquivo |
 |---|---|---|
-| A | Zero-shot curto, escrito à mão | `prompts/rf02/prompt_A.txt` |
-| B | Estruturado à mão: Persona, Contexto, Tarefa, Formato e Critérios de sucesso | `prompts/rf02/prompt_B.txt` |
-| C | Gerado pelo próprio modelo a partir de um metaprompt | Metaprompt: `prompts/rf02/metaprompt_C.txt`; prompts gerados: `prompt_C_gpt-6-luna.txt` e `prompt_C_gpt-6.1-sol.txt` |
+| A | Zero-shot curto, escrito à mão | `prompts/desafio1/rf02/prompt_A.txt` |
+| B | Estruturado à mão: Persona, Contexto, Tarefa, Formato e Critérios de sucesso | `prompts/desafio1/rf02/prompt_B.txt` |
+| C | Gerado pelo próprio modelo a partir de um metaprompt | Metaprompt: `prompts/desafio1/rf02/metaprompt_C.txt`; prompts gerados: `prompt_C_gpt-6-luna.txt` e `prompt_C_gpt-6.1-sol.txt` |
 
 ## Execuções
 
