@@ -1,0 +1,136 @@
+{
+  "versao": "1.0",
+  "descricao": "Esperado das 8 perguntas de dados/originais/perguntas_rag.json (RF18, RF19, RF23). Frases de referência literais, conferidas no texto do PDF com espaços normalizados. Elaborado antes de qualquer chamada ao modelo.",
+  "autoria": "Ana Beatriz",
+  "data_elaboracao": "2026-10-28",
+  "versao_acervo": "1.1",
+  "itens": [
+    {
+      "id": "P01",
+      "tipo": "respondivel",
+      "status_esperado": "fundamentada",
+      "resposta_esperada": "Entregar uma cópia simples e apresentar o original dos documentos do item 10.5, entre eles comprovante de escolaridade, documento oficial de identificação, CPF, certidão de nascimento ou casamento e foto 3x4.",
+      "referencias": [
+        {"doc_id": "ACV-01", "pagina": 10, "item": "10.5", "frase": "serão necessárias a entrega de 01 cópia simples + a apresentação do documento original"},
+        {"doc_id": "ACV-01", "pagina": 10, "item": "10.5, alínea a", "frase": "Comprovante de Escolaridade - Certificado de conclusão e Histórico Escolar do Ensino Médio"}
+      ],
+      "elementos_esperados": ["cópia simples", "original", "escolaridade", "CPF"],
+      "nao_pode_conter": [],
+      "distratores": [],
+      "regra_aplicada": null,
+      "decisao_esperada": "aprovada",
+      "justificativa": null
+    },
+    {
+      "id": "P02",
+      "tipo": "respondivel",
+      "status_esperado": "fundamentada",
+      "resposta_esperada": "É preciso comparecer presencialmente no local onde se inscreveu, conforme os endereços do Anexo I.",
+      "referencias": [
+        {"doc_id": "ACV-01", "pagina": 10, "item": "10.4", "frase": "o candidato deverá apresentar presencialmente no local onde se inscreveu"}
+      ],
+      "elementos_esperados": [["presencialmente", "presencial"], "onde se inscreveu"],
+      "nao_pode_conter": [],
+      "distratores": [],
+      "regra_aplicada": null,
+      "decisao_esperada": "aprovada",
+      "justificativa": null
+    },
+    {
+      "id": "P03",
+      "tipo": "respondivel",
+      "status_esperado": "fundamentada",
+      "resposta_esperada": "Quem não realiza a matrícula nos prazos determinados perde o direito à vaga.",
+      "referencias": [
+        {"doc_id": "ACV-01", "pagina": 11, "item": "10.8", "frase": "O candidato que não realizar sua matrícula nos prazos determinados, perderá o direito à vaga."}
+      ],
+      "elementos_esperados": [["direito à vaga", "perde a vaga", "perderá a vaga"]],
+      "nao_pode_conter": [],
+      "distratores": [],
+      "regra_aplicada": null,
+      "decisao_esperada": "aprovada",
+      "justificativa": null
+    },
+    {
+      "id": "P04",
+      "tipo": "respondivel",
+      "status_esperado": "fundamentada",
+      "resposta_esperada": "Em 05/10/2026: o Edital Retificador nº 06 alterou o início das aulas de Agropecuária em Mimoso (ETEC Cuiabá).",
+      "referencias": [
+        {"doc_id": "ACV-07", "pagina": 1, "item": "1.1", "frase": "Fica alterada para o dia 05 de outubro de 2026 a data de início das aulas dos seguintes cursos"},
+        {"doc_id": "ACV-07", "pagina": 1, "item": "1.1 (quadro)", "frase": "Cuiabá Agropecuária Mimoso"}
+      ],
+      "elementos_esperados": [["05 de outubro de 2026", "05/10/2026"]],
+      "nao_pode_conter": ["21/07/2026"],
+      "distratores": [
+        {"doc_id": "ACV-04", "pagina": 2, "frase": "Início das aulas 21/07/2026"}
+      ],
+      "regra_aplicada": "R1",
+      "decisao_esperada": "aprovada",
+      "justificativa": "O ACV-07 altera o item 5 (início das aulas) somente para os cursos do seu item 1.1, e Agropecuária em Mimoso está na lista. A data anterior (21/07/2026) não vale para este curso."
+    },
+    {
+      "id": "P05",
+      "tipo": "respondivel",
+      "status_esperado": "fundamentada",
+      "resposta_esperada": "De 03/07/2026 a 08/07/2026, conforme o Edital Retificador nº 05, que antecipou a 4ª chamada.",
+      "referencias": [
+        {"doc_id": "ACV-06", "pagina": 2, "item": "1 (cronograma, linha 20)", "frase": "Efetivação das matrículas da 4ª chamada das vagas remanescentes 03/07/2026 a 08/07/2026"}
+      ],
+      "elementos_esperados": ["03/07/2026", "08/07/2026"],
+      "nao_pode_conter": ["23 e 24/07/2026"],
+      "distratores": [
+        {"doc_id": "ACV-04", "pagina": 2, "frase": "Efetivação das matrículas da 4º chamada das vagas remanescentes 23 e 24/07/2026"}
+      ],
+      "regra_aplicada": "R2",
+      "decisao_esperada": "aprovada",
+      "justificativa": "ACV-04 (ordem 3) e ACV-06 (ordem 5) alteram a mesma linha do cronograma; vale o de maior ordem. O ACV-06 não tem data, por isso a ordem segue o número da retificação."
+    },
+    {
+      "id": "P06",
+      "tipo": "sem_resposta",
+      "status_esperado": "sem_evidencia",
+      "resposta_esperada": "Abster-se: o acervo não trata de auxílio transporte nem de bolsa para alunos. Informar a limitação e encaminhar ao servidor.",
+      "referencias": [],
+      "elementos_esperados": [],
+      "nao_pode_conter": [],
+      "distratores": [
+        {"doc_id": "ACV-01", "pagina": 2, "frase": "bolsas de estudos (parcial ou integral) em instituições privadas"}
+      ],
+      "regra_aplicada": null,
+      "decisao_esperada": "revisar",
+      "justificativa": "Nenhum documento trata de auxílio ou bolsa para alunos. O trecho sobre bolsas de estudos (item 3, cotas) fala de quem estudou com bolsa em escola privada e pode ser recuperado por similaridade, mas não responde à pergunta."
+    },
+    {
+      "id": "P07",
+      "tipo": "sem_resposta",
+      "status_esperado": "sem_evidencia",
+      "resposta_esperada": "Abster-se: o acervo traz endereços e contatos das ETECs (Anexo I), mas não o horário de atendimento. Informar a limitação e encaminhar ao servidor.",
+      "referencias": [],
+      "elementos_esperados": [],
+      "nao_pode_conter": [],
+      "distratores": [
+        {"doc_id": "ACV-01", "pagina": 1, "frase": "Toda menção a horário neste Edital terá como referência o horário oficial de Mato Grosso."}
+      ],
+      "regra_aplicada": null,
+      "decisao_esperada": "revisar",
+      "justificativa": "Nenhum documento informa horário de atendimento. O item 1.3 fala do fuso horário de referência do edital e pode ser recuperado por similaridade, mas não responde à pergunta."
+    },
+    {
+      "id": "P08",
+      "tipo": "contraditoria",
+      "status_esperado": "conflito",
+      "resposta_esperada": "Apresentar a divergência sem escolher uma data: o item 11.3.1, alínea c, do edital diz 11/06/2026 e o cronograma do Edital Retificador nº 05 diz 09/07/2026. Encaminhar para revisão.",
+      "referencias": [
+        {"doc_id": "ACV-01", "pagina": 13, "item": "11.3.1, alínea c", "frase": "A lista das matrículas efetivadas na 4ª chamada de vagas remanescentes serão divulgadas no mural das Escolas Técnicas no dia 11/06/2026"},
+        {"doc_id": "ACV-06", "pagina": 2, "item": "1 (cronograma, linha 21)", "frase": "Divulgação/organização das matrículas efetivadas da 4ª chamada pelas Escolas Técnicas Estaduais 09/07/2026"}
+      ],
+      "elementos_esperados": ["11/06/2026", "09/07/2026"],
+      "nao_pode_conter": [],
+      "distratores": [],
+      "regra_aplicada": "R4",
+      "decisao_esperada": "revisar",
+      "justificativa": "O ACV-06 altera o cronograma (item 5), mas não o item 11.3.1 do edital, que continua com outra data. Nenhuma das regras R1 a R3 decide entre os dois textos: é conflito e vai para revisão humana."
+    }
+  ]
+}

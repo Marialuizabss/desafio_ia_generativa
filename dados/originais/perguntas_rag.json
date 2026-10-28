@@ -1,0 +1,14 @@
+{
+  "versao": "1.0",
+  "descricao": "Perguntas de avaliação do RAG (RF18 e RF19). Só a entrada: o esperado fica em dados/gabaritos/gabarito_rag.json.",
+  "perguntas": [
+    {"id": "P01", "pergunta": "Quais documentos preciso apresentar para efetivar a matrícula?"},
+    {"id": "P02", "pergunta": "Posso efetivar a matrícula a distância ou preciso ir pessoalmente?"},
+    {"id": "P03", "pergunta": "O que acontece se eu não fizer a matrícula no prazo?"},
+    {"id": "P04", "pergunta": "Quando começam as aulas de Agropecuária em Mimoso?"},
+    {"id": "P05", "pergunta": "Qual é o período de efetivação das matrículas da 4ª chamada?"},
+    {"id": "P06", "pergunta": "A ETEC oferece auxílio transporte ou bolsa para os alunos?"},
+    {"id": "P07", "pergunta": "Qual é o horário de atendimento da secretaria da ETEC?"},
+    {"id": "P08", "pergunta": "Quando é divulgada a lista das matrículas efetivadas na 4ª chamada?"}
+  ]
+}

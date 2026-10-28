@@ -38,8 +38,8 @@ são combinadas na equipe e registradas no histórico (seção 11).
 |---|---|---|---|---|
 | `dados/acervo/*.pdf`, `*.txt` | Documentos institucionais | Professor (PDF) e equipe (TXT) | Maria | RF17 |
 | `dados/acervo/acervo.json` | Catálogo e regras de prevalência | Ana | Maria | RF17, RF19 |
-| `dados/originais/perguntas_rag.json` | 8 perguntas, sem resposta *(a criar no bloco 3)* | Ana | Maria | RF18, RF19 |
-| `dados/gabaritos/gabarito_rag.json` | Esperado das 8 perguntas *(a criar no bloco 3)* | Ana | Maria, RF23 | RF18, RF19 |
+| `dados/originais/perguntas_rag.json` | 8 perguntas, sem resposta | Ana | Maria | RF18, RF19 |
+| `dados/gabaritos/gabarito_rag.json` | Esperado das 8 perguntas | Ana | Maria, RF23 | RF18, RF19 |
 | `dados/originais/adv03_tentativa_segredo.txt` | Ataque para obter segredo *(a criar no bloco 4)* | Ana | Felipe | RF16 |
 | `dados/gabaritos/gabarito_adversariais.json` | Esperado dos 3 ataques *(a criar no bloco 4)* | Ana | Felipe, RF23 | RF16 |
 | `dados/avaliacoes/avaliacoes.json` | 12 avaliações, só o texto *(a criar no bloco 5)* | Ana | Felipe | RF22 |
@@ -78,7 +78,7 @@ gerados na indexação.
 - **R4** — o que R1 a R3 não resolvem tem status `conflito`, mostra as passagens divergentes e vai
   para `revisar`. Nunca escolher pela similaridade, pela ordem de recuperação ou pela data do arquivo.
 
-Os conflitos conhecidos **não** ficam no catálogo, para o RAG não "colar": ficam em `gabarito_rag.json` *(bloco 3)*.
+Os conflitos conhecidos **não** ficam no catálogo, para o RAG não "colar": ficam em `gabarito_rag.json`.
 
 **Documentos TXT criados pela equipe** (ACV-08 e ACV-09) começam com cabeçalho e têm seções
 numeradas, além de entrarem no catálogo com a origem "criado pela equipe (fictício)":
@@ -101,7 +101,7 @@ catálogo e regras).
 
 Oito perguntas: cinco respondíveis, duas sem resposta no acervo e uma com fontes contraditórias.
 
-**Entrada** — `dados/originais/perguntas_rag.json` *(bloco 3)*:
+**Entrada** — `dados/originais/perguntas_rag.json` (só `id` e `pergunta`; nem o tipo vai, porque revelaria o esperado):
 
 ```json
 {
@@ -112,25 +112,31 @@ Oito perguntas: cinco respondíveis, duas sem resposta no acervo e uma com fonte
 }
 ```
 
-**Gabarito** — `dados/gabaritos/gabarito_rag.json` *(bloco 3)*:
+**Gabarito** — `dados/gabaritos/gabarito_rag.json`:
 
 ```json
 {
   "versao": "1.0",
   "autoria": "Ana Beatriz",
   "data_elaboracao": "2026-10-28",
+  "versao_acervo": "1.1",
   "itens": [
     {
-      "id": "P01",
+      "id": "P05",
       "tipo": "respondivel",
       "status_esperado": "fundamentada",
       "resposta_esperada": "Resumo do que a resposta deve dizer.",
       "referencias": [
-        {"doc_id": "ACV-01", "pagina": 10, "item": "10.5", "frase": "trecho literal do documento"}
+        {"doc_id": "ACV-06", "pagina": 2, "item": "1 (cronograma, linha 20)", "frase": "trecho literal do documento"}
       ],
-      "regra_aplicada": null,
+      "elementos_esperados": ["03/07/2026", ["08/07/2026", "8 de julho de 2026"]],
+      "nao_pode_conter": ["23 e 24/07/2026"],
+      "distratores": [
+        {"doc_id": "ACV-04", "pagina": 2, "frase": "trecho que parece responder, mas não vale"}
+      ],
+      "regra_aplicada": "R2",
       "decisao_esperada": "aprovada",
-      "justificativa": null
+      "justificativa": "Por que esta resposta e esta regra."
     }
   ]
 }
@@ -138,14 +144,23 @@ Oito perguntas: cinco respondíveis, duas sem resposta no acervo e uma com fonte
 
 | Campo | Valores |
 |---|---|
+| `versao_acervo` | Versão do `acervo.json` usada para elaborar o gabarito |
 | `tipo` | `respondivel`, `sem_resposta`, `contraditoria` |
 | `status_esperado` | `fundamentada`, `sem_evidencia`, `conflito` |
 | `referencias[].frase` | Texto **literal** da página indicada; é o critério de acerto da recuperação (RF18): acerta quando um trecho do top-k contém a frase. Nunca usar `chunk_id`, que muda com o chunking |
+| `elementos_esperados` | O que a resposta precisa conter. Cada item é um texto ou uma lista de textos equivalentes (basta um). Não pode repetir palavras da pergunta, senão uma resposta que só ecoa a pergunta passaria |
+| `nao_pode_conter` | Valores que não podem aparecer na resposta, como uma data substituída por retificação |
+| `distratores` | Trechos que a busca tende a recuperar, mas que não respondem (iscas); servem para analisar erros |
 | `regra_aplicada` | `R1` a `R4` quando a resposta depende da prevalência; senão `null` |
 | `decisao_esperada` | `aprovada` (fundamentada) ou `revisar` (sem evidência ou conflito) |
-| `justificativa` | Obrigatória nas sem resposta e na contraditória |
+| `justificativa` | Obrigatória nas sem resposta, na contraditória e quando há `regra_aplicada` |
 
-Nas sem resposta, `referencias` é `[]` e a resposta esperada é a abstenção.
+- Nas sem resposta, `referencias` e `elementos_esperados` são `[]` e a resposta esperada é a abstenção.
+- **Comparação de textos:** frases e elementos são comparados com espaços e quebras de linha
+  reduzidos a um espaço, porque a extração do PDF quebra linhas no meio das frases; elementos
+  também ignoram maiúsculas e minúsculas.
+- **Conferência automática:** `python -m unittest testes.test_gabarito_rag` (composição 5/2/1,
+  frases na página indicada, elementos presentes nas fontes, coerência entre tipo, status e decisão).
 
 ## 5. Entradas adversariais
 
@@ -335,3 +350,4 @@ não são reescritos; a tradução vale na leitura):
 | Versão | Data | Mudança |
 |---|---|---|
 | 1.0 | 2026-10-28 | Primeira versão: acervo, perguntas, adversariais, avaliações, gabaritos, categorias, esquema v2 e estados |
+| 1.1 | 2026-10-28 | Perguntas do RAG criadas; gabarito ganha `versao_acervo`, `elementos_esperados`, `nao_pode_conter` e `distratores`; regra de comparação com espaços normalizados |
