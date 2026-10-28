@@ -60,6 +60,12 @@ class _BaseGabaritoRag(unittest.TestCase):
                 self._paginas[chave] = normalizar(pdf[numero - 1].get_text())
         return self._paginas[chave]
 
+    def texto_completo(self, doc_id: str) -> str:
+        doc = self.documentos[doc_id]
+        if doc["formato"] == "txt":
+            return normalizar((PASTA_ACERVO / doc["arquivo"]).read_text(encoding="utf-8"))
+        return " ".join(self.pagina(doc_id, numero) for numero in range(1, doc["paginas"] + 1))
+
 
 class TestGabaritoRagComposicao(_BaseGabaritoRag):
     """Seção 6: oito perguntas, cinco respondíveis, duas sem resposta e uma contraditória."""
@@ -161,6 +167,18 @@ class TestGabaritoRagFontes(_BaseGabaritoRag):
             for elemento in item["elementos_esperados"]:
                 with self.subTest(pergunta=item["id"], elemento=elemento):
                     self.assertTrue(any(alt.casefold() in fontes for alt in alternativas(elemento)))
+
+    def test_sem_resposta_continua_sem_resposta_no_acervo(self):
+        # Um documento novo que trate do assunto faria a pergunta deixar de ser "sem resposta"
+        for item in self.itens:
+            if item["tipo"] != "sem_resposta":
+                continue
+            self.assertTrue(item.get("termos_ausentes_no_acervo"), item["id"])
+            for doc_id in self.documentos:
+                texto = self.texto_completo(doc_id).casefold()
+                for termo in item["termos_ausentes_no_acervo"]:
+                    with self.subTest(pergunta=item["id"], doc=doc_id, termo=termo):
+                        self.assertNotIn(termo.casefold(), texto)
 
     def test_valor_proibido_nao_e_um_elemento_esperado(self):
         for item in self.itens:

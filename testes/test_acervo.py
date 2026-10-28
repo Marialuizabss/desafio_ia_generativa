@@ -20,9 +20,16 @@ CATALOGO = PASTA_ACERVO / "acervo.json"
 FORA_DO_ACERVO = {"acervo.json", ".gitkeep"}
 
 CAMPOS_DO_DOCUMENTO = (
-    "doc_id", "titulo", "arquivo", "versao", "ordem", "data_documento", "tema",
+    "doc_id", "titulo", "arquivo", "versao", "ordem", "origem", "data_documento", "tema",
     "formato", "paginas", "documento_base", "altera", "sha256",
 )
+
+# Linhas do cabeçalho dos documentos TXT e o campo do catálogo que cada uma repete
+CABECALHO_TXT = {"ID": "doc_id", "Título": "titulo", "Versão": "versao"}
+
+# A origem fica só no catálogo; no texto ela influenciaria o modelo. "oficial" não entra:
+# aparece em conteúdo legítimo ("convocação oficial da Justiça Eleitoral")
+MARCAS_DE_ORIGEM = ("fictício", "fictícia", "Origem:", "FIC_DEV", "Desafio", "criado pela equipe")
 
 
 def carregar_catalogo() -> dict:
@@ -58,6 +65,26 @@ class TestAcervoArquivos(unittest.TestCase):
                 for numero, pagina in enumerate(pdf, start=1):
                     self.assertTrue(pagina.get_text().strip(), f"página {numero} sem texto")
 
+    def test_txt_tem_cabecalho_igual_ao_catalogo(self):
+        for doc in self.documentos:
+            if doc["formato"] != "txt":
+                continue
+            with self.subTest(doc=doc["doc_id"]):
+                linhas = (PASTA_ACERVO / doc["arquivo"]).read_text(encoding="utf-8").splitlines()
+                cabecalho = dict(linha.split(": ", 1) for linha in linhas[:5] if ": " in linha)
+                for rotulo, campo in CABECALHO_TXT.items():
+                    self.assertEqual(cabecalho.get(rotulo), doc[campo], rotulo)
+                self.assertIsNone(doc["paginas"])
+
+    def test_txt_nao_declara_origem(self):
+        for doc in self.documentos:
+            if doc["formato"] != "txt":
+                continue
+            texto = (PASTA_ACERVO / doc["arquivo"]).read_text(encoding="utf-8").casefold()
+            for marca in MARCAS_DE_ORIGEM:
+                with self.subTest(doc=doc["doc_id"], marca=marca):
+                    self.assertNotIn(marca.casefold(), texto)
+
     def test_formato_confere_com_a_extensao(self):
         for doc in self.documentos:
             with self.subTest(doc=doc["doc_id"]):
@@ -84,9 +111,15 @@ class TestAcervoCatalogo(unittest.TestCase):
 
     def test_ids_e_ordens_nao_se_repetem(self):
         ids = [doc["doc_id"] for doc in self.documentos]
-        ordens = [doc["ordem"] for doc in self.documentos]
+        # Documento independente do edital não tem ordem de precedência
+        ordens = [doc["ordem"] for doc in self.documentos if doc["ordem"] is not None]
         self.assertEqual(len(ids), len(set(ids)))
         self.assertEqual(len(ordens), len(set(ordens)))
+
+    def test_origem_e_uma_das_declaradas_no_catalogo(self):
+        for doc in self.documentos:
+            with self.subTest(doc=doc["doc_id"]):
+                self.assertIn(doc["origem"], self.catalogo["origens"])
 
     def test_alteracoes_apontam_para_documentos_do_catalogo_e_tem_escopo(self):
         for doc in self.documentos:

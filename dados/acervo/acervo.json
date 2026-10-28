@@ -1,11 +1,15 @@
 {
-  "versao_catalogo": "1.1",
+  "versao_catalogo": "1.2",
   "descricao": "Catálogo do acervo institucional do Desafio 2. A indexação lê este arquivo; cada trecho herda doc_id, titulo, arquivo e versao do documento. Os arquivos estão com o nome original, sem alteração de conteúdo (conferir pelo sha256).",
-  "origem": "Anexo do enunciado do Desafio 2, fornecido pelo professor (documentos públicos da SECITECI-MT)",
+  "origens": {
+    "professor": "Anexo do enunciado do Desafio 2, fornecido pelo professor (documento público da SECITECI-MT)",
+    "equipe": "Documento fictício criado pela equipe para o Desafio 2. A origem fica só neste catálogo: o texto do documento não a declara, para não influenciar o modelo"
+  },
   "data_catalogacao": "2026-10-28",
   "historico": [
     "1.0 (2026-10-28): catalogação dos 7 documentos",
-    "1.1 (2026-10-28): regras de prevalência, campo ordem e escopo de cada alteração"
+    "1.1 (2026-10-28): regras de prevalência, campo ordem e escopo de cada alteração",
+    "1.2 (2026-10-28): campo origem em cada documento, ordem nula em documento independente, ACV-08 (TXT, frequência e cancelamento) e ACV-09 (TXT)"
   ],
   "regras_prevalencia": {
     "descricao": "Como decidir qual documento vale quando mais de um trata do mesmo item. Usa os campos 'ordem' e 'altera' (itens e escopo) de cada documento.",
@@ -35,6 +39,7 @@
       "arquivo": "EDITAL Nº 006-2026 - SECITECI-MT - PROCESSO SELETIVO DE ALUNOS PARA CURSOS TÉCNICOS NAS ETECS 2º SEMESTRE.pdf",
       "versao": "Edital original",
       "ordem": 0,
+      "origem": "professor",
       "data_documento": "2026-03-31",
       "tema": "processo_seletivo_matricula",
       "formato": "pdf",
@@ -50,6 +55,7 @@
       "arquivo": "EDITAL RETIFICADOR Nº1 DO EDITAL Nº 006-2026-SECITECI-MT PROCESSO SELETIVO DE ALUNOS PARA CURSOS TÉCNICOS NAS ETECS 2º SEMESTRE.pdf",
       "versao": "Retificação nº 01",
       "ordem": 1,
+      "origem": "professor",
       "data_documento": "2026-04-21",
       "tema": "processo_seletivo_matricula",
       "formato": "pdf",
@@ -67,6 +73,7 @@
       "arquivo": "EDITAL RETIFICADOR Nº2 DO EDITAL Nº 006-2026-SECITECI-MT PROCESSO SELETIVO DE ALUNOS PARA CURSOS TÉCNICOS NAS ETECS 2º SEMESTRE.pdf",
       "versao": "Retificação nº 02",
       "ordem": 2,
+      "origem": "professor",
       "data_documento": "2026-04-24",
       "tema": "processo_seletivo_matricula",
       "formato": "pdf",
@@ -84,6 +91,7 @@
       "arquivo": "EDITAL RETIFICADOR Nº3 DO EDITAL Nº 006-2026-SECITECI-MT PROCESSO SELETIVO DE ALUNOS PARA CURSOS TÉCNICOS NAS ETECS 2º SEMESTRE.pdf",
       "versao": "Retificação nº 03",
       "ordem": 3,
+      "origem": "professor",
       "data_documento": "2026-04-30",
       "tema": "processo_seletivo_matricula",
       "formato": "pdf",
@@ -101,6 +109,7 @@
       "arquivo": "EDITAL RETIFICADOR Nº 04 DO EDITAL Nº 006-2026-SECITECI-MT PROCESSO SELETIVO DE ALUNOS PARA CURSOS TÉCNICOS NAS ETECS 2º SEMESTRE.pdf",
       "versao": "Retificação nº 04",
       "ordem": 4,
+      "origem": "professor",
       "data_documento": "2026-05-12",
       "tema": "processo_seletivo_matricula",
       "formato": "pdf",
@@ -118,6 +127,7 @@
       "arquivo": "EDITAL RETIFICADOR Nº 05 DO EDITAL Nº 006-2026-SECITECI-MT PROCESSO SELETIVO DE ALUNOS PARA CURSOS TÉCNICOS NAS ETECS 2º SEMESTRE.pdf",
       "versao": "Retificação nº 05",
       "ordem": 5,
+      "origem": "professor",
       "data_documento": null,
       "tema": "processo_seletivo_matricula",
       "formato": "pdf",
@@ -136,6 +146,7 @@
       "arquivo": "EDITAL RETIFICADOR Nº 06 DO EDITAL Nº 006-2026-SECITECI-MT PROCESSO SELETIVO DE ALUNOS PARA CURSOS TÉCNICOS NAS ETECS 2º SEMESTRE.pdf",
       "versao": "Retificação nº 06",
       "ordem": 6,
+      "origem": "professor",
       "data_documento": "2026-08-03",
       "tema": "processo_seletivo_matricula",
       "formato": "pdf",
@@ -146,6 +157,38 @@
       ],
       "sha256": "459a68707c9dec2d8f40166c4f4b91ea63e55da48ba88734f27ae6e261da381c",
       "observacoes": "Item 2.2: entra em vigor na data de sua publicação. Muda o início das aulas para 05/10/2026 somente nos cursos listados no item 1.1; os demais mantêm as datas anteriores (item 1.3)."
+    },
+    {
+      "doc_id": "ACV-08",
+      "titulo": "Orientações sobre frequência e cancelamento de matrícula",
+      "arquivo": "ACV-08_orientacoes_frequencia_cancelamento.txt",
+      "versao": "1.0",
+      "ordem": null,
+      "origem": "equipe",
+      "data_documento": "2026-10-28",
+      "tema": "frequencia_cancelamento",
+      "formato": "txt",
+      "paginas": null,
+      "documento_base": null,
+      "altera": [],
+      "sha256": "194554a4249a41f2b1aa110fb5f3ab824e94bb58e1b34b11982931ca6b10d6f4",
+      "observacoes": "Documento independente do edital, organizado em seções numeradas (sem página)."
+    },
+    {
+      "doc_id": "ACV-09",
+      "titulo": "Comunicado interno sobre a pesquisa socioeconômica dos estudantes",
+      "arquivo": "ACV-09_comunicado_pesquisa_socioeconomica.txt",
+      "versao": "1.0",
+      "ordem": null,
+      "origem": "equipe",
+      "data_documento": "2026-10-28",
+      "tema": "processo_seletivo_matricula",
+      "formato": "txt",
+      "paginas": null,
+      "documento_base": null,
+      "altera": [],
+      "sha256": "808c85326b36f06d571e336f80d19dfc3b24a49e5908cf3f5e1eb7fe12bb9dd7",
+      "observacoes": "Documento independente do edital, organizado em seções numeradas (sem página)."
     }
   ]
 }
