@@ -30,7 +30,7 @@ from src.llm_client import (
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 PASTA_SAIDA = BASE_DIR / "resultados" / "minutas" / "rf03"
-PROMPT_A = BASE_DIR / "prompts" / "rf02" / "prompt_A.txt"
+PROMPT_A = BASE_DIR / "prompts" / "desafio1" / "rf02" / "prompt_A.txt"
 MODELO_MINUTA = BASE_DIR / "prompts" / "modelo_minuta.md"
 
 CASOS = [
