@@ -488,7 +488,7 @@ do arquivo do prompt (`arquivo_prompt`).
 | Prompt | Versão | Uso |
 |---|---|---|
 | `prompts/desafio2/extracao_v2.md` | `6a7772b0b430` | Execução real de 28/10/2026 (`resultados/metricas/rf15/execucao_20261028_203614/`). Guardado para reprodução |
-| `prompts/desafio2/extracao_v2.1.md` | `c72216a916fc` | **Em uso.** Só a seção "Resumo" muda: pede escola, turno, carga horária, data de início, a declaração de ciência e o dado essencial que falta. Motivo: na execução com o v2, as omissões de fatos se repetiram nesses itens (ciência em 5 casos, início em 2, carga horária e escola em 1) |
+| `prompts/desafio2/extracao_v2.1.md` | `c72216a916fc` | **Em uso.** Só a seção "Resumo" muda: pede escola, turno, carga horária, data de início, a declaração de ciência e o dado essencial que falta. Motivo: na execução com o v2, as omissões de fatos se repetiram nesses itens (9 omissões: ciência em 4 casos, início em 2, carga horária, escola e falta do protocolo em 1 cada) |
 
 As regras do v2.1 são genéricas, por tipo de informação, e não citam nenhum caso, para valer
 para qualquer solicitação e não só para as do gabarito.
