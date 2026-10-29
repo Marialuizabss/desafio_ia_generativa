@@ -279,6 +279,51 @@ def extrair_campos(
     return resultado_de_dict(dados, arquivo), chamada
 
 
+def gerar_json_estrito(
+    instrucoes: str,
+    entrada: str,
+    esquema: dict,
+    nome: str = "solicitacao_v2",
+    modelo: str | None = None,
+) -> tuple[str, dict]:
+    """Uma chamada com saída restrita ao ``esquema`` (Desafio 2). Devolve o texto e a chamada.
+
+    A validação fica com quem chama (RF14). No máximo uma repetição por falha
+    transitória da rede ou do serviço (RF16).
+    """
+
+    modelo_id = (modelo or MODELO).strip()
+    consulta = {
+        "model": modelo_id,
+        "instructions": instrucoes,
+        "input": entrada,
+        "store": False,
+        "text": {"format": {"type": "json_schema", "name": nome, "strict": True, "schema": esquema}},
+    }
+    if modelo_id in MODELOS_COM_RACIOCINIO:
+        consulta["reasoning"] = {"effort": "low"}
+
+    try:
+        cliente = OpenAI(timeout=TIMEOUT_SEGUNDOS, max_retries=1)
+        inicio = perf_counter()
+        resposta = cliente.responses.create(**consulta)
+        duracao = round(perf_counter() - inicio, 2)
+    except OpenAIError as erro:
+        raise ValueError(_mensagem_de_falha(erro)) from erro
+
+    conteudo = (resposta.output_text or "").strip()
+    if not conteudo:
+        raise ValueError("A API retornou uma resposta vazia.")
+
+    chamada = _registrar_chamada(resposta, modelo_id, None, None, duracao)
+    chamada.update({
+        "provedor": "OpenAI",
+        "parametros": {chave: consulta[chave] for chave in ("reasoning", "store") if chave in consulta},
+        "repeticoes_maximas": 1,
+    })
+    return conteudo, chamada
+
+
 def _temperatura(valor) -> float | None:
     if valor is None or valor == "":
         return None

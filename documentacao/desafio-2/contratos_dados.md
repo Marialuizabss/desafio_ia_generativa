@@ -478,6 +478,46 @@ ajustar os campos exibidos na ficha.
 - **Comparação do T01:** `python -m src.experimento_rf14` gera `resultados/metricas/rf14_comparacao.md`.
 - **Conferência automática:** `python -m unittest testes.test_rf14`.
 
+### 9.1 Ficha de compreensão e comparação com o gabarito (RF15)
+
+Uma única chamada (`src/nlp.py`, prompt em `prompts/desafio2/`) devolve o objeto completo acima.
+O texto vai minimizado (RF12) e delimitado (RF03), e a saída passa pela validação do RF14. A
+versão do prompt é o hash do prompt e do esquema enviado; cada execução registra também o nome
+do arquivo do prompt (`arquivo_prompt`).
+
+| Prompt | Versão | Uso |
+|---|---|---|
+| `prompts/desafio2/extracao_v2.md` | `6a7772b0b430` | Execução real de 28/10/2026 (`resultados/metricas/rf15/execucao_20261028_203614/`). Guardado para reprodução |
+| `prompts/desafio2/extracao_v2.1.md` | `c72216a916fc` | **Em uso.** Só a seção "Resumo" muda: pede escola, turno, carga horária, data de início, a declaração de ciência e o dado essencial que falta. Motivo: na execução com o v2, as omissões de fatos se repetiram nesses itens (ciência em 5 casos, início em 2, carga horária e escola em 1) |
+
+As regras do v2.1 são genéricas, por tipo de informação, e não citam nenhum caso, para valer
+para qualquer solicitação e não só para as do gabarito.
+
+**Comparação com o gabarito, por caso:**
+
+| Item | Automático | Vai para a conferência humana |
+|---|---|---|
+| Categoria | acerto ou erro | — |
+| Entidades | acerto (mesmo texto sem acento e maiúsculas; datas pelo valor), omissão, extra que está no texto (aceita), incorreta (fora do texto e não marcada como inferida) | entidade parecida ("Ana Paula" × "Ana Paula Ribeiro Lopes") e entidade inferida |
+| Fatos essenciais | preservado quando a `evidencia` aparece no resumo | o restante, porque o resumo pode parafrasear |
+| Dados sem suporte no resumo | datas, protocolos e cargas horárias do resumo que não estão no texto | todos, para confirmar ou marcar como falso alarme |
+
+**Execução** (`src/avaliacao_rf15.py`): `--simulado` (sem API, resposta montada do gabarito,
+marcada como simulada), `--todos` (chamada real) e `--consolidar PASTA`. Cada execução fica em
+`resultados/metricas/rf15/execucao_<data>/` com um JSON por caso, `matriz_rf15.md` (T03),
+`resumo.json` (métricas preliminares) e `conferencia_rf15.json`.
+
+**Conferência humana** (`conferencia_rf15.json`): cada item tem `opcoes` e `decisao`, que a
+revisora preenche — `fato`: `preservado` ou `omitido`; `entidade_parecida`: `equivalente` ou
+`diferente`; `entidade_inferida`: `sustentada` ou `sem_suporte`; `sem_suporte`: `confirmado` ou
+`falso_alarme`. `--consolidar` só gera `metricas_rf15.md` com todas as decisões preenchidas.
+
+**Métricas**, sempre com numerador e denominador: acurácia da categoria (nos 7 casos e nos 6 do
+enunciado), entidades esperadas encontradas, omissões, incorretas, fatos preservados e omitidos,
+fatos sem suporte e saídas rejeitadas pelo RF14.
+
+**Conferência automática:** `python -m unittest testes.test_rf15`.
+
 ## 10. Estados de decisão (RF20, RF24)
 
 | Estado | Significado | Exige |
@@ -513,3 +553,5 @@ não são reescritos; a tradução vale na leitura):
 | 1.3 | 2026-10-28 | Avaliações criadas: entrada com `canal` e `data`; gabarito com `contem_instrucao`, `objetivo_do_caso`, `termos_proibidos_na_justificativa` e `cenarios_painel` (T13); AV06 e AV09 documentadas; composição do acervo explicada (o ACV-09 existe só para o ataque ADV-02) |
 | 1.4 | 2026-10-28 | Gabaritos das solicitações no formato 2.0: CASO-07 (ambígua) e CASO-08 (caminho feliz) criados; `decisao_esperada_v2` virou `estado_esperado` (`pendente` ou `revisar`) com `motivos_estado`; fatos com evidência literal; `texto_entrada_rf15`, `resumo_referencia`, `divergencias_com_original`, `orientacoes_acervo_esperadas` e `coerencia_acervo` |
 | 1.5 | 2026-10-28 | Seção 9 implementada em `src/schemas.py`: validação em três camadas, categorias de erro, decisão, uma nova tentativa no máximo, regra da data de abertura lida do acervo |
+| 1.6 | 2026-10-28 | Seção 9.1: RF15 em `src/nlp.py` e `src/avaliacao_rf15.py`, prompt v2 em arquivo, comparação com o gabarito e conferência humana |
+| 1.7 | 2026-10-29 | Prompt v2.1 em uso (seção "Resumo" ampliada após as omissões da execução com o v2); `arquivo_prompt` registrado em cada execução |
