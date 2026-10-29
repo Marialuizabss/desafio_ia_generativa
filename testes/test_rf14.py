@@ -255,6 +255,13 @@ class TestRF14Apoio(_BaseRF14):
         self.assertEqual(schemas.para_exibicao("  "), VALOR_AUSENTE)
         self.assertEqual(schemas.para_exibicao("2026-000201"), "2026-000201")
 
+    def test_esperado_do_gabarito_nao_altera_o_gabarito(self):
+        original = json.dumps(self.caso08, sort_keys=True)
+        esperado = schemas.esperado_do_gabarito(self.caso08)
+        esperado["entidades"]["datas"].clear()
+        esperado["dados_curso"]["curso"] = "outro"
+        self.assertEqual(json.dumps(self.caso08, sort_keys=True), original)
+
     def test_conversao_para_os_campos_do_desafio_1(self):
         solicitacao, _ = schemas.validar_estrutura(json.dumps(self.com(protocolo=None, campos_ausentes=["protocolo"])))
         campos = schemas.para_campos_v1(solicitacao, "dados/originais/caso8.txt")

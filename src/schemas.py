@@ -175,7 +175,7 @@ def validar_regras(
 
     hoje = hoje or date.today()
     erros = []
-    texto = _comparavel(texto_original)
+    texto = comparavel(texto_original)
     datas_do_texto = datas_no_texto(texto_original)
     valores = solicitacao.valores()
 
@@ -208,13 +208,13 @@ def validar_regras(
 
     for campo in ("protocolo", "solicitante"):
         valor = valores[campo]
-        if valor is not None and _comparavel(valor) not in texto:
+        if valor is not None and comparavel(valor) not in texto:
             erros.append(ErroValidacao("regra", "dado_nao_presente_no_original", campo,
                                        f"{campo} não aparece no texto original."))
 
     for tipo, entidades in solicitacao.entidades.model_dump().items():
         for indice, entidade in enumerate(entidades):
-            if entidade["origem"] == "literal" and _comparavel(entidade["texto"]) not in texto:
+            if entidade["origem"] == "literal" and comparavel(entidade["texto"]) not in texto:
                 erros.append(ErroValidacao("regra", "fato_sem_suporte", f"entidades.{tipo}.{indice}",
                                            f"Entidade marcada como literal não aparece no texto: {entidade['texto']}"))
 
@@ -356,7 +356,11 @@ def para_campos_v1(solicitacao: Solicitacao, arquivo: str) -> dict:
 
 
 def esperado_do_gabarito(gabarito: dict) -> dict:
-    """Monta, a partir de um gabarito 2.0, o JSON que uma extração correta devolveria."""
+    """Monta, a partir de um gabarito 2.0, o JSON que uma extração correta devolveria.
+
+    Trabalha sobre uma cópia: alterar o resultado não pode alterar o gabarito.
+    """
+    gabarito = json.loads(json.dumps(gabarito))
     extracao = gabarito["extracao_esperada"]
 
     def valor(nome):
@@ -385,7 +389,7 @@ def esperado_do_gabarito(gabarito: dict) -> dict:
     return dados
 
 
-def _comparavel(texto: str) -> str:
+def comparavel(texto: str) -> str:
     """Sem acento, sem maiúsculas e com espaços normalizados (OCR e transcrição variam nisso)."""
     sem_acento = "".join(
         letra for letra in unicodedata.normalize("NFKD", texto or "") if not unicodedata.combining(letra)
