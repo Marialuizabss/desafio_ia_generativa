@@ -1,0 +1,54 @@
+{
+  "experimento": "RF15 — resumo, categoria e entidades comparados com o gabarito (T03)",
+  "modo": "real",
+  "chamou_api": true,
+  "executado_em": "2026-10-29T10:57:15-04:00",
+  "arquivo_prompt": "extracao_v2.1.md",
+  "versao_prompt": "c72216a916fc",
+  "versao_esquema": "2.0",
+  "casos": [
+    "CASO-01",
+    "CASO-04",
+    "CASO-05",
+    "CASO-06",
+    "CASO-02",
+    "CASO-07",
+    "CASO-08"
+  ],
+  "casos_com_erro": {},
+  "custo_estimado_usd": 0.006799,
+  "metricas_preliminares": {
+    "acuracia_categoria": {
+      "numerador": 7,
+      "denominador": 7,
+      "percentual": 100.0
+    },
+    "acuracia_categoria_seis_do_enunciado": {
+      "numerador": 6,
+      "denominador": 6,
+      "percentual": 100.0
+    },
+    "entidades_acertos": {
+      "numerador": 29,
+      "denominador": 29,
+      "percentual": 100.0
+    },
+    "entidades_omissoes": 0,
+    "entidades_parecidas_a_conferir": 0,
+    "entidades_extras_no_texto": 1,
+    "entidades_incorretas": 0,
+    "entidades_inferidas_a_conferir": 0,
+    "fatos_preservados_automatico": {
+      "numerador": 30,
+      "denominador": 44,
+      "percentual": 68.2
+    },
+    "fatos_a_conferir": 14,
+    "resumo_sem_suporte": 0,
+    "rejeitadas": {
+      "numerador": 0,
+      "denominador": 7,
+      "percentual": 0.0
+    }
+  }
+}

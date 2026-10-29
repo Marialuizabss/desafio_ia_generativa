@@ -1,0 +1,191 @@
+{
+  "caso": "CASO-06",
+  "modo": "real",
+  "tipo_caso": "completa",
+  "arquivo": "dados/processados/extracao_entrada_pdf-imagem.json",
+  "arquivo_prompt": "extracao_v2.1.md",
+  "versao_prompt": "c72216a916fc",
+  "versao_esquema": "2.0",
+  "chamadas": [
+    {
+      "modelo": "gpt-5.6-luna",
+      "temperatura": null,
+      "idioma": null,
+      "timeout_segundos": 120.0,
+      "tempo_resposta_segundos": 8.16,
+      "tokens_entrada": 1983,
+      "tokens_saida": 719,
+      "tokens_total": 2702,
+      "tokens_raciocinio": 181,
+      "tokens_cache": 1552,
+      "custo_estimado_usd": 0.001259,
+      "preco_usd_por_milhao_tokens": {
+        "entrada": 0.2,
+        "saida": 1.2
+      },
+      "provedor": "OpenAI",
+      "parametros": {
+        "reasoning": {
+          "effort": "low"
+        },
+        "store": false
+      },
+      "repeticoes_maximas": 1
+    }
+  ],
+  "validacao": {
+    "versao_esquema": "2.0",
+    "entrada": {
+      "arquivo": "dados/processados/extracao_entrada_pdf-imagem.json",
+      "sha256_texto": "360f7cb0d5854cd42cdd88996ec45fcc66f2c7d94f46241a84e8ea3d4f65a32e"
+    },
+    "decisao": "revisar",
+    "minuta_bloqueada": true,
+    "tentativas": [
+      {
+        "numero": 1,
+        "erros": []
+      }
+    ],
+    "erros_regras": [
+      {
+        "camada": "regra",
+        "categoria": "data_incoerente",
+        "campo": "data_solicitacao",
+        "mensagem": "17/01/2026 é anterior à abertura do processo seletivo (31/03/2026)."
+      }
+    ],
+    "motivos": [
+      "data_incoerente: 17/01/2026 é anterior à abertura do processo seletivo (31/03/2026).",
+      "modelo: Não há pedido principal escrito na ficha; a categoria foi definida pela natureza do formulário."
+    ]
+  },
+  "saida_validada": {
+    "versao_esquema": "2.0",
+    "protocolo": "2024-000142",
+    "data_solicitacao": "17/01/2026",
+    "solicitante": "MARCUS VINICIUS DE ALMEIDA SANTOS",
+    "assunto": "Ficha de matrícula",
+    "pedido": null,
+    "categoria": "matricula",
+    "resumo": "MARCUS VINICIUS DE ALMEIDA SANTOS consta como aluno em ficha de matrícula da ESCOLA TÉCNICA ESTADUAL DE CUIABÁ, sob o código 2024-000142, com matrícula em 17/01/2026. Está inscrito no curso Técnico em Enfermagem, do eixo Saúde, no turno noturno, com carga horária de 1.200 horas e início em 01/02/2027. Declara ciência das regras de cancelamento automático por faltas nos primeiros dias de aula. Não há pedido escrito.",
+    "entidades": {
+      "pessoas": [
+        {
+          "texto": "MARCUS VINICIUS DE ALMEIDA SANTOS",
+          "origem": "literal"
+        }
+      ],
+      "orgaos": [
+        {
+          "texto": "GOVERNO DE MATO GROSSO",
+          "origem": "literal"
+        },
+        {
+          "texto": "SECRETARIA DE ESTADO DE CIÊNCIA, TECNOLOGIA E INOVAÇÃO - SECTECI/MT",
+          "origem": "literal"
+        },
+        {
+          "texto": "ESCOLA TÉCNICA ESTADUAL DE CUIABÁ",
+          "origem": "literal"
+        }
+      ],
+      "locais": [],
+      "datas": [
+        {
+          "texto": "01/02/2027",
+          "origem": "literal"
+        },
+        {
+          "texto": "17/01/2026",
+          "origem": "literal"
+        }
+      ],
+      "protocolos": [
+        {
+          "texto": "2024-000142",
+          "origem": "literal"
+        }
+      ]
+    },
+    "dados_curso": {
+      "curso": "TÉCNICO EM ENFERMAGEM",
+      "eixo": "SAÚDE",
+      "carga_horaria": "1.200 HORAS",
+      "turno": "NOTURNO",
+      "data_inicio": "01/02/2027",
+      "regras_ciencia": "O aluno declara estar ciente de que sua matrícula será automaticamente cancelada se faltar, sem justificativa comprovada, nos 02 (dois) primeiros dias de aula consecutivos ou em 03 (três) dias de aula, consecutivos ou não, no período dos 10 (dez) primeiros dias de aula."
+    },
+    "campos_ausentes": [
+      "pedido"
+    ],
+    "alertas_seguranca": [],
+    "requer_revisao": true,
+    "motivos_revisao": [
+      "Não há pedido principal escrito na ficha; a categoria foi definida pela natureza do formulário."
+    ]
+  },
+  "saidas_brutas": [
+    "{\"versao_esquema\":\"2.0\",\"protocolo\":\"2024-000142\",\"data_solicitacao\":\"17/01/2026\",\"solicitante\":\"MARCUS VINICIUS DE ALMEIDA SANTOS\",\"assunto\":\"Ficha de matrícula\",\"pedido\":null,\"categoria\":\"matricula\",\"resumo\":\"MARCUS VINICIUS DE ALMEIDA SANTOS consta como aluno em ficha de matrícula da ESCOLA TÉCNICA ESTADUAL DE CUIABÁ, sob o código 2024-000142, com matrícula em 17/01/2026. Está inscrito no curso Técnico em Enfermagem, do eixo Saúde, no turno noturno, com carga horária de 1.200 horas e início em 01/02/2027. Declara ciência das regras de cancelamento automático por faltas nos primeiros dias de aula. Não há pedido escrito.\",\"entidades\":{\"pessoas\":[{\"texto\":\"MARCUS VINICIUS DE ALMEIDA SANTOS\",\"origem\":\"literal\"}],\"orgaos\":[{\"texto\":\"GOVERNO DE MATO GROSSO\",\"origem\":\"literal\"},{\"texto\":\"SECRETARIA DE ESTADO DE CIÊNCIA, TECNOLOGIA E INOVAÇÃO - SECTECI/MT\",\"origem\":\"literal\"},{\"texto\":\"ESCOLA TÉCNICA ESTADUAL DE CUIABÁ\",\"origem\":\"literal\"}],\"locais\":[],\"datas\":[{\"texto\":\"01/02/2027\",\"origem\":\"literal\"},{\"texto\":\"17/01/2026\",\"origem\":\"literal\"}],\"protocolos\":[{\"texto\":\"2024-000142\",\"origem\":\"literal\"}]},\"dados_curso\":{\"curso\":\"TÉCNICO EM ENFERMAGEM\",\"eixo\":\"SAÚDE\",\"carga_horaria\":\"1.200 HORAS\",\"turno\":\"NOTURNO\",\"data_inicio\":\"01/02/2027\",\"regras_ciencia\":\"O aluno declara estar ciente de que sua matrícula será automaticamente cancelada se faltar, sem justificativa comprovada, nos 02 (dois) primeiros dias de aula consecutivos ou em 03 (três) dias de aula, consecutivos ou não, no período dos 10 (dez) primeiros dias de aula.\"},\"campos_ausentes\":[\"pedido\"],\"alertas_seguranca\":[],\"requer_revisao\":true,\"motivos_revisao\":[\"Não há pedido principal escrito na ficha; a categoria foi definida pela natureza do formulário.\"]}"
+  ],
+  "comparacao": {
+    "rejeitada": false,
+    "categoria": {
+      "esperada": "matricula",
+      "obtida": "matricula",
+      "acerto": true
+    },
+    "entidades": {
+      "acertos": [
+        {
+          "tipo": "pessoas",
+          "texto": "MARCUS VINICIUS DE ALMEIDA SANTOS"
+        },
+        {
+          "tipo": "orgaos",
+          "texto": "GOVERNO DE MATO GROSSO"
+        },
+        {
+          "tipo": "orgaos",
+          "texto": "SECRETARIA DE ESTADO DE CIÊNCIA, TECNOLOGIA E INOVAÇÃO - SECTECI/MT"
+        },
+        {
+          "tipo": "orgaos",
+          "texto": "ESCOLA TÉCNICA ESTADUAL DE CUIABÁ"
+        },
+        {
+          "tipo": "datas",
+          "texto": "01/02/2027"
+        },
+        {
+          "tipo": "datas",
+          "texto": "17/01/2026"
+        },
+        {
+          "tipo": "protocolos",
+          "texto": "2024-000142"
+        }
+      ],
+      "omissoes": [],
+      "parecidas": [],
+      "extras_no_texto": [],
+      "incorretas": [],
+      "inferidas": []
+    },
+    "fatos": {
+      "preservados": [
+        "Código lido na ficha: 2024-000142",
+        "Nome na ficha: Marcus Vinicius de Almeida Santos",
+        "Ficha da Escola Técnica Estadual de Cuiabá",
+        "Curso Técnico em Enfermagem, 1.200 horas, noturno",
+        "Início do curso em 01/02/2027",
+        "Data da matrícula lida como 17/01/2026"
+      ],
+      "a_conferir": [
+        "Termo de ciência da regra de cancelamento por faltas"
+      ]
+    },
+    "sem_suporte": [],
+    "palavras_resumo": 67
+  }
+}

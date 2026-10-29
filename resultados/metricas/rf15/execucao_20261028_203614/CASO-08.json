@@ -1,0 +1,171 @@
+{
+  "caso": "CASO-08",
+  "modo": "real",
+  "tipo_caso": "completa",
+  "arquivo": "dados/originais/caso8_solicitacao_coerente_acervo.txt",
+  "versao_prompt": "6a7772b0b430",
+  "versao_esquema": "2.0",
+  "chamadas": [
+    {
+      "modelo": "gpt-5.6-luna",
+      "temperatura": null,
+      "idioma": null,
+      "timeout_segundos": 120.0,
+      "tempo_resposta_segundos": 7.5,
+      "tokens_entrada": 1677,
+      "tokens_saida": 591,
+      "tokens_total": 2268,
+      "tokens_raciocinio": 163,
+      "tokens_cache": 1496,
+      "custo_estimado_usd": 0.001045,
+      "preco_usd_por_milhao_tokens": {
+        "entrada": 0.2,
+        "saida": 1.2
+      },
+      "provedor": "OpenAI",
+      "parametros": {
+        "reasoning": {
+          "effort": "low"
+        },
+        "store": false
+      },
+      "repeticoes_maximas": 1
+    }
+  ],
+  "validacao": {
+    "versao_esquema": "2.0",
+    "entrada": {
+      "arquivo": "dados/originais/caso8_solicitacao_coerente_acervo.txt",
+      "sha256_texto": "b6c03e992d68ff987ecbf762143e768b137d3094ac556eb54e12764de6069549"
+    },
+    "decisao": "aceita",
+    "minuta_bloqueada": false,
+    "tentativas": [
+      {
+        "numero": 1,
+        "erros": []
+      }
+    ],
+    "erros_regras": [],
+    "motivos": []
+  },
+  "saida_validada": {
+    "versao_esquema": "2.0",
+    "protocolo": "2026-000201",
+    "data_solicitacao": "12/06/2026",
+    "solicitante": "Ana Paula Ribeiro Lopes",
+    "assunto": "Efetivação da matrícula no curso Técnico em Enfermagem",
+    "pedido": "Solicita informações sobre quais documentos precisa levar, onde deve comparecer e até quando pode efetivar a matrícula.",
+    "categoria": "matricula",
+    "resumo": "Ana Paula Ribeiro Lopes, protocolo 2026-000201, de 12/06/2026, informa que foi aprovada na 1ª chamada para o curso Técnico em Enfermagem, eixo Saúde, na ETEC Cuiabá, no turno noturno, com início em 21/07/2026. Solicita informações sobre os documentos necessários, o local e o prazo para efetivar a matrícula.",
+    "entidades": {
+      "pessoas": [
+        {
+          "texto": "Ana Paula Ribeiro Lopes",
+          "origem": "literal"
+        }
+      ],
+      "orgaos": [
+        {
+          "texto": "ETEC Cuiabá",
+          "origem": "literal"
+        }
+      ],
+      "locais": [
+        {
+          "texto": "Cuiabá",
+          "origem": "literal"
+        }
+      ],
+      "datas": [
+        {
+          "texto": "12/06/2026",
+          "origem": "literal"
+        },
+        {
+          "texto": "21/07/2026",
+          "origem": "literal"
+        }
+      ],
+      "protocolos": [
+        {
+          "texto": "2026-000201",
+          "origem": "literal"
+        }
+      ]
+    },
+    "dados_curso": {
+      "curso": "Técnico em Enfermagem",
+      "eixo": "Saúde",
+      "carga_horaria": "1.600 horas",
+      "turno": "noturno",
+      "data_inicio": "21/07/2026",
+      "regras_ciencia": "Ela declara estar ciente de que a matrícula será cancelada se faltar, sem justificativa comprovada, nos 2 primeiros dias de aula consecutivos ou em 3 dias, consecutivos ou não, nos 10 primeiros dias de aula."
+    },
+    "campos_ausentes": [],
+    "alertas_seguranca": [],
+    "requer_revisao": false,
+    "motivos_revisao": []
+  },
+  "saidas_brutas": [
+    "{\"versao_esquema\":\"2.0\",\"protocolo\":\"2026-000201\",\"data_solicitacao\":\"12/06/2026\",\"solicitante\":\"Ana Paula Ribeiro Lopes\",\"assunto\":\"Efetivação da matrícula no curso Técnico em Enfermagem\",\"pedido\":\"Solicita informações sobre quais documentos precisa levar, onde deve comparecer e até quando pode efetivar a matrícula.\",\"categoria\":\"matricula\",\"resumo\":\"Ana Paula Ribeiro Lopes, protocolo 2026-000201, de 12/06/2026, informa que foi aprovada na 1ª chamada para o curso Técnico em Enfermagem, eixo Saúde, na ETEC Cuiabá, no turno noturno, com início em 21/07/2026. Solicita informações sobre os documentos necessários, o local e o prazo para efetivar a matrícula.\",\"entidades\":{\"pessoas\":[{\"texto\":\"Ana Paula Ribeiro Lopes\",\"origem\":\"literal\"}],\"orgaos\":[{\"texto\":\"ETEC Cuiabá\",\"origem\":\"literal\"}],\"locais\":[{\"texto\":\"Cuiabá\",\"origem\":\"literal\"}],\"datas\":[{\"texto\":\"12/06/2026\",\"origem\":\"literal\"},{\"texto\":\"21/07/2026\",\"origem\":\"literal\"}],\"protocolos\":[{\"texto\":\"2026-000201\",\"origem\":\"literal\"}]},\"dados_curso\":{\"curso\":\"Técnico em Enfermagem\",\"eixo\":\"Saúde\",\"carga_horaria\":\"1.600 horas\",\"turno\":\"noturno\",\"data_inicio\":\"21/07/2026\",\"regras_ciencia\":\"Ela declara estar ciente de que a matrícula será cancelada se faltar, sem justificativa comprovada, nos 2 primeiros dias de aula consecutivos ou em 3 dias, consecutivos ou não, nos 10 primeiros dias de aula.\"},\"campos_ausentes\":[],\"alertas_seguranca\":[],\"requer_revisao\":false,\"motivos_revisao\":[]}"
+  ],
+  "comparacao": {
+    "rejeitada": false,
+    "categoria": {
+      "esperada": "matricula",
+      "obtida": "matricula",
+      "acerto": true
+    },
+    "entidades": {
+      "acertos": [
+        {
+          "tipo": "pessoas",
+          "texto": "Ana Paula Ribeiro Lopes"
+        },
+        {
+          "tipo": "orgaos",
+          "texto": "ETEC Cuiabá"
+        },
+        {
+          "tipo": "datas",
+          "texto": "12/06/2026"
+        },
+        {
+          "tipo": "datas",
+          "texto": "21/07/2026"
+        },
+        {
+          "tipo": "protocolos",
+          "texto": "2026-000201"
+        }
+      ],
+      "omissoes": [],
+      "parecidas": [],
+      "extras_no_texto": [
+        {
+          "tipo": "locais",
+          "texto": "Cuiabá"
+        }
+      ],
+      "incorretas": [],
+      "inferidas": []
+    },
+    "fatos": {
+      "preservados": [
+        "Solicitante: Ana Paula Ribeiro Lopes",
+        "Protocolo 2026-000201, de 12/06/2026",
+        "Aprovada na 1ª chamada",
+        "Técnico em Enfermagem na ETEC Cuiabá, noturno",
+        "Início em 21/07/2026"
+      ],
+      "a_conferir": [
+        "Carga horária de 1.600 horas",
+        "Declara ciência da regra de cancelamento por faltas",
+        "Pergunta documentos, local e prazo da matrícula"
+      ]
+    },
+    "sem_suporte": [],
+    "palavras_resumo": 48
+  }
+}

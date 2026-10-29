@@ -46,6 +46,7 @@ delimitado e tratado como dado, não como instrução; e cada execução, revis�
 | PDF | PyMuPDF | 1.28.2 | Leitura local de PDF com texto e geração do PDF da minuta |
 | Imagem | Pillow | 12.3.0 | Montagem da peça com brasão e textos |
 | Áudio | mutagen | 1.48.1 | Duração do áudio, sem chamar a API |
+| Validação | Pydantic | 2.14.1 | Contrato da extração e validação estrita (RF14) |
 | Configuração | python-dotenv, JSON | 1.2.4 | Chave no `.env`; caminhos, modelos e parâmetros no `config.json` |
 | Registro | JSON Lines | — | `resultados/logs/execucoes.jsonl`, uma linha por evento |
 | Testes | unittest e `streamlit.testing` (AppTest) | — | Testes de regras, fluxo e cliques na interface, com a API simulada |
@@ -129,7 +130,7 @@ As saídas ficam em `resultados/minutas/aprovadas/` (minuta e PDF), `resultados/
 
 | O quê | Comando | Chama a API? |
 |---|---|---|
-| Todos os testes (181) | `python -m unittest discover -s testes -t .` | Não |
+| Todos os testes (287) | `python -m unittest discover -s testes -t .` | Não |
 | Versões do Python e das bibliotecas | `python -m src.versoes` | Não |
 | Varredura de credenciais e dados pessoais (RF12) | `python -m src.varredura_rf12` | Não |
 | Avaliação dos 7 casos (RF13) | `python -m src.avaliacao_rf13 --todos` | Sim, ~US$ 0,03 |
@@ -181,8 +182,10 @@ desafio_ia_generativa/
 │   ├── minuta_pdf.py           PDF da minuta
 │   ├── privacidade.py          minimização de dados pessoais (RF12)
 │   ├── audit.py                registro das execuções (RF11)
+│   ├── schemas.py              contrato e validação da extração (RF14)
+│   ├── nlp.py                  resumo, categoria e entidades (RF15)
 │   ├── configuracao.py, versoes.py
-│   └── experimento_*, avaliacao_rf13.py, varredura_rf12.py   experimentos e verificações
+│   └── experimento_*, avaliacao_rf13.py, avaliacao_rf15.py, varredura_rf12.py   experimentos e verificações
 ├── resultados/                 minutas, áudios, imagens, avaliações, métricas e logs
 ├── testes/                     testes automatizados (unittest)
 └── documentacao/
@@ -254,6 +257,36 @@ revisão de código, testes e documentação) e o **Claude** na verificação fi
 no tratamento de falhas da API. Todo código e todo conteúdo gerado com apoio de IA foram revisados e
 testados pela equipe.
 O registro completo está em [`documentacao/desafio-1/02_registro_uso_ia.md`](documentacao/desafio-1/02_registro_uso_ia.md).
+
+## 14. Desafio 2
+
+Formato dos dados: [`documentacao/desafio-2/contratos_dados.md`](documentacao/desafio-2/contratos_dados.md).
+Relatório: [`documentacao/desafio-2/01_relatorio_tecnico.md`](documentacao/desafio-2/01_relatorio_tecnico.md).
+
+### Compreensão da solicitação (RF14 e RF15)
+
+Uma chamada extrai campos, resumo, categoria e entidades. A saída é validada em três camadas (JSON,
+esquema Pydantic e regras de negócio); inválida ou incoerente, a minuta é bloqueada.
+
+| O quê | Comando | Chama a API? |
+|---|---|---|
+| Testes | `python -m unittest testes.test_rf14 testes.test_rf15` | Não |
+| JSON sintático × esquema (T01) | `python -m src.experimento_rf14` | Não |
+| Avaliação simulada | `python -m src.avaliacao_rf15 --simulado` | Não |
+| Avaliação real dos 7 casos | `python -m src.avaliacao_rf15 --todos` | Sim, ~US$ 0,007 |
+| Métricas finais | `python -m src.avaliacao_rf15 --consolidar PASTA` | Não |
+
+Conferência humana: rode `--todos`, preencha `decisao` no `conferencia_rf15.json` da pasta gerada e
+rode `--consolidar` com essa pasta. Resultados em `resultados/metricas/rf14_comparacao.md` e
+`resultados/metricas/rf15/execucao_*/`.
+
+### Acervo, índice e RAG (RF17 a RF19 e RF21)
+
+*A preencher — Maria Luiza.*
+
+### Guardrails, interface e sentimentos (RF16, RF20 e RF22)
+
+*A preencher — Felipe.*
 
 ---
 

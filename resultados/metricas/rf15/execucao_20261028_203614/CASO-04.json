@@ -1,0 +1,150 @@
+{
+  "caso": "CASO-04",
+  "modo": "real",
+  "tipo_caso": "completa",
+  "arquivo": "dados/originais/entrada_texto.txt",
+  "versao_prompt": "6a7772b0b430",
+  "versao_esquema": "2.0",
+  "chamadas": [
+    {
+      "modelo": "gpt-5.6-luna",
+      "temperatura": null,
+      "idioma": null,
+      "timeout_segundos": 120.0,
+      "tempo_resposta_segundos": 7.12,
+      "tokens_entrada": 1767,
+      "tokens_saida": 541,
+      "tokens_total": 2308,
+      "tokens_raciocinio": 165,
+      "tokens_cache": 1496,
+      "custo_estimado_usd": 0.001003,
+      "preco_usd_por_milhao_tokens": {
+        "entrada": 0.2,
+        "saida": 1.2
+      },
+      "provedor": "OpenAI",
+      "parametros": {
+        "reasoning": {
+          "effort": "low"
+        },
+        "store": false
+      },
+      "repeticoes_maximas": 1
+    }
+  ],
+  "validacao": {
+    "versao_esquema": "2.0",
+    "entrada": {
+      "arquivo": "dados/originais/entrada_texto.txt",
+      "sha256_texto": "93706a6f0fae36de607014fb47fb93e1a6d56d7ae0c31a1a8afab1b8cf4530b9"
+    },
+    "decisao": "aceita",
+    "minuta_bloqueada": false,
+    "tentativas": [
+      {
+        "numero": 1,
+        "erros": []
+      }
+    ],
+    "erros_regras": [],
+    "motivos": []
+  },
+  "saida_validada": {
+    "versao_esquema": "2.0",
+    "protocolo": "2026-000142",
+    "data_solicitacao": "14/10/2026",
+    "solicitante": "Marcos Vinícius de Almeida Santos",
+    "assunto": "Efetivação de matrícula e documentos pendentes",
+    "pedido": "Solicita a efetivação da matrícula no curso Técnico em Enfermagem e pede informação sobre quais documentos ainda precisa apresentar.",
+    "categoria": "matricula",
+    "resumo": "Marcos Vinícius de Almeida Santos solicita, pelo protocolo 2026-000142, em 14/10/2026, a efetivação de sua matrícula no curso Técnico em Enfermagem. Também pede informação sobre quais documentos ainda precisa apresentar.",
+    "entidades": {
+      "pessoas": [
+        {
+          "texto": "Marcos Vinícius de Almeida Santos",
+          "origem": "literal"
+        }
+      ],
+      "orgaos": [],
+      "locais": [],
+      "datas": [
+        {
+          "texto": "14/10/2026",
+          "origem": "literal"
+        },
+        {
+          "texto": "01/02/2027",
+          "origem": "literal"
+        }
+      ],
+      "protocolos": [
+        {
+          "texto": "2026-000142",
+          "origem": "literal"
+        }
+      ]
+    },
+    "dados_curso": {
+      "curso": "Técnico em Enfermagem",
+      "eixo": "Saúde",
+      "carga_horaria": "1200 horas",
+      "turno": "noturno",
+      "data_inicio": "01/02/2027",
+      "regras_ciencia": "A pessoa declara estar ciente de que a matrícula será automaticamente cancelada se faltar, sem justificativa comprovada, nos dois primeiros dias de aula consecutivos ou em três dias de aula, consecutivos ou não, nos dez primeiros dias de aula."
+    },
+    "campos_ausentes": [],
+    "alertas_seguranca": [],
+    "requer_revisao": false,
+    "motivos_revisao": []
+  },
+  "saidas_brutas": [
+    "{\"versao_esquema\":\"2.0\",\"protocolo\":\"2026-000142\",\"data_solicitacao\":\"14/10/2026\",\"solicitante\":\"Marcos Vinícius de Almeida Santos\",\"assunto\":\"Efetivação de matrícula e documentos pendentes\",\"pedido\":\"Solicita a efetivação da matrícula no curso Técnico em Enfermagem e pede informação sobre quais documentos ainda precisa apresentar.\",\"categoria\":\"matricula\",\"resumo\":\"Marcos Vinícius de Almeida Santos solicita, pelo protocolo 2026-000142, em 14/10/2026, a efetivação de sua matrícula no curso Técnico em Enfermagem. Também pede informação sobre quais documentos ainda precisa apresentar.\",\"entidades\":{\"pessoas\":[{\"texto\":\"Marcos Vinícius de Almeida Santos\",\"origem\":\"literal\"}],\"orgaos\":[],\"locais\":[],\"datas\":[{\"texto\":\"14/10/2026\",\"origem\":\"literal\"},{\"texto\":\"01/02/2027\",\"origem\":\"literal\"}],\"protocolos\":[{\"texto\":\"2026-000142\",\"origem\":\"literal\"}]},\"dados_curso\":{\"curso\":\"Técnico em Enfermagem\",\"eixo\":\"Saúde\",\"carga_horaria\":\"1200 horas\",\"turno\":\"noturno\",\"data_inicio\":\"01/02/2027\",\"regras_ciencia\":\"A pessoa declara estar ciente de que a matrícula será automaticamente cancelada se faltar, sem justificativa comprovada, nos dois primeiros dias de aula consecutivos ou em três dias de aula, consecutivos ou não, nos dez primeiros dias de aula.\"},\"campos_ausentes\":[],\"alertas_seguranca\":[],\"requer_revisao\":false,\"motivos_revisao\":[]}"
+  ],
+  "comparacao": {
+    "rejeitada": false,
+    "categoria": {
+      "esperada": "matricula",
+      "obtida": "matricula",
+      "acerto": true
+    },
+    "entidades": {
+      "acertos": [
+        {
+          "tipo": "pessoas",
+          "texto": "Marcos Vinícius de Almeida Santos"
+        },
+        {
+          "tipo": "datas",
+          "texto": "14/10/2026"
+        },
+        {
+          "tipo": "datas",
+          "texto": "01/02/2027"
+        },
+        {
+          "tipo": "protocolos",
+          "texto": "2026-000142"
+        }
+      ],
+      "omissoes": [],
+      "parecidas": [],
+      "extras_no_texto": [],
+      "incorretas": [],
+      "inferidas": []
+    },
+    "fatos": {
+      "preservados": [
+        "Protocolo 2026-000142, de 14/10/2026",
+        "Solicitante: Marcos Vinícius de Almeida Santos",
+        "Curso Técnico em Enfermagem, turno noturno"
+      ],
+      "a_conferir": [
+        "Início em 01/02/2027",
+        "Declara ciência da regra de cancelamento por faltas",
+        "Pede a lista de documentos que ainda precisa apresentar"
+      ]
+    },
+    "sem_suporte": [],
+    "palavras_resumo": 30
+  }
+}

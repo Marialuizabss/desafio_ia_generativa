@@ -421,8 +421,10 @@ principal claro, escolhe-se a mais próxima, registra-se a justificativa e o est
 
 ## 9. Esquema da extração v2 (RF14)
 
-Saída da extração que alimenta a ficha da interface e a minuta. A validação (Pydantic) e as
-regras de negócio são definidas no RF14; o Felipe pode ajustar os campos exibidos na ficha.
+Saída da extração que alimenta a ficha da interface e a minuta. **Implementado em
+`src/schemas.py`** (modelo `Solicitacao`, Pydantic em modo estrito, versão `"2.0"`); o esquema
+enviado ao provedor (`esquema_saida_restrita()`) é gerado a partir do mesmo modelo. O Felipe pode
+ajustar os campos exibidos na ficha.
 
 | Campo | Tipo | Observação |
 |---|---|---|
@@ -446,6 +448,75 @@ regras de negócio são definidas no RF14; o Felipe pode ajustar os campos exibi
   (decisão 5 da equipe).
 - Estrutura inválida ou regra de negócio violada: a minuta não é gerada e o estado é `revisar`,
   guardando entrada, erro e decisão (critério do RF14).
+
+**Validação em três camadas** (`validar_com_correcao`):
+
+| Camada | Categoria do erro | Exemplo |
+|---|---|---|
+| 1. Sintática | `json_invalido` | Resposta cortada no meio |
+| 2. Esquema | `chave_extra` | Chave `prioridade` fora do contrato |
+| | `tipo_incorreto` | `requer_revisao: "não"` (texto no lugar de booleano; nada é convertido) |
+| | `campo_obrigatorio_ausente` | Sem a chave `categoria` |
+| | `valor_fora_do_dominio` | Categoria `transferencia`, versão `1.0`, origem `deduzida` |
+| 3. Regras de negócio | `data_impossivel` | `31/02/2026` ou data fora do formato `DD/MM/AAAA` |
+| | `dado_nao_presente_no_original` | Data, protocolo ou solicitante que não aparece no texto |
+| | `data_incoerente` | Solicitação antes da abertura do processo (data do edital no `acervo.json`, 31/03/2026) ou no futuro; início do curso antes da solicitação |
+| | `fato_sem_suporte` | Entidade `literal` que não aparece no texto |
+| | `incoerencia_interna` | `campos_ausentes` diferente dos campos `null` |
+| | `resumo_longo` | Resumo com mais de 100 palavras |
+
+- **Decisão:** `aceita`; `revisar` (regra violada, alerta de segurança ou `requer_revisao`); ou
+  `rejeitada` (estrutura ainda inválida depois da nova tentativa).
+- **No máximo uma nova tentativa**, só para erro de sintaxe ou de esquema, com a lista de erros no
+  pedido. Regra de negócio violada não gera nova tentativa: o dado veio assim da entrada.
+- **Minuta bloqueada** quando a decisão é `rejeitada` ou há regra violada. Um alerta de segurança
+  sozinho leva a `revisar` sem bloquear a minuta, como no Desafio 1.
+- **Comparações com o texto** ignoram acento, maiúsculas e espaços (OCR e transcrição variam
+  nisso); datas são reconhecidas como `14/10/2026` e "14 de outubro de 2026".
+- **Registro:** `para_registro()` guarda o arquivo de entrada e o hash do texto (sem o texto), os
+  erros de cada tentativa, os erros de regra e a decisão.
+- **Comparação do T01:** `python -m src.experimento_rf14` gera `resultados/metricas/rf14_comparacao.md`.
+- **Conferência automática:** `python -m unittest testes.test_rf14`.
+
+### 9.1 Ficha de compreensão e comparação com o gabarito (RF15)
+
+Uma única chamada (`src/nlp.py`, prompt em `prompts/desafio2/`) devolve o objeto completo acima.
+O texto vai minimizado (RF12) e delimitado (RF03), e a saída passa pela validação do RF14. A
+versão do prompt é o hash do prompt e do esquema enviado; cada execução registra também o nome
+do arquivo do prompt (`arquivo_prompt`).
+
+| Prompt | Versão | Uso |
+|---|---|---|
+| `prompts/desafio2/extracao_v2.md` | `6a7772b0b430` | Execução real de 28/10/2026 (`resultados/metricas/rf15/execucao_20261028_203614/`). Guardado para reprodução |
+| `prompts/desafio2/extracao_v2.1.md` | `c72216a916fc` | **Em uso.** Só a seção "Resumo" muda: pede escola, turno, carga horária, data de início, a declaração de ciência e o dado essencial que falta. Motivo: na execução com o v2, as omissões de fatos se repetiram nesses itens (9 omissões: ciência em 4 casos, início em 2, carga horária, escola e falta do protocolo em 1 cada) |
+
+As regras do v2.1 são genéricas, por tipo de informação, e não citam nenhum caso, para valer
+para qualquer solicitação e não só para as do gabarito.
+
+**Comparação com o gabarito, por caso:**
+
+| Item | Automático | Vai para a conferência humana |
+|---|---|---|
+| Categoria | acerto ou erro | — |
+| Entidades | acerto (mesmo texto sem acento e maiúsculas; datas pelo valor), omissão, extra que está no texto (aceita), incorreta (fora do texto e não marcada como inferida) | entidade parecida ("Ana Paula" × "Ana Paula Ribeiro Lopes") e entidade inferida |
+| Fatos essenciais | preservado quando a `evidencia` aparece no resumo | o restante, porque o resumo pode parafrasear |
+| Dados sem suporte no resumo | datas, protocolos e cargas horárias do resumo que não estão no texto | todos, para confirmar ou marcar como falso alarme |
+
+**Execução** (`src/avaliacao_rf15.py`): `--simulado` (sem API, resposta montada do gabarito,
+marcada como simulada), `--todos` (chamada real) e `--consolidar PASTA`. Cada execução fica em
+`resultados/metricas/rf15/execucao_<data>/` com um JSON por caso, `matriz_rf15.md` (T03),
+`resumo.json` (métricas preliminares) e `conferencia_rf15.json`.
+
+**Conferência humana** (`conferencia_rf15.json`): cada item tem `opcoes` e `decisao`, que a
+revisora preenche — `fato`: `preservado` ou `omitido`; `entidade_parecida`: `equivalente` ou
+`diferente`; `entidade_inferida`: `sustentada` ou `sem_suporte`; `sem_suporte`: `confirmado` ou
+`falso_alarme`. `--consolidar` só gera `metricas_rf15.md` com todas as decisões preenchidas.
+
+**Métricas**, sempre com numerador e denominador: acurácia da categoria (nos 7 casos e nos 6 do
+enunciado), entidades esperadas encontradas, omissões, incorretas, fatos preservados e omitidos,
+fatos sem suporte e saídas rejeitadas pelo RF14.
+
+**Conferência automática:** `python -m unittest testes.test_rf15`.
 
 ## 10. Estados de decisão (RF20, RF24)
 
@@ -481,3 +552,6 @@ não são reescritos; a tradução vale na leitura):
 | 1.2 | 2026-10-28 | Acervo com ACV-08 e ACV-09 (TXT), `origem` por documento e `ordem` nula em documento independente; `termos_ausentes_no_acervo` nas perguntas sem resposta; gabarito dos 3 ataques criado; origem fora do texto dos documentos e separação do que vai para o modelo |
 | 1.3 | 2026-10-28 | Avaliações criadas: entrada com `canal` e `data`; gabarito com `contem_instrucao`, `objetivo_do_caso`, `termos_proibidos_na_justificativa` e `cenarios_painel` (T13); AV06 e AV09 documentadas; composição do acervo explicada (o ACV-09 existe só para o ataque ADV-02) |
 | 1.4 | 2026-10-28 | Gabaritos das solicitações no formato 2.0: CASO-07 (ambígua) e CASO-08 (caminho feliz) criados; `decisao_esperada_v2` virou `estado_esperado` (`pendente` ou `revisar`) com `motivos_estado`; fatos com evidência literal; `texto_entrada_rf15`, `resumo_referencia`, `divergencias_com_original`, `orientacoes_acervo_esperadas` e `coerencia_acervo` |
+| 1.5 | 2026-10-28 | Seção 9 implementada em `src/schemas.py`: validação em três camadas, categorias de erro, decisão, uma nova tentativa no máximo, regra da data de abertura lida do acervo |
+| 1.6 | 2026-10-28 | Seção 9.1: RF15 em `src/nlp.py` e `src/avaliacao_rf15.py`, prompt v2 em arquivo, comparação com o gabarito e conferência humana |
+| 1.7 | 2026-10-29 | Prompt v2.1 em uso (seção "Resumo" ampliada após as omissões da execução com o v2); `arquivo_prompt` registrado em cada execução |

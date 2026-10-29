@@ -218,3 +218,7 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Índice vetorial do Desafio 2: gerado pela indexação e recriado a partir de dados/acervo/
+indice/*
+!indice/.gitkeep

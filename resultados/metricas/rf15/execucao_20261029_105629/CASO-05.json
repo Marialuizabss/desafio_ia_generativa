@@ -1,0 +1,148 @@
+{
+  "caso": "CASO-05",
+  "modo": "real",
+  "tipo_caso": "completa",
+  "arquivo": "dados/processados/transcricao_entrada_audio.txt",
+  "arquivo_prompt": "extracao_v2.1.md",
+  "versao_prompt": "c72216a916fc",
+  "versao_esquema": "2.0",
+  "chamadas": [
+    {
+      "modelo": "gpt-5.6-luna",
+      "temperatura": null,
+      "idioma": null,
+      "timeout_segundos": 120.0,
+      "tempo_resposta_segundos": 6.52,
+      "tokens_entrada": 1765,
+      "tokens_saida": 567,
+      "tokens_total": 2332,
+      "tokens_raciocinio": 151,
+      "tokens_cache": 1552,
+      "custo_estimado_usd": 0.001033,
+      "preco_usd_por_milhao_tokens": {
+        "entrada": 0.2,
+        "saida": 1.2
+      },
+      "provedor": "OpenAI",
+      "parametros": {
+        "reasoning": {
+          "effort": "low"
+        },
+        "store": false
+      },
+      "repeticoes_maximas": 1
+    }
+  ],
+  "validacao": {
+    "versao_esquema": "2.0",
+    "entrada": {
+      "arquivo": "dados/processados/transcricao_entrada_audio.txt",
+      "sha256_texto": "07504e1c4b89cdea2c8ac3aa6914720e88e3a33d913d6b38d4c9430ccb811847"
+    },
+    "decisao": "revisar",
+    "minuta_bloqueada": false,
+    "tentativas": [
+      {
+        "numero": 1,
+        "erros": []
+      }
+    ],
+    "erros_regras": [],
+    "motivos": [
+      "modelo: Falta a data de início do curso."
+    ]
+  },
+  "saida_validada": {
+    "versao_esquema": "2.0",
+    "protocolo": "2026-000142",
+    "data_solicitacao": "14/10/2026",
+    "solicitante": "Marcos Vinícius de Almeida Santos",
+    "assunto": "Efetivação de matrícula e apresentação de documentos",
+    "pedido": "Pede a efetivação da matrícula no curso técnico em enfermagem e solicita informação sobre quais documentos ainda precisa apresentar.",
+    "categoria": "matricula",
+    "resumo": "Marcos Vinícius de Almeida Santos solicita, pelo protocolo 2026-000142, de 14 de outubro de 2026, a efetivação da matrícula no curso técnico em enfermagem, do eixo tecnológico de saúde, com carga horária de 1.200 horas, no turno noturno. Declara estar ciente das regras de cancelamento por faltas nos primeiros dias de aula e pede informação sobre os documentos que ainda precisa apresentar. Não informa a data de início do curso.",
+    "entidades": {
+      "pessoas": [
+        {
+          "texto": "Marcos Vinícius de Almeida Santos",
+          "origem": "literal"
+        }
+      ],
+      "orgaos": [],
+      "locais": [],
+      "datas": [
+        {
+          "texto": "14 de outubro de 2026",
+          "origem": "literal"
+        }
+      ],
+      "protocolos": [
+        {
+          "texto": "2026-000142",
+          "origem": "literal"
+        }
+      ]
+    },
+    "dados_curso": {
+      "curso": "curso técnico em enfermagem",
+      "eixo": "eixo tecnológico de saúde",
+      "carga_horaria": "1.200 horas",
+      "turno": "noturno",
+      "data_inicio": null,
+      "regras_ciencia": "Declara estar ciente de que a matrícula será cancelada automaticamente se faltar sem justificativa comprovada nos dois primeiros dias de aula consecutivos, em três dias de aula consecutivos ou não nos dez primeiros dias de aula."
+    },
+    "campos_ausentes": [
+      "data_inicio"
+    ],
+    "alertas_seguranca": [],
+    "requer_revisao": true,
+    "motivos_revisao": [
+      "Falta a data de início do curso."
+    ]
+  },
+  "saidas_brutas": [
+    "{\"versao_esquema\":\"2.0\",\"protocolo\":\"2026-000142\",\"data_solicitacao\":\"14/10/2026\",\"solicitante\":\"Marcos Vinícius de Almeida Santos\",\"assunto\":\"Efetivação de matrícula e apresentação de documentos\",\"pedido\":\"Pede a efetivação da matrícula no curso técnico em enfermagem e solicita informação sobre quais documentos ainda precisa apresentar.\",\"categoria\":\"matricula\",\"resumo\":\"Marcos Vinícius de Almeida Santos solicita, pelo protocolo 2026-000142, de 14 de outubro de 2026, a efetivação da matrícula no curso técnico em enfermagem, do eixo tecnológico de saúde, com carga horária de 1.200 horas, no turno noturno. Declara estar ciente das regras de cancelamento por faltas nos primeiros dias de aula e pede informação sobre os documentos que ainda precisa apresentar. Não informa a data de início do curso.\",\"entidades\":{\"pessoas\":[{\"texto\":\"Marcos Vinícius de Almeida Santos\",\"origem\":\"literal\"}],\"orgaos\":[],\"locais\":[],\"datas\":[{\"texto\":\"14 de outubro de 2026\",\"origem\":\"literal\"}],\"protocolos\":[{\"texto\":\"2026-000142\",\"origem\":\"literal\"}]},\"dados_curso\":{\"curso\":\"curso técnico em enfermagem\",\"eixo\":\"eixo tecnológico de saúde\",\"carga_horaria\":\"1.200 horas\",\"turno\":\"noturno\",\"data_inicio\":null,\"regras_ciencia\":\"Declara estar ciente de que a matrícula será cancelada automaticamente se faltar sem justificativa comprovada nos dois primeiros dias de aula consecutivos, em três dias de aula consecutivos ou não nos dez primeiros dias de aula.\"},\"campos_ausentes\":[\"data_inicio\"],\"alertas_seguranca\":[],\"requer_revisao\":true,\"motivos_revisao\":[\"Falta a data de início do curso.\"]}"
+  ],
+  "comparacao": {
+    "rejeitada": false,
+    "categoria": {
+      "esperada": "matricula",
+      "obtida": "matricula",
+      "acerto": true
+    },
+    "entidades": {
+      "acertos": [
+        {
+          "tipo": "pessoas",
+          "texto": "Marcos Vinícius de Almeida Santos"
+        },
+        {
+          "tipo": "datas",
+          "texto": "14 de outubro de 2026"
+        },
+        {
+          "tipo": "protocolos",
+          "texto": "2026-000142"
+        }
+      ],
+      "omissoes": [],
+      "parecidas": [],
+      "extras_no_texto": [],
+      "incorretas": [],
+      "inferidas": []
+    },
+    "fatos": {
+      "preservados": [
+        "Protocolo 2026-000142, de 14 de outubro de 2026",
+        "Solicitante: Marcos Vinícius de Almeida Santos",
+        "Curso Técnico em Enfermagem, turno noturno"
+      ],
+      "a_conferir": [
+        "Declara ciência da regra de cancelamento por faltas",
+        "Pede a lista de documentos que ainda precisa apresentar"
+      ]
+    },
+    "sem_suporte": [],
+    "palavras_resumo": 70
+  }
+}

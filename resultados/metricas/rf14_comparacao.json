@@ -1,0 +1,118 @@
+{
+  "experimento": "RF14 — JSON sintático × esquema × regras de negócio (T01)",
+  "executado_em": "2026-10-28T19:40:55-04:00",
+  "caso_base": "CASO-08",
+  "entrada": "dados/originais/caso8_solicitacao_coerente_acervo.txt",
+  "data_minima": "2026-03-31",
+  "chamou_api": false,
+  "resumo": {
+    "versoes": 8,
+    "json_loads_aceita": 7,
+    "esquema_aceita": 3,
+    "regras_aceitam": 1
+  },
+  "linhas": [
+    {
+      "versao": "valida",
+      "defeito": "nenhum",
+      "json_loads_aceita": true,
+      "esquema_aceita": true,
+      "regras_aceitam": true,
+      "erros": [],
+      "tentativas": 1,
+      "decisao": "aceita",
+      "minuta_bloqueada": false
+    },
+    {
+      "versao": "chave_extra",
+      "defeito": "chave \"prioridade\" fora do contrato",
+      "json_loads_aceita": true,
+      "esquema_aceita": false,
+      "regras_aceitam": null,
+      "erros": [
+        "chave_extra:prioridade"
+      ],
+      "tentativas": 2,
+      "decisao": "rejeitada",
+      "minuta_bloqueada": true
+    },
+    {
+      "versao": "tipo_incorreto",
+      "defeito": "requer_revisao como texto (\"não\")",
+      "json_loads_aceita": true,
+      "esquema_aceita": false,
+      "regras_aceitam": null,
+      "erros": [
+        "tipo_incorreto:requer_revisao"
+      ],
+      "tentativas": 2,
+      "decisao": "rejeitada",
+      "minuta_bloqueada": true
+    },
+    {
+      "versao": "campo_obrigatorio_ausente",
+      "defeito": "sem a chave \"categoria\"",
+      "json_loads_aceita": true,
+      "esquema_aceita": false,
+      "regras_aceitam": null,
+      "erros": [
+        "campo_obrigatorio_ausente:categoria"
+      ],
+      "tentativas": 2,
+      "decisao": "rejeitada",
+      "minuta_bloqueada": true
+    },
+    {
+      "versao": "valor_fora_do_dominio",
+      "defeito": "categoria \"transferencia\", fora das seis",
+      "json_loads_aceita": true,
+      "esquema_aceita": false,
+      "regras_aceitam": null,
+      "erros": [
+        "valor_fora_do_dominio:categoria"
+      ],
+      "tentativas": 2,
+      "decisao": "rejeitada",
+      "minuta_bloqueada": true
+    },
+    {
+      "versao": "json_invalido",
+      "defeito": "resposta cortada no meio",
+      "json_loads_aceita": false,
+      "esquema_aceita": false,
+      "regras_aceitam": null,
+      "erros": [
+        "json_invalido"
+      ],
+      "tentativas": 2,
+      "decisao": "rejeitada",
+      "minuta_bloqueada": true
+    },
+    {
+      "versao": "data_impossivel",
+      "defeito": "data_solicitacao 31/02/2026",
+      "json_loads_aceita": true,
+      "esquema_aceita": true,
+      "regras_aceitam": false,
+      "erros": [
+        "data_impossivel:data_solicitacao"
+      ],
+      "tentativas": 1,
+      "decisao": "revisar",
+      "minuta_bloqueada": true
+    },
+    {
+      "versao": "dado_nao_presente_no_original",
+      "defeito": "protocolo 2026-000999, que não está no texto",
+      "json_loads_aceita": true,
+      "esquema_aceita": true,
+      "regras_aceitam": false,
+      "erros": [
+        "dado_nao_presente_no_original:protocolo"
+      ],
+      "tentativas": 1,
+      "decisao": "revisar",
+      "minuta_bloqueada": true
+    }
+  ]
+}

@@ -1,0 +1,151 @@
+{
+  "caso": "CASO-01",
+  "modo": "real",
+  "tipo_caso": "completa",
+  "arquivo": "dados/originais/caso1_solicitacao_completa.txt",
+  "arquivo_prompt": "extracao_v2.1.md",
+  "versao_prompt": "c72216a916fc",
+  "versao_esquema": "2.0",
+  "chamadas": [
+    {
+      "modelo": "gpt-5.6-luna",
+      "temperatura": null,
+      "idioma": null,
+      "timeout_segundos": 120.0,
+      "tempo_resposta_segundos": 8.04,
+      "tokens_entrada": 1777,
+      "tokens_saida": 508,
+      "tokens_total": 2285,
+      "tokens_raciocinio": 87,
+      "tokens_cache": 0,
+      "custo_estimado_usd": 0.000965,
+      "preco_usd_por_milhao_tokens": {
+        "entrada": 0.2,
+        "saida": 1.2
+      },
+      "provedor": "OpenAI",
+      "parametros": {
+        "reasoning": {
+          "effort": "low"
+        },
+        "store": false
+      },
+      "repeticoes_maximas": 1
+    }
+  ],
+  "validacao": {
+    "versao_esquema": "2.0",
+    "entrada": {
+      "arquivo": "dados/originais/caso1_solicitacao_completa.txt",
+      "sha256_texto": "05cae92a3c4664f466e5cd1ff728eb65bfa96627f0a7b8a989a8a92b8424645c"
+    },
+    "decisao": "aceita",
+    "minuta_bloqueada": false,
+    "tentativas": [
+      {
+        "numero": 1,
+        "erros": []
+      }
+    ],
+    "erros_regras": [],
+    "motivos": []
+  },
+  "saida_validada": {
+    "versao_esquema": "2.0",
+    "protocolo": "2026-000157",
+    "data_solicitacao": "15/10/2026",
+    "solicitante": "Juliana Ferreira Campos",
+    "assunto": "Efetivação de matrícula",
+    "pedido": "Efetivar a matrícula no curso Técnico em Informática e informar quais documentos ainda precisa apresentar.",
+    "categoria": "matricula",
+    "resumo": "Juliana Ferreira Campos solicita, pelo protocolo 2026-000157, aberto em 15/10/2026, a efetivação de sua matrícula no curso Técnico em Informática, do eixo tecnológico Informação e Comunicação, com 1.200 horas, no turno vespertino e início previsto para 01/02/2027. Declara estar ciente das regras de cancelamento por faltas nos primeiros dias de aula e pede informação sobre os documentos que ainda precisa apresentar.",
+    "entidades": {
+      "pessoas": [
+        {
+          "texto": "Juliana Ferreira Campos",
+          "origem": "literal"
+        }
+      ],
+      "orgaos": [],
+      "locais": [],
+      "datas": [
+        {
+          "texto": "15/10/2026",
+          "origem": "literal"
+        },
+        {
+          "texto": "01/02/2027",
+          "origem": "literal"
+        }
+      ],
+      "protocolos": [
+        {
+          "texto": "2026-000157",
+          "origem": "literal"
+        }
+      ]
+    },
+    "dados_curso": {
+      "curso": "Técnico em Informática",
+      "eixo": "Informação e Comunicação",
+      "carga_horaria": "1.200 horas",
+      "turno": "vespertino",
+      "data_inicio": "01/02/2027",
+      "regras_ciencia": "A solicitante declara estar ciente de que sua matrícula será cancelada automaticamente se faltar, sem justificativa comprovada, nos 2 (dois) primeiros dias de aula consecutivos, ou em 3 (três) dias de aula, consecutivos ou não, nos 10 (dez) primeiros dias de aula."
+    },
+    "campos_ausentes": [],
+    "alertas_seguranca": [],
+    "requer_revisao": false,
+    "motivos_revisao": []
+  },
+  "saidas_brutas": [
+    "{\"versao_esquema\":\"2.0\",\"protocolo\":\"2026-000157\",\"data_solicitacao\":\"15/10/2026\",\"solicitante\":\"Juliana Ferreira Campos\",\"assunto\":\"Efetivação de matrícula\",\"pedido\":\"Efetivar a matrícula no curso Técnico em Informática e informar quais documentos ainda precisa apresentar.\",\"categoria\":\"matricula\",\"resumo\":\"Juliana Ferreira Campos solicita, pelo protocolo 2026-000157, aberto em 15/10/2026, a efetivação de sua matrícula no curso Técnico em Informática, do eixo tecnológico Informação e Comunicação, com 1.200 horas, no turno vespertino e início previsto para 01/02/2027. Declara estar ciente das regras de cancelamento por faltas nos primeiros dias de aula e pede informação sobre os documentos que ainda precisa apresentar.\",\"entidades\":{\"pessoas\":[{\"texto\":\"Juliana Ferreira Campos\",\"origem\":\"literal\"}],\"orgaos\":[],\"locais\":[],\"datas\":[{\"texto\":\"15/10/2026\",\"origem\":\"literal\"},{\"texto\":\"01/02/2027\",\"origem\":\"literal\"}],\"protocolos\":[{\"texto\":\"2026-000157\",\"origem\":\"literal\"}]},\"dados_curso\":{\"curso\":\"Técnico em Informática\",\"eixo\":\"Informação e Comunicação\",\"carga_horaria\":\"1.200 horas\",\"turno\":\"vespertino\",\"data_inicio\":\"01/02/2027\",\"regras_ciencia\":\"A solicitante declara estar ciente de que sua matrícula será cancelada automaticamente se faltar, sem justificativa comprovada, nos 2 (dois) primeiros dias de aula consecutivos, ou em 3 (três) dias de aula, consecutivos ou não, nos 10 (dez) primeiros dias de aula.\"},\"campos_ausentes\":[],\"alertas_seguranca\":[],\"requer_revisao\":false,\"motivos_revisao\":[]}"
+  ],
+  "comparacao": {
+    "rejeitada": false,
+    "categoria": {
+      "esperada": "matricula",
+      "obtida": "matricula",
+      "acerto": true
+    },
+    "entidades": {
+      "acertos": [
+        {
+          "tipo": "pessoas",
+          "texto": "Juliana Ferreira Campos"
+        },
+        {
+          "tipo": "datas",
+          "texto": "15/10/2026"
+        },
+        {
+          "tipo": "datas",
+          "texto": "01/02/2027"
+        },
+        {
+          "tipo": "protocolos",
+          "texto": "2026-000157"
+        }
+      ],
+      "omissoes": [],
+      "parecidas": [],
+      "extras_no_texto": [],
+      "incorretas": [],
+      "inferidas": []
+    },
+    "fatos": {
+      "preservados": [
+        "Protocolo 2026-000157, aberto em 15/10/2026",
+        "Solicitante: Juliana Ferreira Campos",
+        "Curso Técnico em Informática, turno vespertino",
+        "Início previsto em 01/02/2027"
+      ],
+      "a_conferir": [
+        "Declara ciência da regra de cancelamento por faltas",
+        "Pede a lista de documentos que ainda precisa apresentar"
+      ]
+    },
+    "sem_suporte": [],
+    "palavras_resumo": 61
+  }
+}

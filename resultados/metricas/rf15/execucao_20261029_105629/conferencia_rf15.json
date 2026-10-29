@@ -1,0 +1,160 @@
+{
+  "instrucoes": "Preencha 'decisao' de cada item com uma das 'opcoes' e, se quiser, a 'observacao'. Depois rode: python -m src.avaliacao_rf15 --consolidar resultados/metricas/rf15/execucao_20261029_105629",
+  "revisora": "Ana Beatriz",
+  "itens": [
+    {
+      "caso": "CASO-01",
+      "tipo": "fato",
+      "descricao": "O resumo preserva o fato \"Declara ciência da regra de cancelamento por faltas\"?",
+      "opcoes": [
+        "preservado",
+        "omitido"
+      ],
+      "decisao": "preservado",
+      "observacao": ""
+    },
+    {
+      "caso": "CASO-01",
+      "tipo": "fato",
+      "descricao": "O resumo preserva o fato \"Pede a lista de documentos que ainda precisa apresentar\"?",
+      "opcoes": [
+        "preservado",
+        "omitido"
+      ],
+      "decisao": "preservado",
+      "observacao": ""
+    },
+    {
+      "caso": "CASO-04",
+      "tipo": "fato",
+      "descricao": "O resumo preserva o fato \"Declara ciência da regra de cancelamento por faltas\"?",
+      "opcoes": [
+        "preservado",
+        "omitido"
+      ],
+      "decisao": "preservado",
+      "observacao": ""
+    },
+    {
+      "caso": "CASO-04",
+      "tipo": "fato",
+      "descricao": "O resumo preserva o fato \"Pede a lista de documentos que ainda precisa apresentar\"?",
+      "opcoes": [
+        "preservado",
+        "omitido"
+      ],
+      "decisao": "preservado",
+      "observacao": ""
+    },
+    {
+      "caso": "CASO-05",
+      "tipo": "fato",
+      "descricao": "O resumo preserva o fato \"Declara ciência da regra de cancelamento por faltas\"?",
+      "opcoes": [
+        "preservado",
+        "omitido"
+      ],
+      "decisao": "preservado",
+      "observacao": ""
+    },
+    {
+      "caso": "CASO-05",
+      "tipo": "fato",
+      "descricao": "O resumo preserva o fato \"Pede a lista de documentos que ainda precisa apresentar\"?",
+      "opcoes": [
+        "preservado",
+        "omitido"
+      ],
+      "decisao": "preservado",
+      "observacao": ""
+    },
+    {
+      "caso": "CASO-06",
+      "tipo": "fato",
+      "descricao": "O resumo preserva o fato \"Termo de ciência da regra de cancelamento por faltas\"?",
+      "opcoes": [
+        "preservado",
+        "omitido"
+      ],
+      "decisao": "preservado",
+      "observacao": ""
+    },
+    {
+      "caso": "CASO-02",
+      "tipo": "fato",
+      "descricao": "O resumo preserva o fato \"Não informa o protocolo\"?",
+      "opcoes": [
+        "preservado",
+        "omitido"
+      ],
+      "decisao": "preservado",
+      "observacao": ""
+    },
+    {
+      "caso": "CASO-02",
+      "tipo": "fato",
+      "descricao": "O resumo preserva o fato \"Pergunta o que levar e o prazo\"?",
+      "opcoes": [
+        "preservado",
+        "omitido"
+      ],
+      "decisao": "preservado",
+      "observacao": ""
+    },
+    {
+      "caso": "CASO-07",
+      "tipo": "fato",
+      "descricao": "O resumo preserva o fato \"Começou a trabalhar e está em dúvida entre trancar e mudar de turno\"?",
+      "opcoes": [
+        "preservado",
+        "omitido"
+      ],
+      "decisao": "preservado",
+      "observacao": ""
+    },
+    {
+      "caso": "CASO-07",
+      "tipo": "fato",
+      "descricao": "O resumo preserva o fato \"Faltou dois dias na primeira semana\"?",
+      "opcoes": [
+        "preservado",
+        "omitido"
+      ],
+      "decisao": "preservado",
+      "observacao": ""
+    },
+    {
+      "caso": "CASO-07",
+      "tipo": "fato",
+      "descricao": "O resumo preserva o fato \"Pergunta se as faltas já cancelam a matrícula\"?",
+      "opcoes": [
+        "preservado",
+        "omitido"
+      ],
+      "decisao": "preservado",
+      "observacao": ""
+    },
+    {
+      "caso": "CASO-08",
+      "tipo": "fato",
+      "descricao": "O resumo preserva o fato \"Declara ciência da regra de cancelamento por faltas\"?",
+      "opcoes": [
+        "preservado",
+        "omitido"
+      ],
+      "decisao": "preservado",
+      "observacao": ""
+    },
+    {
+      "caso": "CASO-08",
+      "tipo": "fato",
+      "descricao": "O resumo preserva o fato \"Pergunta documentos, local e prazo da matrícula\"?",
+      "opcoes": [
+        "preservado",
+        "omitido"
+      ],
+      "decisao": "preservado",
+      "observacao": ""
+    }
+  ]
+}
