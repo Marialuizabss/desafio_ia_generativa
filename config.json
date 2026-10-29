@@ -35,5 +35,20 @@
   "custos_estimados_usd": {
     "voz_por_minuto": 0.015,
     "imagem": 0.063
+  },
+  "adaptador_llm": {
+    "provedor": "openai",
+    "configuracoes": {
+      "principal": {
+        "modelo": "gpt-4o-mini",
+        "temperatura": 0
+      },
+      "alternativa": {
+        "modelo": "gpt-4o-mini",
+        "temperatura": 0.5
+      }
+    },
+    "timeout_segundos": 120,
+    "max_retries": 1
   }
 }
