@@ -1,0 +1,161 @@
+{
+  "caso": "CASO-07",
+  "modo": "real",
+  "tipo_caso": "ambigua",
+  "arquivo": "dados/originais/caso7_solicitacao_ambigua.txt",
+  "versao_prompt": "6a7772b0b430",
+  "versao_esquema": "2.0",
+  "chamadas": [
+    {
+      "modelo": "gpt-5.6-luna",
+      "temperatura": null,
+      "idioma": null,
+      "timeout_segundos": 120.0,
+      "tempo_resposta_segundos": 7.41,
+      "tokens_entrada": 1613,
+      "tokens_saida": 548,
+      "tokens_total": 2161,
+      "tokens_raciocinio": 150,
+      "tokens_cache": 1496,
+      "custo_estimado_usd": 0.00098,
+      "preco_usd_por_milhao_tokens": {
+        "entrada": 0.2,
+        "saida": 1.2
+      },
+      "provedor": "OpenAI",
+      "parametros": {
+        "reasoning": {
+          "effort": "low"
+        },
+        "store": false
+      },
+      "repeticoes_maximas": 1
+    }
+  ],
+  "validacao": {
+    "versao_esquema": "2.0",
+    "entrada": {
+      "arquivo": "dados/originais/caso7_solicitacao_ambigua.txt",
+      "sha256_texto": "35a194597e5ded6d3c9de5601248ae59350dbc5fc7ac1d376aefc3d4665395e4"
+    },
+    "decisao": "revisar",
+    "minuta_bloqueada": false,
+    "tentativas": [
+      {
+        "numero": 1,
+        "erros": []
+      }
+    ],
+    "erros_regras": [],
+    "motivos": [
+      "modelo: O pedido é ambíguo, pois apresenta alternativas de trancamento ou mudança de turno e também questiona o efeito das faltas sobre a matrícula."
+    ]
+  },
+  "saida_validada": {
+    "versao_esquema": "2.0",
+    "protocolo": "2026-000188",
+    "data_solicitacao": "20/10/2026",
+    "solicitante": "Camila Rocha Prado",
+    "assunto": "Trancamento ou mudança de turno e faltas",
+    "pedido": "Orientação sobre escolher entre trancar a matrícula ou mudar de turno, e sobre o possível cancelamento da matrícula por ter faltado dois dias na primeira semana.",
+    "categoria": "frequencia_cancelamento",
+    "resumo": "Camila Rocha Prado, protocolo 2026-000188, de 20/10/2026, informa que está matriculada no Técnico em Agropecuária, em Mimoso. Relata que começou a trabalhar e pergunta se deve trancar a matrícula ou pedir mudança de turno. Também pergunta se duas faltas na primeira semana cancelam a matrícula e o que deve fazer.",
+    "entidades": {
+      "pessoas": [
+        {
+          "texto": "Camila Rocha Prado",
+          "origem": "literal"
+        }
+      ],
+      "orgaos": [],
+      "locais": [
+        {
+          "texto": "Mimoso",
+          "origem": "literal"
+        }
+      ],
+      "datas": [
+        {
+          "texto": "20/10/2026",
+          "origem": "literal"
+        }
+      ],
+      "protocolos": [
+        {
+          "texto": "2026-000188",
+          "origem": "literal"
+        }
+      ]
+    },
+    "dados_curso": {
+      "curso": "Técnico em Agropecuária",
+      "eixo": null,
+      "carga_horaria": null,
+      "turno": null,
+      "data_inicio": null,
+      "regras_ciencia": null
+    },
+    "campos_ausentes": [
+      "eixo",
+      "carga_horaria",
+      "turno",
+      "data_inicio",
+      "regras_ciencia"
+    ],
+    "alertas_seguranca": [],
+    "requer_revisao": true,
+    "motivos_revisao": [
+      "O pedido é ambíguo, pois apresenta alternativas de trancamento ou mudança de turno e também questiona o efeito das faltas sobre a matrícula."
+    ]
+  },
+  "saidas_brutas": [
+    "{\"versao_esquema\":\"2.0\",\"protocolo\":\"2026-000188\",\"data_solicitacao\":\"20/10/2026\",\"solicitante\":\"Camila Rocha Prado\",\"assunto\":\"Trancamento ou mudança de turno e faltas\",\"pedido\":\"Orientação sobre escolher entre trancar a matrícula ou mudar de turno, e sobre o possível cancelamento da matrícula por ter faltado dois dias na primeira semana.\",\"categoria\":\"frequencia_cancelamento\",\"resumo\":\"Camila Rocha Prado, protocolo 2026-000188, de 20/10/2026, informa que está matriculada no Técnico em Agropecuária, em Mimoso. Relata que começou a trabalhar e pergunta se deve trancar a matrícula ou pedir mudança de turno. Também pergunta se duas faltas na primeira semana cancelam a matrícula e o que deve fazer.\",\"entidades\":{\"pessoas\":[{\"texto\":\"Camila Rocha Prado\",\"origem\":\"literal\"}],\"orgaos\":[],\"locais\":[{\"texto\":\"Mimoso\",\"origem\":\"literal\"}],\"datas\":[{\"texto\":\"20/10/2026\",\"origem\":\"literal\"}],\"protocolos\":[{\"texto\":\"2026-000188\",\"origem\":\"literal\"}]},\"dados_curso\":{\"curso\":\"Técnico em Agropecuária\",\"eixo\":null,\"carga_horaria\":null,\"turno\":null,\"data_inicio\":null,\"regras_ciencia\":null},\"campos_ausentes\":[\"eixo\",\"carga_horaria\",\"turno\",\"data_inicio\",\"regras_ciencia\"],\"alertas_seguranca\":[],\"requer_revisao\":true,\"motivos_revisao\":[\"O pedido é ambíguo, pois apresenta alternativas de trancamento ou mudança de turno e também questiona o efeito das faltas sobre a matrícula.\"]}"
+  ],
+  "comparacao": {
+    "rejeitada": false,
+    "categoria": {
+      "esperada": "frequencia_cancelamento",
+      "obtida": "frequencia_cancelamento",
+      "acerto": true
+    },
+    "entidades": {
+      "acertos": [
+        {
+          "tipo": "pessoas",
+          "texto": "Camila Rocha Prado"
+        },
+        {
+          "tipo": "locais",
+          "texto": "Mimoso"
+        },
+        {
+          "tipo": "datas",
+          "texto": "20/10/2026"
+        },
+        {
+          "tipo": "protocolos",
+          "texto": "2026-000188"
+        }
+      ],
+      "omissoes": [],
+      "parecidas": [],
+      "extras_no_texto": [],
+      "incorretas": [],
+      "inferidas": []
+    },
+    "fatos": {
+      "preservados": [
+        "Solicitante: Camila Rocha Prado",
+        "Protocolo 2026-000188, de 20/10/2026",
+        "Matriculada no Técnico em Agropecuária, em Mimoso"
+      ],
+      "a_conferir": [
+        "Começou a trabalhar e está em dúvida entre trancar e mudar de turno",
+        "Faltou dois dias na primeira semana",
+        "Pergunta se as faltas já cancelam a matrícula"
+      ]
+    },
+    "sem_suporte": [],
+    "palavras_resumo": 50
+  }
+}

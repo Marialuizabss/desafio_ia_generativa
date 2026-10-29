@@ -1,0 +1,44 @@
+{
+  "acuracia_categoria": {
+    "numerador": 7,
+    "denominador": 7,
+    "percentual": 100.0
+  },
+  "acuracia_categoria_seis_do_enunciado": {
+    "numerador": 6,
+    "denominador": 6,
+    "percentual": 100.0
+  },
+  "entidades_acertos": {
+    "numerador": 29,
+    "denominador": 29,
+    "percentual": 100.0
+  },
+  "entidades_omissoes": 0,
+  "entidades_extras_no_texto": 3,
+  "entidades_incorretas": 0,
+  "fatos_preservados_automatico": {
+    "numerador": 26,
+    "denominador": 44,
+    "percentual": 59.1
+  },
+  "resumo_sem_suporte": 0,
+  "rejeitadas": {
+    "numerador": 0,
+    "denominador": 7,
+    "percentual": 0.0
+  },
+  "fatos_preservados": {
+    "numerador": 35,
+    "denominador": 44,
+    "percentual": 79.5
+  },
+  "fatos_omitidos": 9,
+  "entidades_inferidas_sem_suporte": 0,
+  "fatos_sem_suporte": 0,
+  "conferencia_humana": {
+    "itens": 18,
+    "revisora": "Ana Beatriz"
+  },
+  "modo": "real"
+}

@@ -1,0 +1,153 @@
+{
+  "caso": "CASO-02",
+  "modo": "real",
+  "tipo_caso": "incompleta",
+  "arquivo": "dados/originais/caso2_solicitacao_incompleta.txt",
+  "versao_prompt": "6a7772b0b430",
+  "versao_esquema": "2.0",
+  "chamadas": [
+    {
+      "modelo": "gpt-5.6-luna",
+      "temperatura": null,
+      "idioma": null,
+      "timeout_segundos": 120.0,
+      "tempo_resposta_segundos": 4.26,
+      "tokens_entrada": 1598,
+      "tokens_saida": 316,
+      "tokens_total": 1914,
+      "tokens_raciocinio": 0,
+      "tokens_cache": 1496,
+      "custo_estimado_usd": 0.000699,
+      "preco_usd_por_milhao_tokens": {
+        "entrada": 0.2,
+        "saida": 1.2
+      },
+      "provedor": "OpenAI",
+      "parametros": {
+        "reasoning": {
+          "effort": "low"
+        },
+        "store": false
+      },
+      "repeticoes_maximas": 1
+    }
+  ],
+  "validacao": {
+    "versao_esquema": "2.0",
+    "entrada": {
+      "arquivo": "dados/originais/caso2_solicitacao_incompleta.txt",
+      "sha256_texto": "9f98f6cac45c3a34b1cf094540b17502a7fe87379b70b29ded5e2ac0857fa1ae"
+    },
+    "decisao": "revisar",
+    "minuta_bloqueada": false,
+    "tentativas": [
+      {
+        "numero": 1,
+        "erros": []
+      }
+    ],
+    "erros_regras": [],
+    "motivos": [
+      "modelo: Falta o número de protocolo.",
+      "modelo: Falta a data da solicitação."
+    ]
+  },
+  "saida_validada": {
+    "versao_esquema": "2.0",
+    "protocolo": null,
+    "data_solicitacao": null,
+    "solicitante": "Roberto Alves Nunes",
+    "assunto": "Matrícula no Técnico em Administração",
+    "pedido": "Fazer a matrícula no Técnico em Administração e saber o que precisa levar e até quando.",
+    "categoria": "matricula",
+    "resumo": "Roberto Alves Nunes solicita matrícula no Técnico em Administração, eixo Gestão e Negócios, com carga horária de 1.000 horas e início em 01/02/2027. Ele também pergunta o que precisa levar e até quando.",
+    "entidades": {
+      "pessoas": [
+        {
+          "texto": "Roberto Alves Nunes",
+          "origem": "literal"
+        },
+        {
+          "texto": "Roberto",
+          "origem": "literal"
+        }
+      ],
+      "orgaos": [],
+      "locais": [],
+      "datas": [
+        {
+          "texto": "01/02/2027",
+          "origem": "literal"
+        }
+      ],
+      "protocolos": []
+    },
+    "dados_curso": {
+      "curso": "Técnico em Administração",
+      "eixo": "Gestão e Negócios",
+      "carga_horaria": "1.000 horas",
+      "turno": null,
+      "data_inicio": "01/02/2027",
+      "regras_ciencia": null
+    },
+    "campos_ausentes": [
+      "protocolo",
+      "data_solicitacao",
+      "turno",
+      "regras_ciencia"
+    ],
+    "alertas_seguranca": [],
+    "requer_revisao": true,
+    "motivos_revisao": [
+      "Falta o número de protocolo.",
+      "Falta a data da solicitação."
+    ]
+  },
+  "saidas_brutas": [
+    "{\"versao_esquema\":\"2.0\",\"protocolo\":null,\"data_solicitacao\":null,\"solicitante\":\"Roberto Alves Nunes\",\"assunto\":\"Matrícula no Técnico em Administração\",\"pedido\":\"Fazer a matrícula no Técnico em Administração e saber o que precisa levar e até quando.\",\"categoria\":\"matricula\",\"resumo\":\"Roberto Alves Nunes solicita matrícula no Técnico em Administração, eixo Gestão e Negócios, com carga horária de 1.000 horas e início em 01/02/2027. Ele também pergunta o que precisa levar e até quando.\",\"entidades\":{\"pessoas\":[{\"texto\":\"Roberto Alves Nunes\",\"origem\":\"literal\"},{\"texto\":\"Roberto\",\"origem\":\"literal\"}],\"orgaos\":[],\"locais\":[],\"datas\":[{\"texto\":\"01/02/2027\",\"origem\":\"literal\"}],\"protocolos\":[]},\"dados_curso\":{\"curso\":\"Técnico em Administração\",\"eixo\":\"Gestão e Negócios\",\"carga_horaria\":\"1.000 horas\",\"turno\":null,\"data_inicio\":\"01/02/2027\",\"regras_ciencia\":null},\"campos_ausentes\":[\"protocolo\",\"data_solicitacao\",\"turno\",\"regras_ciencia\"],\"alertas_seguranca\":[],\"requer_revisao\":true,\"motivos_revisao\":[\"Falta o número de protocolo.\",\"Falta a data da solicitação.\"]}"
+  ],
+  "comparacao": {
+    "rejeitada": false,
+    "categoria": {
+      "esperada": "matricula",
+      "obtida": "matricula",
+      "acerto": true
+    },
+    "entidades": {
+      "acertos": [
+        {
+          "tipo": "pessoas",
+          "texto": "Roberto Alves Nunes"
+        },
+        {
+          "tipo": "datas",
+          "texto": "01/02/2027"
+        }
+      ],
+      "omissoes": [],
+      "parecidas": [],
+      "extras_no_texto": [
+        {
+          "tipo": "pessoas",
+          "texto": "Roberto"
+        }
+      ],
+      "incorretas": [],
+      "inferidas": []
+    },
+    "fatos": {
+      "preservados": [
+        "Solicitante: Roberto Alves Nunes",
+        "Curso Técnico em Administração",
+        "Carga horária declarada de 1.000 horas",
+        "Início em 01/02/2027"
+      ],
+      "a_conferir": [
+        "Não informa o protocolo",
+        "Pergunta o que levar e o prazo"
+      ]
+    },
+    "sem_suporte": [],
+    "palavras_resumo": 33
+  }
+}
