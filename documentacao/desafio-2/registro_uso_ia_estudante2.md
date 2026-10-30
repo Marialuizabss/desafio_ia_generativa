@@ -43,8 +43,8 @@ deve refletir o que de fato aconteceu.*
 - Testes escritos num ambiente Linux falharam no Windows (separador de caminho); corrigido.
 - Um bloco de instruções tinha crases dentro de outro bloco de código e chegou quebrado ao terminal;
   reenviado corrigido.
-- A IA afirmou que as regras específicas "já estavam no código" que enviei como se fossem de outra
-  origem; foi corrigida, porque esse código da minha parte do RF19 foi escrito por mim.
+- Em um momento, a IA tratou as regras específicas por pergunta como se fossem de outra origem;
+  foi corrigida, porque esse código da minha parte do RF19 foi escrito por mim.
 
 ## Como o código e o conteúdo foram validados
 
