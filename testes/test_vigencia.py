@@ -379,7 +379,8 @@ def test_trecho_suspeito_sai_do_contexto_e_vira_alerta(monkeypatch):
 
     assert contextos == [["ACV-06-p2-s1-c1"]]
     assert resultado["status"] == "fundamentada"
-    assert resultado["decisao"] == "revisar"
+    # A resposta não cita o documento alertado: segue como resposta, com o alerta registrado.
+    assert resultado["decisao"] == "responder"
     assert resultado["alertas"][0]["chunk_id"] == "ACV-09-p0-s4-c1"
     assert resultado["alertas"][0]["doc_id"] == "ACV-09"
     assert "aviso" in resultado
@@ -434,3 +435,22 @@ def test_contradicao_alegada_sobre_assuntos_diferentes_e_ignorada(monkeypatch):
 def test_prompt_pede_resposta_completa_e_citacao_por_chunk():
     assert "sem omitir nenhum" in rf19.INSTRUCOES
     assert "UM único chunk" in rf19.INSTRUCOES
+
+
+def test_resposta_que_cita_o_documento_alertado_vai_para_revisao(monkeypatch):
+    resposta = {
+        "status": "fundamentada",
+        "resposta": "A participação é obrigatória para os alunos matriculados.",
+        "justificativa": "Item 2.2 do comunicado.",
+        "citacoes": [{"chunk_id": "ACV-09-p0-s3-c1",
+                      "trecho": "A participação é obrigatória para os alunos matriculados"}],
+        "prevalencia": {"item": None, "escopo_aplicado": "", "documentos_considerados": ["ACV-09"],
+                        "resolvida": True},
+    }
+    _preparar(monkeypatch, ["ACV-09-p0-s3-c1", "ACV-09-p0-s4-c1"], [resposta])
+
+    resultado = rf19.responder_rf19("A pesquisa socioeconômica é obrigatória?")
+
+    assert resultado["status"] == "fundamentada"
+    assert resultado["decisao"] == "revisar"
+    assert resultado["alertas"]

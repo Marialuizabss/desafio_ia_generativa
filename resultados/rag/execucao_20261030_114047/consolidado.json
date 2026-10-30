@@ -1,0 +1,131 @@
+{
+  "rodadas": 3,
+  "perguntas": [
+    {
+      "id": "P01",
+      "tipo": "respondivel",
+      "status_esperado": "fundamentada",
+      "execucoes": 3,
+      "aprovadas": 0,
+      "status_correto": 3,
+      "status_obtidos": [
+        "fundamentada",
+        "fundamentada",
+        "fundamentada"
+      ],
+      "falhas_por_verificacao": {
+        "elementos_na_resposta": 3
+      }
+    },
+    {
+      "id": "P02",
+      "tipo": "respondivel",
+      "status_esperado": "fundamentada",
+      "execucoes": 3,
+      "aprovadas": 0,
+      "status_correto": 3,
+      "status_obtidos": [
+        "fundamentada",
+        "fundamentada",
+        "fundamentada"
+      ],
+      "falhas_por_verificacao": {
+        "elementos_na_resposta": 3
+      }
+    },
+    {
+      "id": "P03",
+      "tipo": "respondivel",
+      "status_esperado": "fundamentada",
+      "execucoes": 3,
+      "aprovadas": 3,
+      "status_correto": 3,
+      "status_obtidos": [
+        "fundamentada",
+        "fundamentada",
+        "fundamentada"
+      ],
+      "falhas_por_verificacao": {}
+    },
+    {
+      "id": "P04",
+      "tipo": "respondivel",
+      "status_esperado": "fundamentada",
+      "execucoes": 3,
+      "aprovadas": 3,
+      "status_correto": 3,
+      "status_obtidos": [
+        "fundamentada",
+        "fundamentada",
+        "fundamentada"
+      ],
+      "falhas_por_verificacao": {}
+    },
+    {
+      "id": "P05",
+      "tipo": "respondivel",
+      "status_esperado": "fundamentada",
+      "execucoes": 3,
+      "aprovadas": 3,
+      "status_correto": 3,
+      "status_obtidos": [
+        "fundamentada",
+        "fundamentada",
+        "fundamentada"
+      ],
+      "falhas_por_verificacao": {}
+    },
+    {
+      "id": "P06",
+      "tipo": "sem_resposta",
+      "status_esperado": "sem_evidencia",
+      "execucoes": 3,
+      "aprovadas": 3,
+      "status_correto": 3,
+      "status_obtidos": [
+        "sem_evidencia",
+        "sem_evidencia",
+        "sem_evidencia"
+      ],
+      "falhas_por_verificacao": {}
+    },
+    {
+      "id": "P07",
+      "tipo": "sem_resposta",
+      "status_esperado": "sem_evidencia",
+      "execucoes": 3,
+      "aprovadas": 3,
+      "status_correto": 3,
+      "status_obtidos": [
+        "sem_evidencia",
+        "sem_evidencia",
+        "sem_evidencia"
+      ],
+      "falhas_por_verificacao": {}
+    },
+    {
+      "id": "P08",
+      "tipo": "contraditoria",
+      "status_esperado": "conflito",
+      "execucoes": 3,
+      "aprovadas": 3,
+      "status_correto": 3,
+      "status_obtidos": [
+        "conflito",
+        "conflito",
+        "conflito"
+      ],
+      "falhas_por_verificacao": {}
+    }
+  ],
+  "aprovacoes_por_rodada": [
+    6,
+    6,
+    6
+  ],
+  "status_correto_por_rodada": [
+    8,
+    8,
+    8
+  ]
+}

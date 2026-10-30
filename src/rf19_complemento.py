@@ -188,18 +188,28 @@ def _separar_suspeitos(evidencias):
 
 
 def _anexar_alertas(resultado, alertas):
-    """Registra os alertas e manda o caso para revisão humana."""
+    """Registra os alertas. Manda para revisão se a resposta se apoia no documento alertado.
+
+    Um trecho suspeito de outro documento sai do contexto e fica só sinalizado para a
+    curadoria; se a resposta cita o MESMO documento em que a instrução apareceu, um
+    servidor precisa revisar antes de considerá-la.
+    """
 
     resultado["alertas"] = alertas
 
-    if alertas:
-        if resultado.get("decisao") == "responder":
-            resultado["decisao"] = "revisar"
+    if not alertas:
+        return resultado
 
-        resultado["aviso"] = (
-            "Um trecho do acervo com instrução dirigida ao assistente foi retirado do "
-            "contexto e sinalizado para a curadoria do acervo."
-        )
+    documentos_alertados = {a.get("doc_id") for a in alertas}
+    documentos_citados = {f.get("doc_id") for f in resultado.get("fontes") or []}
+
+    if resultado.get("decisao") == "responder" and documentos_alertados & documentos_citados:
+        resultado["decisao"] = "revisar"
+
+    resultado["aviso"] = (
+        "Um trecho do acervo com instrução dirigida ao assistente foi retirado do "
+        "contexto e sinalizado para a curadoria do acervo."
+    )
 
     return resultado
 
