@@ -280,9 +280,38 @@ Conferência humana: rode `--todos`, preencha `decisao` no `conferencia_rf15.jso
 rode `--consolidar` com essa pasta. Resultados em `resultados/metricas/rf14_comparacao.md` e
 `resultados/metricas/rf15/execucao_*/`.
 
-### Acervo, índice e RAG (RF17 a RF19 e RF21)
+### Acervo, índice e RAG (RF17 a RF19, RF21 e RF24)
 
-*A preencher — Maria Luiza.*
+Acervo de nove documentos (edital, seis retificações e dois TXT fictícios) catalogados em
+`dados/acervo/acervo.json`. O índice é um ChromaDB local em `dados/indice_vetorial/` (não vai para o
+git), com embeddings `paraphrase-multilingual-MiniLM-L12-v2` (384 dimensões, distância cosseno, limite
+de 128 tokens por trecho). O modelo é baixado na primeira execução e depois roda localmente.
+
+```
+pip install -r requirements.txt
+python -m src.indexar                      # indexa o acervo (pode repetir: não duplica)
+python -m src.indexar --status             # documentos, chunks e versão do índice
+python -m src.indexar --excluir ACV-09 --motivo "retenção encerrada"
+python -m src.avaliacao_rf18               # compara 3 configurações de chunking (RF18)
+python -m src.avaliacao_rag --repeticoes 3 # oito perguntas do RAG, três rodadas (usa a API)
+python -m pytest testes -q                 # testes (não usam a API nem baixam o modelo)
+```
+
+Consulta ao RAG, com a configuração de geração escolhida em `config.json`:
+
+```python
+from src.rf19_complemento import responder_rf19
+
+resultado = responder_rf19("Quando começam as aulas de Agropecuária em Mimoso?", top_k=15)
+# nome_configuracao="forte" usa outro modelo; "simulada" não chama a API (só se abstém)
+print(resultado["status"], resultado["decisao"], resultado["fontes"], resultado["id_consulta"])
+```
+
+`status` é `fundamentada`, `sem_evidencia` ou `conflito`; `decisao` é `responder` ou `revisar`. Cada
+consulta é gravada em `resultados/logs/execucoes.jsonl` (evento `consulta_rag`, com versões, trechos
+recuperados, tempos e custos, sem chave de API e com identificadores mascarados). Trocar a
+configuração de geração não reconstrói o índice. Detalhes, resultados e limitações:
+`documentacao/desafio-2/01_relatorio_tecnico.md`, seções 4 e 5.
 
 ### Guardrails, interface e sentimentos (RF16, RF20 e RF22)
 
