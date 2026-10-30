@@ -1,0 +1,37 @@
+{
+  "rf": "RF21",
+  "data_execucao": "2026-10-29T18:14:24.568876+00:00",
+  "pergunta": "Um cidadão pergunta qual é o prazo para apresentar documentos, mas nenhum prazo foi informado. Como você deve responder?",
+  "configuracoes": {
+    "principal": {
+      "resposta": "Você pode informar que, para obter informações precisas sobre prazos para apresentação de documentos, é necessário consultar a instituição ou órgão responsável, pois cada caso pode ter regras específicas.",
+      "auditoria": {
+        "provedor": "openai",
+        "modelo": "gpt-4o-mini",
+        "configuracao": "principal",
+        "temperatura": 0,
+        "tempo_resposta_segundos": 2.16,
+        "tokens_entrada": 58,
+        "tokens_saida": 36,
+        "tokens_total": 94,
+        "custo_estimado_usd": 3e-05,
+        "status": "sucesso"
+      }
+    },
+    "alternativa": {
+      "resposta": "Você pode informar que, como não há um prazo específico definido, é recomendável entrar em contato diretamente com o órgão ou instituição responsável para obter informações precisas sobre a apresentação de documentos.",
+      "auditoria": {
+        "provedor": "openai",
+        "modelo": "gpt-4o-mini",
+        "configuracao": "alternativa",
+        "temperatura": 0.5,
+        "tempo_resposta_segundos": 1.762,
+        "tokens_entrada": 58,
+        "tokens_saida": 38,
+        "tokens_total": 96,
+        "custo_estimado_usd": 3.1e-05,
+        "status": "sucesso"
+      }
+    }
+  }
+}

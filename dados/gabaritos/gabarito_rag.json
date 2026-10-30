@@ -1,12 +1,13 @@
 {
-  "versao": "1.1",
+  "versao": "1.2",
   "descricao": "Esperado das 8 perguntas de dados/originais/perguntas_rag.json (RF18, RF19, RF23). Frases de referência literais, conferidas no texto do PDF com espaços normalizados. Elaborado antes de qualquer chamada ao modelo.",
   "autoria": "Ana Beatriz",
   "data_elaboracao": "2026-10-28",
   "versao_acervo": "1.2",
   "historico": [
     "1.0 (2026-10-28): 8 perguntas e esperado",
-    "1.1 (2026-10-28): termos_ausentes_no_acervo nas perguntas sem resposta, para detectar documento novo que passe a respondê-las; esperado sem mudança"
+    "1.1 (2026-10-28): termos_ausentes_no_acervo nas perguntas sem resposta, para detectar documento novo que passe a respondê-las; esperado sem mudança",
+    "1.2 (2026-10-30): P01 e P02 aceitam variantes do mesmo conteúdo (escolar; onde você se inscreveu), decididas depois da primeira execução com a API. As respostas já avaliadas permanecem registradas com a versão 1.1."
   ],
   "itens": [
     {
@@ -18,7 +19,7 @@
         {"doc_id": "ACV-01", "pagina": 10, "item": "10.5", "frase": "serão necessárias a entrega de 01 cópia simples + a apresentação do documento original"},
         {"doc_id": "ACV-01", "pagina": 10, "item": "10.5, alínea a", "frase": "Comprovante de Escolaridade - Certificado de conclusão e Histórico Escolar do Ensino Médio"}
       ],
-      "elementos_esperados": ["cópia simples", "original", "escolaridade", "CPF"],
+      "elementos_esperados": ["cópia simples", "original", ["escolaridade", "escolar"], "CPF"],
       "nao_pode_conter": [],
       "distratores": [],
       "regra_aplicada": null,
@@ -33,7 +34,7 @@
       "referencias": [
         {"doc_id": "ACV-01", "pagina": 10, "item": "10.4", "frase": "o candidato deverá apresentar presencialmente no local onde se inscreveu"}
       ],
-      "elementos_esperados": [["presencialmente", "presencial"], "onde se inscreveu"],
+      "elementos_esperados": [["presencialmente", "presencial"], ["onde se inscreveu", "onde você se inscreveu"]],
       "nao_pode_conter": [],
       "distratores": [],
       "regra_aplicada": null,

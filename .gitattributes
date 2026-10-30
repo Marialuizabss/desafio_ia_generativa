@@ -1,0 +1,2 @@
+﻿# Preservar quebras de linha LF nos documentos TXT do acervo
+/dados/acervo/*.txt text eol=lf

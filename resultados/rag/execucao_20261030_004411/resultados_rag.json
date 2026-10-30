@@ -1,0 +1,312 @@
+{
+  "rf": "RF19/RF23",
+  "data_hora": "2026-10-30T00:44:11-04:00",
+  "top_k": 15,
+  "configuracao": "principal",
+  "resumo": {
+    "status_correto": {
+      "numerador": 6,
+      "denominador": 8
+    },
+    "respondiveis_aprovadas": {
+      "numerador": 1,
+      "denominador": 5
+    },
+    "abstencao_correta_sem_resposta": {
+      "numerador": 2,
+      "denominador": 2
+    },
+    "conflito_tratado": {
+      "numerador": 1,
+      "denominador": 1
+    },
+    "tokens_total": 36473,
+    "custo_estimado_usd": 0.006141,
+    "observacao_metricas": null
+  },
+  "avaliacoes": [
+    {
+      "id": "P01",
+      "tipo": "respondivel",
+      "pergunta": "Quais documentos preciso apresentar para efetivar a matrícula?",
+      "status_esperado": "fundamentada",
+      "status_obtido": "sem_evidencia",
+      "decisao_obtida": "revisar",
+      "verificacoes": {
+        "status_correto": false,
+        "decisao_correta": false,
+        "elementos_na_resposta": false,
+        "sem_valor_proibido": true,
+        "citacoes_rastreaveis": false,
+        "cita_pagina_de_referencia": false
+      },
+      "aprovado": false,
+      "resposta": "Não há evidências suficientes para responder com segurança.",
+      "justificativa": "Falha na validação: O trecho citado não foi comprovado na fonte.",
+      "fontes": [],
+      "auditoria": {
+        "configuracao": "principal",
+        "modelo": "gpt-4o-mini",
+        "simulado": null,
+        "tempo_resposta_segundos": 5.307,
+        "tokens_entrada": 5085,
+        "tokens_saida": 469,
+        "tokens_total": 5554,
+        "custo_estimado_usd": 0.001044
+      }
+    },
+    {
+      "id": "P02",
+      "tipo": "respondivel",
+      "pergunta": "Posso efetivar a matrícula a distância ou preciso ir pessoalmente?",
+      "status_esperado": "fundamentada",
+      "status_obtido": "fundamentada",
+      "decisao_obtida": "responder",
+      "verificacoes": {
+        "status_correto": true,
+        "decisao_correta": true,
+        "elementos_na_resposta": false,
+        "sem_valor_proibido": true,
+        "citacoes_rastreaveis": true,
+        "cita_pagina_de_referencia": true
+      },
+      "aprovado": false,
+      "resposta": "É necessário comparecer pessoalmente para efetivar a matrícula.",
+      "justificativa": "O edital especifica que a efetivação da matrícula requer a apresentação presencial de toda a documentação listada.",
+      "fontes": [
+        {
+          "chunk_id": "ACV-01-p10-s1-c3",
+          "doc_id": "ACV-01",
+          "versao": "Edital original",
+          "pagina": 10,
+          "secao": null,
+          "trecho_citado": "Para efetivação da matrícula, OBRIGATORIAMENTE, o candidato deverá apresentar presencialmente no local onde se inscreveu conforme endereços disponíveis no Anexo I, toda a documentação listada no item 10.5."
+        }
+      ],
+      "auditoria": {
+        "configuracao": "principal",
+        "modelo": "gpt-4o-mini",
+        "simulado": null,
+        "tempo_resposta_segundos": 3.265,
+        "tokens_entrada": 4669,
+        "tokens_saida": 203,
+        "tokens_total": 4872,
+        "custo_estimado_usd": 0.000822
+      }
+    },
+    {
+      "id": "P03",
+      "tipo": "respondivel",
+      "pergunta": "O que acontece se eu não fizer a matrícula no prazo?",
+      "status_esperado": "fundamentada",
+      "status_obtido": "fundamentada",
+      "decisao_obtida": "responder",
+      "verificacoes": {
+        "status_correto": true,
+        "decisao_correta": true,
+        "elementos_na_resposta": true,
+        "sem_valor_proibido": true,
+        "citacoes_rastreaveis": true,
+        "cita_pagina_de_referencia": true
+      },
+      "aprovado": true,
+      "resposta": "Se você não fizer a matrícula no prazo, perderá o direito à vaga.",
+      "justificativa": "O edital estabelece que o candidato que não realizar sua matrícula nos prazos determinados perderá o direito à vaga.",
+      "fontes": [
+        {
+          "chunk_id": "ACV-01-p11-s1-c5",
+          "doc_id": "ACV-01",
+          "versao": "Edital original",
+          "pagina": 11,
+          "secao": null,
+          "trecho_citado": "O candidato que não realizar sua matrícula nos prazos determinados, perderá o direito à vaga."
+        }
+      ],
+      "auditoria": {
+        "configuracao": "principal",
+        "modelo": "gpt-4o-mini",
+        "simulado": null,
+        "tempo_resposta_segundos": 2.545,
+        "tokens_entrada": 4603,
+        "tokens_saida": 174,
+        "tokens_total": 4777,
+        "custo_estimado_usd": 0.000795
+      }
+    },
+    {
+      "id": "P04",
+      "tipo": "respondivel",
+      "pergunta": "Quando começam as aulas de Agropecuária em Mimoso?",
+      "status_esperado": "fundamentada",
+      "status_obtido": "fundamentada",
+      "decisao_obtida": "responder",
+      "verificacoes": {
+        "status_correto": true,
+        "decisao_correta": true,
+        "elementos_na_resposta": true,
+        "sem_valor_proibido": true,
+        "citacoes_rastreaveis": false,
+        "cita_pagina_de_referencia": true
+      },
+      "aprovado": false,
+      "resposta": "As aulas de Agropecuária em Mimoso começam no dia 05 de outubro de 2026.",
+      "justificativa": "A data de início das aulas foi alterada conforme a retificação do edital.",
+      "fontes": [
+        {
+          "chunk_id": "ACV-07-p1-s1-c2",
+          "doc_id": "ACV-07",
+          "versao": "Retificação nº 06",
+          "pagina": 1,
+          "secao": null,
+          "trecho_citado": "Fica alterada para o dia 05 de outubro de 2026 a data de início das aulas dos seguintes cursos: ... Agropecuária ... Mimoso"
+        }
+      ],
+      "auditoria": {
+        "configuracao": "principal",
+        "modelo": "gpt-4o-mini",
+        "simulado": null,
+        "tempo_resposta_segundos": 3.293,
+        "tokens_entrada": 5941,
+        "tokens_saida": 202,
+        "tokens_total": 6143,
+        "custo_estimado_usd": 0.001012
+      }
+    },
+    {
+      "id": "P05",
+      "tipo": "respondivel",
+      "pergunta": "Qual é o período de efetivação das matrículas da 4ª chamada?",
+      "status_esperado": "fundamentada",
+      "status_obtido": "conflito",
+      "decisao_obtida": "revisar",
+      "verificacoes": {
+        "status_correto": false,
+        "decisao_correta": false,
+        "elementos_na_resposta": false,
+        "sem_valor_proibido": true,
+        "citacoes_rastreaveis": true,
+        "cita_pagina_de_referencia": false
+      },
+      "aprovado": false,
+      "resposta": "Há informações documentais divergentes. É necessária revisão humana.",
+      "justificativa": "Período da 4ª chamada não comprovado na ACV-06.",
+      "fontes": [
+        {
+          "chunk_id": "ACV-04-p2-s1-c1",
+          "doc_id": "ACV-04",
+          "versao": "Retificação nº 03",
+          "pagina": 2,
+          "secao": null,
+          "trecho_citado": "19. Efetivação das matrículas da 4º chamada das vagas remanescentes 23 e 24/07/2026"
+        }
+      ],
+      "auditoria": {
+        "configuracao": "principal",
+        "modelo": "gpt-4o-mini",
+        "simulado": null,
+        "tempo_resposta_segundos": 3.111,
+        "tokens_entrada": 5168,
+        "tokens_saida": 213,
+        "tokens_total": 5381,
+        "custo_estimado_usd": 0.000903
+      }
+    },
+    {
+      "id": "P06",
+      "tipo": "sem_resposta",
+      "pergunta": "A ETEC oferece auxílio transporte ou bolsa para os alunos?",
+      "status_esperado": "sem_evidencia",
+      "status_obtido": "sem_evidencia",
+      "decisao_obtida": "revisar",
+      "verificacoes": {
+        "status_correto": true,
+        "decisao_correta": true
+      },
+      "aprovado": true,
+      "resposta": "Não há evidências suficientes para responder com segurança.",
+      "justificativa": "Nenhum dos documentos analisados menciona explicitamente a existência de auxílio transporte ou bolsa para os alunos.",
+      "fontes": [],
+      "auditoria": {
+        "configuracao": "principal",
+        "modelo": "gpt-4o-mini",
+        "simulado": null,
+        "tempo_resposta_segundos": 1.626,
+        "tokens_entrada": 4481,
+        "tokens_saida": 117,
+        "tokens_total": 4598,
+        "custo_estimado_usd": 0.000742
+      }
+    },
+    {
+      "id": "P07",
+      "tipo": "sem_resposta",
+      "pergunta": "Qual é o horário de atendimento da secretaria da ETEC?",
+      "status_esperado": "sem_evidencia",
+      "status_obtido": "sem_evidencia",
+      "decisao_obtida": "revisar",
+      "verificacoes": {
+        "status_correto": true,
+        "decisao_correta": true
+      },
+      "aprovado": true,
+      "resposta": "Não há evidências suficientes para responder com segurança.",
+      "justificativa": "As fontes disponíveis não contêm informações específicas sobre o horário de atendimento da secretaria da ETEC.",
+      "fontes": [],
+      "auditoria": {
+        "configuracao": "principal",
+        "modelo": "gpt-4o-mini",
+        "simulado": null,
+        "tempo_resposta_segundos": 2.418,
+        "tokens_entrada": 5036,
+        "tokens_saida": 112,
+        "tokens_total": 5148,
+        "custo_estimado_usd": 0.000823
+      }
+    },
+    {
+      "id": "P08",
+      "tipo": "contraditoria",
+      "pergunta": "Quando é divulgada a lista das matrículas efetivadas na 4ª chamada?",
+      "status_esperado": "conflito",
+      "status_obtido": "conflito",
+      "decisao_obtida": "revisar",
+      "verificacoes": {
+        "status_correto": true,
+        "decisao_correta": true,
+        "divergencia_apresentada": true,
+        "cita_os_dois_documentos": true
+      },
+      "aprovado": true,
+      "resposta": "Há informações documentais divergentes. É necessária revisão humana.",
+      "justificativa": "ACV-01 (item 11.3.1) informa 11/06/2026; ACV-06 (item 5) informa 09/07/2026. Os escopos catalogados não resolvem a divergência.",
+      "fontes": [
+        {
+          "chunk_id": "ACV-01-p13-s1-c1",
+          "doc_id": "ACV-01",
+          "versao": "Edital original",
+          "pagina": 13,
+          "secao": null,
+          "trecho_citado": "13 \nb) A entrega dos documentos não garante a matrícula do candidato, que será efetivada \nem obediência a ordem classificatória do resultado final do Processo Seletivo divulgado \nno dia 11/06/2026. \nc) A lista das matrículas efetivadas na 4ª chamada de vagas remanescentes serão \ndivulgadas no mural das Escolas Técnicas no dia 11/06/2026. \n \n11.3.2. As vagas remanescentes (5ª chamada) serão preenchidas pelos candidatos por ordem \nde chegada e entrega de documentos na ETEC, independente de ter ou não participado deste \nprocesso seletivo.  \n \n11.3.3. A lista de quantidade de vagas remanescentes para a 4ª chamada, quando houver, será \ndivulgada no mural das Escolas Técnicas no dia 22/07/2026. \n12. DISPOSIÇÕES TRANSITÓRIAS \n12.1. Os casos omissos neste Edital serão resolvidos pela Comissão Coor"
+        },
+        {
+          "chunk_id": "ACV-06-p2-s1-c1",
+          "doc_id": "ACV-06",
+          "versao": "Retificação nº 05",
+          "pagina": 2,
+          "secao": null,
+          "trecho_citado": "Nº \nDescrição/Ação \nPeríodo/Data \n19 Convocação antecipada dos classificados para vagas \nremanescentes – 4ª chamada conforme item 11.3.1 \n03/07/2026 \n20 Efetivação das matrículas da 4ª chamada das vagas \nremanescentes \n03/07/2026 a \n08/07/2026 \n21 Divulgação/organização das matrículas efetivadas da 4ª \nchamada pelas Escolas Técnicas Estaduais \n09/07/2026 \n22 Convocação para vagas remanescentes - 5ª chamada \nconforme item 11.1.3  \n03/07/2026 \na \n18/08/2026  \n23 Início das aulas \n21/07/2026 \n2. DA RETIFICAÇÃO DO ITEM 11.3.2  \nAcrescenta-se ao item 11.3.2 do Edital nº 006/2026/SECITECI/MT:  \n11.3.2. As vagas remanescentes da 5ª chamada poderão ser preenchidas por interessados, \npor ordem de chegada e entrega da documentação exigida na Escola Técnica Estadual \nresponsável pela turma, independe"
+        }
+      ],
+      "auditoria": {
+        "configuracao": null,
+        "modelo": null,
+        "simulado": null,
+        "tempo_resposta_segundos": null,
+        "tokens_entrada": null,
+        "tokens_saida": null,
+        "tokens_total": null,
+        "custo_estimado_usd": null
+      }
+    }
+  ]
+}

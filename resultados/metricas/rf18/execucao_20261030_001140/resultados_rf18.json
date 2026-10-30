@@ -1,0 +1,1025 @@
+{
+  "rf": "RF18",
+  "data_hora": "2026-10-30T00:11:26-04:00",
+  "modelo_embeddings": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+  "perguntas": [
+    "P01",
+    "P02",
+    "P03",
+    "P04",
+    "P05"
+  ],
+  "cobertura": {
+    "pequena": {
+      "referencias_cobertas": 7,
+      "referencias_total": 7,
+      "detalhe": [
+        {
+          "pergunta": "P01",
+          "doc_id": "ACV-01",
+          "pagina": 10,
+          "chunks_contendo_a_frase": [
+            "ACV-01-p10-s1-c8"
+          ],
+          "coberta": true
+        },
+        {
+          "pergunta": "P01",
+          "doc_id": "ACV-01",
+          "pagina": 10,
+          "chunks_contendo_a_frase": [
+            "ACV-01-p10-s1-c8"
+          ],
+          "coberta": true
+        },
+        {
+          "pergunta": "P02",
+          "doc_id": "ACV-01",
+          "pagina": 10,
+          "chunks_contendo_a_frase": [
+            "ACV-01-p10-s1-c7"
+          ],
+          "coberta": true
+        },
+        {
+          "pergunta": "P03",
+          "doc_id": "ACV-01",
+          "pagina": 11,
+          "chunks_contendo_a_frase": [
+            "ACV-01-p11-s1-c12"
+          ],
+          "coberta": true
+        },
+        {
+          "pergunta": "P04",
+          "doc_id": "ACV-07",
+          "pagina": 1,
+          "chunks_contendo_a_frase": [
+            "ACV-07-p1-s1-c4"
+          ],
+          "coberta": true
+        },
+        {
+          "pergunta": "P04",
+          "doc_id": "ACV-07",
+          "pagina": 1,
+          "chunks_contendo_a_frase": [
+            "ACV-07-p1-s1-c5"
+          ],
+          "coberta": true
+        },
+        {
+          "pergunta": "P05",
+          "doc_id": "ACV-06",
+          "pagina": 2,
+          "chunks_contendo_a_frase": [
+            "ACV-06-p2-s1-c1"
+          ],
+          "coberta": true
+        }
+      ]
+    },
+    "media": {
+      "referencias_cobertas": 7,
+      "referencias_total": 7,
+      "detalhe": [
+        {
+          "pergunta": "P01",
+          "doc_id": "ACV-01",
+          "pagina": 10,
+          "chunks_contendo_a_frase": [
+            "ACV-01-p10-s1-c3"
+          ],
+          "coberta": true
+        },
+        {
+          "pergunta": "P01",
+          "doc_id": "ACV-01",
+          "pagina": 10,
+          "chunks_contendo_a_frase": [
+            "ACV-01-p10-s1-c3"
+          ],
+          "coberta": true
+        },
+        {
+          "pergunta": "P02",
+          "doc_id": "ACV-01",
+          "pagina": 10,
+          "chunks_contendo_a_frase": [
+            "ACV-01-p10-s1-c3"
+          ],
+          "coberta": true
+        },
+        {
+          "pergunta": "P03",
+          "doc_id": "ACV-01",
+          "pagina": 11,
+          "chunks_contendo_a_frase": [
+            "ACV-01-p11-s1-c5"
+          ],
+          "coberta": true
+        },
+        {
+          "pergunta": "P04",
+          "doc_id": "ACV-07",
+          "pagina": 1,
+          "chunks_contendo_a_frase": [
+            "ACV-07-p1-s1-c2"
+          ],
+          "coberta": true
+        },
+        {
+          "pergunta": "P04",
+          "doc_id": "ACV-07",
+          "pagina": 1,
+          "chunks_contendo_a_frase": [
+            "ACV-07-p1-s1-c2"
+          ],
+          "coberta": true
+        },
+        {
+          "pergunta": "P05",
+          "doc_id": "ACV-06",
+          "pagina": 2,
+          "chunks_contendo_a_frase": [
+            "ACV-06-p2-s1-c1"
+          ],
+          "coberta": true
+        }
+      ]
+    },
+    "grande": {
+      "referencias_cobertas": 7,
+      "referencias_total": 7,
+      "detalhe": [
+        {
+          "pergunta": "P01",
+          "doc_id": "ACV-01",
+          "pagina": 10,
+          "chunks_contendo_a_frase": [
+            "ACV-01-p10-s1-c2"
+          ],
+          "coberta": true
+        },
+        {
+          "pergunta": "P01",
+          "doc_id": "ACV-01",
+          "pagina": 10,
+          "chunks_contendo_a_frase": [
+            "ACV-01-p10-s1-c2"
+          ],
+          "coberta": true
+        },
+        {
+          "pergunta": "P02",
+          "doc_id": "ACV-01",
+          "pagina": 10,
+          "chunks_contendo_a_frase": [
+            "ACV-01-p10-s1-c2"
+          ],
+          "coberta": true
+        },
+        {
+          "pergunta": "P03",
+          "doc_id": "ACV-01",
+          "pagina": 11,
+          "chunks_contendo_a_frase": [
+            "ACV-01-p11-s1-c3"
+          ],
+          "coberta": true
+        },
+        {
+          "pergunta": "P04",
+          "doc_id": "ACV-07",
+          "pagina": 1,
+          "chunks_contendo_a_frase": [
+            "ACV-07-p1-s1-c1"
+          ],
+          "coberta": true
+        },
+        {
+          "pergunta": "P04",
+          "doc_id": "ACV-07",
+          "pagina": 1,
+          "chunks_contendo_a_frase": [
+            "ACV-07-p1-s1-c1",
+            "ACV-07-p1-s1-c2"
+          ],
+          "coberta": true
+        },
+        {
+          "pergunta": "P05",
+          "doc_id": "ACV-06",
+          "pagina": 2,
+          "chunks_contendo_a_frase": [
+            "ACV-06-p2-s1-c1"
+          ],
+          "coberta": true
+        }
+      ]
+    }
+  },
+  "configuracoes": {
+    "pequena": {
+      "parametros": {
+        "tamanho": 300,
+        "sobreposicao": 50,
+        "unidade": "caracteres"
+      },
+      "total_chunks": 253,
+      "acerto_de_recuperacao": {
+        "3": {
+          "acertos": 3,
+          "perguntas": 5,
+          "taxa": 0.6
+        },
+        "5": {
+          "acertos": 3,
+          "perguntas": 5,
+          "taxa": 0.6
+        },
+        "10": {
+          "acertos": 4,
+          "perguntas": 5,
+          "taxa": 0.8
+        }
+      },
+      "por_pergunta": [
+        {
+          "id": "P01",
+          "pergunta": "Quais documentos preciso apresentar para efetivar a matrícula?",
+          "posicao_primeira_referencia": 3,
+          "distancia_cosseno_do_acerto": 0.338,
+          "acerto_em_k": {
+            "3": true,
+            "5": true,
+            "10": true
+          },
+          "top_recuperados": [
+            {
+              "posicao": 1,
+              "chunk_id": "ACV-01-p3-s1-c4",
+              "doc_id": "ACV-01",
+              "pagina": 3,
+              "distancia_cosseno": 0.316
+            },
+            {
+              "posicao": 2,
+              "chunk_id": "ACV-01-p10-s1-c7",
+              "doc_id": "ACV-01",
+              "pagina": 10,
+              "distancia_cosseno": 0.326
+            },
+            {
+              "posicao": 3,
+              "chunk_id": "ACV-01-p10-s1-c8",
+              "doc_id": "ACV-01",
+              "pagina": 10,
+              "distancia_cosseno": 0.338
+            },
+            {
+              "posicao": 4,
+              "chunk_id": "ACV-01-p11-s1-c12",
+              "doc_id": "ACV-01",
+              "pagina": 11,
+              "distancia_cosseno": 0.3408
+            },
+            {
+              "posicao": 5,
+              "chunk_id": "ACV-01-p13-s1-c1",
+              "doc_id": "ACV-01",
+              "pagina": 13,
+              "distancia_cosseno": 0.3548
+            }
+          ]
+        },
+        {
+          "id": "P02",
+          "pergunta": "Posso efetivar a matrícula a distância ou preciso ir pessoalmente?",
+          "posicao_primeira_referencia": null,
+          "distancia_cosseno_do_acerto": null,
+          "acerto_em_k": {
+            "3": false,
+            "5": false,
+            "10": false
+          },
+          "top_recuperados": [
+            {
+              "posicao": 1,
+              "chunk_id": "ACV-01-p11-s1-c4",
+              "doc_id": "ACV-01",
+              "pagina": 11,
+              "distancia_cosseno": 0.5625
+            },
+            {
+              "posicao": 2,
+              "chunk_id": "ACV-08-p0-s1-c1",
+              "doc_id": "ACV-08",
+              "pagina": null,
+              "distancia_cosseno": 0.583
+            },
+            {
+              "posicao": 3,
+              "chunk_id": "ACV-06-p2-s1-c9",
+              "doc_id": "ACV-06",
+              "pagina": 2,
+              "distancia_cosseno": 0.586
+            },
+            {
+              "posicao": 4,
+              "chunk_id": "ACV-06-p2-s1-c7",
+              "doc_id": "ACV-06",
+              "pagina": 2,
+              "distancia_cosseno": 0.6179
+            },
+            {
+              "posicao": 5,
+              "chunk_id": "ACV-01-p3-s1-c4",
+              "doc_id": "ACV-01",
+              "pagina": 3,
+              "distancia_cosseno": 0.627
+            }
+          ]
+        },
+        {
+          "id": "P03",
+          "pergunta": "O que acontece se eu não fizer a matrícula no prazo?",
+          "posicao_primeira_referencia": 6,
+          "distancia_cosseno_do_acerto": 0.4919,
+          "acerto_em_k": {
+            "3": false,
+            "5": false,
+            "10": true
+          },
+          "top_recuperados": [
+            {
+              "posicao": 1,
+              "chunk_id": "ACV-06-p2-s1-c9",
+              "doc_id": "ACV-06",
+              "pagina": 2,
+              "distancia_cosseno": 0.4081
+            },
+            {
+              "posicao": 2,
+              "chunk_id": "ACV-01-p3-s1-c11",
+              "doc_id": "ACV-01",
+              "pagina": 3,
+              "distancia_cosseno": 0.4458
+            },
+            {
+              "posicao": 3,
+              "chunk_id": "ACV-08-p0-s1-c1",
+              "doc_id": "ACV-08",
+              "pagina": null,
+              "distancia_cosseno": 0.4525
+            },
+            {
+              "posicao": 4,
+              "chunk_id": "ACV-01-p13-s1-c1",
+              "doc_id": "ACV-01",
+              "pagina": 13,
+              "distancia_cosseno": 0.4629
+            },
+            {
+              "posicao": 5,
+              "chunk_id": "ACV-01-p12-s1-c5",
+              "doc_id": "ACV-01",
+              "pagina": 12,
+              "distancia_cosseno": 0.4776
+            }
+          ]
+        },
+        {
+          "id": "P04",
+          "pergunta": "Quando começam as aulas de Agropecuária em Mimoso?",
+          "posicao_primeira_referencia": 1,
+          "distancia_cosseno_do_acerto": 0.4002,
+          "acerto_em_k": {
+            "3": true,
+            "5": true,
+            "10": true
+          },
+          "top_recuperados": [
+            {
+              "posicao": 1,
+              "chunk_id": "ACV-07-p1-s1-c5",
+              "doc_id": "ACV-07",
+              "pagina": 1,
+              "distancia_cosseno": 0.4002
+            },
+            {
+              "posicao": 2,
+              "chunk_id": "ACV-07-p1-s1-c4",
+              "doc_id": "ACV-07",
+              "pagina": 1,
+              "distancia_cosseno": 0.4754
+            },
+            {
+              "posicao": 3,
+              "chunk_id": "ACV-07-p2-s1-c1",
+              "doc_id": "ACV-07",
+              "pagina": 2,
+              "distancia_cosseno": 0.5157
+            },
+            {
+              "posicao": 4,
+              "chunk_id": "ACV-07-p2-s1-c2",
+              "doc_id": "ACV-07",
+              "pagina": 2,
+              "distancia_cosseno": 0.5216
+            },
+            {
+              "posicao": 5,
+              "chunk_id": "ACV-01-p15-s1-c1",
+              "doc_id": "ACV-01",
+              "pagina": 15,
+              "distancia_cosseno": 0.5321
+            }
+          ]
+        },
+        {
+          "id": "P05",
+          "pergunta": "Qual é o período de efetivação das matrículas da 4ª chamada?",
+          "posicao_primeira_referencia": 2,
+          "distancia_cosseno_do_acerto": 0.3036,
+          "acerto_em_k": {
+            "3": true,
+            "5": true,
+            "10": true
+          },
+          "top_recuperados": [
+            {
+              "posicao": 1,
+              "chunk_id": "ACV-06-p1-s1-c5",
+              "doc_id": "ACV-06",
+              "pagina": 1,
+              "distancia_cosseno": 0.2647
+            },
+            {
+              "posicao": 2,
+              "chunk_id": "ACV-06-p2-s1-c1",
+              "doc_id": "ACV-06",
+              "pagina": 2,
+              "distancia_cosseno": 0.3036
+            },
+            {
+              "posicao": 3,
+              "chunk_id": "ACV-01-p8-s1-c4",
+              "doc_id": "ACV-01",
+              "pagina": 8,
+              "distancia_cosseno": 0.3267
+            },
+            {
+              "posicao": 4,
+              "chunk_id": "ACV-01-p8-s1-c3",
+              "doc_id": "ACV-01",
+              "pagina": 8,
+              "distancia_cosseno": 0.3478
+            },
+            {
+              "posicao": 5,
+              "chunk_id": "ACV-01-p12-s1-c7",
+              "doc_id": "ACV-01",
+              "pagina": 12,
+              "distancia_cosseno": 0.3631
+            }
+          ]
+        }
+      ]
+    },
+    "media": {
+      "parametros": {
+        "tamanho": 800,
+        "sobreposicao": 100,
+        "unidade": "caracteres"
+      },
+      "total_chunks": 105,
+      "acerto_de_recuperacao": {
+        "3": {
+          "acertos": 3,
+          "perguntas": 5,
+          "taxa": 0.6
+        },
+        "5": {
+          "acertos": 3,
+          "perguntas": 5,
+          "taxa": 0.6
+        },
+        "10": {
+          "acertos": 5,
+          "perguntas": 5,
+          "taxa": 1.0
+        }
+      },
+      "por_pergunta": [
+        {
+          "id": "P01",
+          "pergunta": "Quais documentos preciso apresentar para efetivar a matrícula?",
+          "posicao_primeira_referencia": 2,
+          "distancia_cosseno_do_acerto": 0.3625,
+          "acerto_em_k": {
+            "3": true,
+            "5": true,
+            "10": true
+          },
+          "top_recuperados": [
+            {
+              "posicao": 1,
+              "chunk_id": "ACV-01-p3-s1-c2",
+              "doc_id": "ACV-01",
+              "pagina": 3,
+              "distancia_cosseno": 0.3619
+            },
+            {
+              "posicao": 2,
+              "chunk_id": "ACV-01-p10-s1-c3",
+              "doc_id": "ACV-01",
+              "pagina": 10,
+              "distancia_cosseno": 0.3625
+            },
+            {
+              "posicao": 3,
+              "chunk_id": "ACV-01-p11-s1-c3",
+              "doc_id": "ACV-01",
+              "pagina": 11,
+              "distancia_cosseno": 0.3742
+            },
+            {
+              "posicao": 4,
+              "chunk_id": "ACV-01-p11-s1-c5",
+              "doc_id": "ACV-01",
+              "pagina": 11,
+              "distancia_cosseno": 0.4034
+            },
+            {
+              "posicao": 5,
+              "chunk_id": "ACV-01-p7-s1-c2",
+              "doc_id": "ACV-01",
+              "pagina": 7,
+              "distancia_cosseno": 0.4116
+            }
+          ]
+        },
+        {
+          "id": "P02",
+          "pergunta": "Posso efetivar a matrícula a distância ou preciso ir pessoalmente?",
+          "posicao_primeira_referencia": 9,
+          "distancia_cosseno_do_acerto": 0.6997,
+          "acerto_em_k": {
+            "3": false,
+            "5": false,
+            "10": true
+          },
+          "top_recuperados": [
+            {
+              "posicao": 1,
+              "chunk_id": "ACV-08-p0-s1-c1",
+              "doc_id": "ACV-08",
+              "pagina": null,
+              "distancia_cosseno": 0.583
+            },
+            {
+              "posicao": 2,
+              "chunk_id": "ACV-01-p11-s1-c2",
+              "doc_id": "ACV-01",
+              "pagina": 11,
+              "distancia_cosseno": 0.6034
+            },
+            {
+              "posicao": 3,
+              "chunk_id": "ACV-08-p0-s4-c1",
+              "doc_id": "ACV-08",
+              "pagina": null,
+              "distancia_cosseno": 0.6266
+            },
+            {
+              "posicao": 4,
+              "chunk_id": "ACV-01-p3-s1-c2",
+              "doc_id": "ACV-01",
+              "pagina": 3,
+              "distancia_cosseno": 0.6307
+            },
+            {
+              "posicao": 5,
+              "chunk_id": "ACV-01-p12-s1-c3",
+              "doc_id": "ACV-01",
+              "pagina": 12,
+              "distancia_cosseno": 0.6565
+            }
+          ]
+        },
+        {
+          "id": "P03",
+          "pergunta": "O que acontece se eu não fizer a matrícula no prazo?",
+          "posicao_primeira_referencia": 9,
+          "distancia_cosseno_do_acerto": 0.5571,
+          "acerto_em_k": {
+            "3": false,
+            "5": false,
+            "10": true
+          },
+          "top_recuperados": [
+            {
+              "posicao": 1,
+              "chunk_id": "ACV-01-p12-s1-c3",
+              "doc_id": "ACV-01",
+              "pagina": 12,
+              "distancia_cosseno": 0.434
+            },
+            {
+              "posicao": 2,
+              "chunk_id": "ACV-08-p0-s1-c1",
+              "doc_id": "ACV-08",
+              "pagina": null,
+              "distancia_cosseno": 0.4525
+            },
+            {
+              "posicao": 3,
+              "chunk_id": "ACV-01-p10-s1-c2",
+              "doc_id": "ACV-01",
+              "pagina": 10,
+              "distancia_cosseno": 0.5151
+            },
+            {
+              "posicao": 4,
+              "chunk_id": "ACV-01-p13-s1-c1",
+              "doc_id": "ACV-01",
+              "pagina": 13,
+              "distancia_cosseno": 0.5238
+            },
+            {
+              "posicao": 5,
+              "chunk_id": "ACV-08-p0-s2-c1",
+              "doc_id": "ACV-08",
+              "pagina": null,
+              "distancia_cosseno": 0.5253
+            }
+          ]
+        },
+        {
+          "id": "P04",
+          "pergunta": "Quando começam as aulas de Agropecuária em Mimoso?",
+          "posicao_primeira_referencia": 1,
+          "distancia_cosseno_do_acerto": 0.3391,
+          "acerto_em_k": {
+            "3": true,
+            "5": true,
+            "10": true
+          },
+          "top_recuperados": [
+            {
+              "posicao": 1,
+              "chunk_id": "ACV-07-p1-s1-c2",
+              "doc_id": "ACV-07",
+              "pagina": 1,
+              "distancia_cosseno": 0.3391
+            },
+            {
+              "posicao": 2,
+              "chunk_id": "ACV-07-p2-s1-c1",
+              "doc_id": "ACV-07",
+              "pagina": 2,
+              "distancia_cosseno": 0.4529
+            },
+            {
+              "posicao": 3,
+              "chunk_id": "ACV-01-p6-s1-c3",
+              "doc_id": "ACV-01",
+              "pagina": 6,
+              "distancia_cosseno": 0.5312
+            },
+            {
+              "posicao": 4,
+              "chunk_id": "ACV-02-p3-s1-c2",
+              "doc_id": "ACV-02",
+              "pagina": 3,
+              "distancia_cosseno": 0.5324
+            },
+            {
+              "posicao": 5,
+              "chunk_id": "ACV-06-p2-s1-c3",
+              "doc_id": "ACV-06",
+              "pagina": 2,
+              "distancia_cosseno": 0.5457
+            }
+          ]
+        },
+        {
+          "id": "P05",
+          "pergunta": "Qual é o período de efetivação das matrículas da 4ª chamada?",
+          "posicao_primeira_referencia": 1,
+          "distancia_cosseno_do_acerto": 0.375,
+          "acerto_em_k": {
+            "3": true,
+            "5": true,
+            "10": true
+          },
+          "top_recuperados": [
+            {
+              "posicao": 1,
+              "chunk_id": "ACV-06-p2-s1-c1",
+              "doc_id": "ACV-06",
+              "pagina": 2,
+              "distancia_cosseno": 0.375
+            },
+            {
+              "posicao": 2,
+              "chunk_id": "ACV-04-p2-s1-c1",
+              "doc_id": "ACV-04",
+              "pagina": 2,
+              "distancia_cosseno": 0.379
+            },
+            {
+              "posicao": 3,
+              "chunk_id": "ACV-01-p12-s1-c3",
+              "doc_id": "ACV-01",
+              "pagina": 12,
+              "distancia_cosseno": 0.3806
+            },
+            {
+              "posicao": 4,
+              "chunk_id": "ACV-01-p13-s1-c1",
+              "doc_id": "ACV-01",
+              "pagina": 13,
+              "distancia_cosseno": 0.3903
+            },
+            {
+              "posicao": 5,
+              "chunk_id": "ACV-01-p8-s1-c2",
+              "doc_id": "ACV-01",
+              "pagina": 8,
+              "distancia_cosseno": 0.4075
+            }
+          ]
+        }
+      ]
+    },
+    "grande": {
+      "parametros": {
+        "tamanho": 1200,
+        "sobreposicao": 200,
+        "unidade": "caracteres"
+      },
+      "total_chunks": 79,
+      "acerto_de_recuperacao": {
+        "3": {
+          "acertos": 2,
+          "perguntas": 5,
+          "taxa": 0.4
+        },
+        "5": {
+          "acertos": 2,
+          "perguntas": 5,
+          "taxa": 0.4
+        },
+        "10": {
+          "acertos": 2,
+          "perguntas": 5,
+          "taxa": 0.4
+        }
+      },
+      "por_pergunta": [
+        {
+          "id": "P01",
+          "pergunta": "Quais documentos preciso apresentar para efetivar a matrícula?",
+          "posicao_primeira_referencia": null,
+          "distancia_cosseno_do_acerto": null,
+          "acerto_em_k": {
+            "3": false,
+            "5": false,
+            "10": false
+          },
+          "top_recuperados": [
+            {
+              "posicao": 1,
+              "chunk_id": "ACV-01-p11-s1-c2",
+              "doc_id": "ACV-01",
+              "pagina": 11,
+              "distancia_cosseno": 0.3626
+            },
+            {
+              "posicao": 2,
+              "chunk_id": "ACV-01-p13-s1-c1",
+              "doc_id": "ACV-01",
+              "pagina": 13,
+              "distancia_cosseno": 0.417
+            },
+            {
+              "posicao": 3,
+              "chunk_id": "ACV-06-p2-s1-c3",
+              "doc_id": "ACV-06",
+              "pagina": 2,
+              "distancia_cosseno": 0.4366
+            },
+            {
+              "posicao": 4,
+              "chunk_id": "ACV-01-p4-s1-c3",
+              "doc_id": "ACV-01",
+              "pagina": 4,
+              "distancia_cosseno": 0.4444
+            },
+            {
+              "posicao": 5,
+              "chunk_id": "ACV-01-p10-s1-c3",
+              "doc_id": "ACV-01",
+              "pagina": 10,
+              "distancia_cosseno": 0.4454
+            }
+          ]
+        },
+        {
+          "id": "P02",
+          "pergunta": "Posso efetivar a matrícula a distância ou preciso ir pessoalmente?",
+          "posicao_primeira_referencia": null,
+          "distancia_cosseno_do_acerto": null,
+          "acerto_em_k": {
+            "3": false,
+            "5": false,
+            "10": false
+          },
+          "top_recuperados": [
+            {
+              "posicao": 1,
+              "chunk_id": "ACV-08-p0-s1-c1",
+              "doc_id": "ACV-08",
+              "pagina": null,
+              "distancia_cosseno": 0.583
+            },
+            {
+              "posicao": 2,
+              "chunk_id": "ACV-06-p2-s1-c3",
+              "doc_id": "ACV-06",
+              "pagina": 2,
+              "distancia_cosseno": 0.586
+            },
+            {
+              "posicao": 3,
+              "chunk_id": "ACV-08-p0-s4-c1",
+              "doc_id": "ACV-08",
+              "pagina": null,
+              "distancia_cosseno": 0.6266
+            },
+            {
+              "posicao": 4,
+              "chunk_id": "ACV-09-p0-s4-c1",
+              "doc_id": "ACV-09",
+              "pagina": null,
+              "distancia_cosseno": 0.6698
+            },
+            {
+              "posicao": 5,
+              "chunk_id": "ACV-01-p12-s1-c2",
+              "doc_id": "ACV-01",
+              "pagina": 12,
+              "distancia_cosseno": 0.6755
+            }
+          ]
+        },
+        {
+          "id": "P03",
+          "pergunta": "O que acontece se eu não fizer a matrícula no prazo?",
+          "posicao_primeira_referencia": null,
+          "distancia_cosseno_do_acerto": null,
+          "acerto_em_k": {
+            "3": false,
+            "5": false,
+            "10": false
+          },
+          "top_recuperados": [
+            {
+              "posicao": 1,
+              "chunk_id": "ACV-06-p2-s1-c3",
+              "doc_id": "ACV-06",
+              "pagina": 2,
+              "distancia_cosseno": 0.4081
+            },
+            {
+              "posicao": 2,
+              "chunk_id": "ACV-08-p0-s1-c1",
+              "doc_id": "ACV-08",
+              "pagina": null,
+              "distancia_cosseno": 0.4525
+            },
+            {
+              "posicao": 3,
+              "chunk_id": "ACV-01-p12-s1-c2",
+              "doc_id": "ACV-01",
+              "pagina": 12,
+              "distancia_cosseno": 0.4736
+            },
+            {
+              "posicao": 4,
+              "chunk_id": "ACV-01-p13-s1-c1",
+              "doc_id": "ACV-01",
+              "pagina": 13,
+              "distancia_cosseno": 0.5238
+            },
+            {
+              "posicao": 5,
+              "chunk_id": "ACV-08-p0-s2-c1",
+              "doc_id": "ACV-08",
+              "pagina": null,
+              "distancia_cosseno": 0.5253
+            }
+          ]
+        },
+        {
+          "id": "P04",
+          "pergunta": "Quando começam as aulas de Agropecuária em Mimoso?",
+          "posicao_primeira_referencia": 1,
+          "distancia_cosseno_do_acerto": 0.4288,
+          "acerto_em_k": {
+            "3": true,
+            "5": true,
+            "10": true
+          },
+          "top_recuperados": [
+            {
+              "posicao": 1,
+              "chunk_id": "ACV-07-p1-s1-c2",
+              "doc_id": "ACV-07",
+              "pagina": 1,
+              "distancia_cosseno": 0.4288
+            },
+            {
+              "posicao": 2,
+              "chunk_id": "ACV-07-p2-s1-c1",
+              "doc_id": "ACV-07",
+              "pagina": 2,
+              "distancia_cosseno": 0.4529
+            },
+            {
+              "posicao": 3,
+              "chunk_id": "ACV-01-p6-s1-c2",
+              "doc_id": "ACV-01",
+              "pagina": 6,
+              "distancia_cosseno": 0.4759
+            },
+            {
+              "posicao": 4,
+              "chunk_id": "ACV-01-p15-s1-c1",
+              "doc_id": "ACV-01",
+              "pagina": 15,
+              "distancia_cosseno": 0.5614
+            },
+            {
+              "posicao": 5,
+              "chunk_id": "ACV-06-p2-s1-c2",
+              "doc_id": "ACV-06",
+              "pagina": 2,
+              "distancia_cosseno": 0.5712
+            }
+          ]
+        },
+        {
+          "id": "P05",
+          "pergunta": "Qual é o período de efetivação das matrículas da 4ª chamada?",
+          "posicao_primeira_referencia": 2,
+          "distancia_cosseno_do_acerto": 0.375,
+          "acerto_em_k": {
+            "3": true,
+            "5": true,
+            "10": true
+          },
+          "top_recuperados": [
+            {
+              "posicao": 1,
+              "chunk_id": "ACV-06-p1-s1-c2",
+              "doc_id": "ACV-06",
+              "pagina": 1,
+              "distancia_cosseno": 0.2647
+            },
+            {
+              "posicao": 2,
+              "chunk_id": "ACV-06-p2-s1-c1",
+              "doc_id": "ACV-06",
+              "pagina": 2,
+              "distancia_cosseno": 0.375
+            },
+            {
+              "posicao": 3,
+              "chunk_id": "ACV-04-p2-s1-c1",
+              "doc_id": "ACV-04",
+              "pagina": 2,
+              "distancia_cosseno": 0.379
+            },
+            {
+              "posicao": 4,
+              "chunk_id": "ACV-01-p13-s1-c1",
+              "doc_id": "ACV-01",
+              "pagina": 13,
+              "distancia_cosseno": 0.3903
+            },
+            {
+              "posicao": 5,
+              "chunk_id": "ACV-06-p2-s1-c2",
+              "doc_id": "ACV-06",
+              "pagina": 2,
+              "distancia_cosseno": 0.4167
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

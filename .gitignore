@@ -222,3 +222,8 @@ __marimo__/
 # Índice vetorial do Desafio 2: gerado pela indexação e recriado a partir de dados/acervo/
 indice/*
 !indice/.gitkeep
+
+# ChromaDB - indices vetoriais locais do RF17
+/dados/indice_vetorial/
+/dados/indice_teste_rf17/
+/dados/indice_avaliacao_rf18/
