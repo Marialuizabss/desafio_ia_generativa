@@ -46,6 +46,15 @@
       "alternativa": {
         "modelo": "gpt-4o-mini",
         "temperatura": 0.5
+      },
+      "forte": {
+        "modelo": "gpt-5.6-luna",
+        "temperatura": null
+      },
+      "simulada": {
+        "provedor": "simulado",
+        "modelo": "simulado-abstencao-v1",
+        "temperatura": null
       }
     },
     "timeout_segundos": 120,

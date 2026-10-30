@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from src.provider_adapter import (
+    ErroProvedor,
     carregar_configuracao_llm,
     consultar_llm,
 )
@@ -62,11 +63,15 @@ def test_falha_na_api():
             "Falha simulada na API"
         )
 
-        with pytest.raises(RuntimeError, match="Falha simulada na API"):
+        with pytest.raises(ErroProvedor, match="Falha inesperada") as info:
             consultar_llm(
                 instrucoes="Responda objetivamente.",
                 entrada="Qual é o prazo?",
             )
+
+    # A mensagem original (que pode conter dados da requisição) não é repassada.
+    assert "Falha simulada" not in str(info.value)
+    assert info.value.auditoria["status"] == "erro"
 
 
 def test_erro_conexao_openai():

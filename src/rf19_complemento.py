@@ -17,7 +17,11 @@ Não há regra escrita para uma pergunta, um curso ou uma data específicos.
 
 import json
 import re
+from datetime import datetime
+from time import perf_counter
 
+from src.auditoria_rag import registrar_consulta_rag, versao_do_prompt, versao_indice_atual
+from src.provider_adapter import ErroProvedor
 from src.rag import (
     recuperar_evidencias,
     formatar_fonte,
@@ -622,7 +626,8 @@ def _mesmo_assunto(fontes, minimo=0.3):
     return False
 
 
-def _verificar_contradicao(pergunta, resposta, contexto, evidencias, fontes, vigencia):
+def _verificar_contradicao(pergunta, resposta, contexto, evidencias, fontes, vigencia,
+                            nome_configuracao="principal"):
     """Segunda leitura: outro documento vigente dá valor diferente para o mesmo fato?
 
     Devolve (conflito, auditoria). `conflito` é None quando não há contradição
@@ -642,7 +647,7 @@ def _verificar_contradicao(pergunta, resposta, contexto, evidencias, fontes, vig
         texto, auditoria = consultar_llm(
             instrucoes=INSTRUCOES_VERIFICACAO,
             entrada=json.dumps(pedido, ensure_ascii=False),
-            nome_configuracao="principal",
+            nome_configuracao=nome_configuracao,
         )
     except Exception:
         return None, {}
@@ -686,16 +691,13 @@ def _verificar_contradicao(pergunta, resposta, contexto, evidencias, fontes, vig
     }, auditoria
 
 
-def responder_rf19(pergunta, top_k=15, dados_cidadao=None):
-    """Executa o RF19 e devolve resposta, status, decisão e fontes verificadas."""
+def _responder_rf19(pergunta, top_k, dados_cidadao, nome_configuracao, rastro):
+    """Fluxo do RF19 sem auditoria. `rastro` recebe o que a auditoria precisa."""
 
-    if not isinstance(pergunta, str) or not pergunta.strip():
-        raise ValueError("Pergunta vazia.")
-
-    if not isinstance(top_k, int) or top_k < 1:
-        raise ValueError("top_k inválido.")
-
+    marca_recuperacao = perf_counter()
     evidencias = recuperar_evidencias(pergunta, top_k=top_k)
+    rastro["latencia_recuperacao"] = round(perf_counter() - marca_recuperacao, 3)
+    rastro["evidencias"] = list(evidencias)
 
     if not evidencias:
         return _abstencao(pergunta)
@@ -706,11 +708,11 @@ def responder_rf19(pergunta, top_k=15, dados_cidadao=None):
         return _anexar_alertas(_abstencao(pergunta), alertas)
 
     return _anexar_alertas(
-        _gerar_resposta(pergunta, evidencias, dados_cidadao), alertas
+        _gerar_resposta(pergunta, evidencias, dados_cidadao, nome_configuracao), alertas
     )
 
 
-def _gerar_resposta(pergunta, evidencias, dados_cidadao):
+def _gerar_resposta(pergunta, evidencias, dados_cidadao, nome_configuracao="principal"):
     catalogo = obter_documentos_catalogados()
     vigencia = analisar_vigencia(evidencias, catalogo)
     contexto = montar_contexto(evidencias)
@@ -738,7 +740,7 @@ def _gerar_resposta(pergunta, evidencias, dados_cidadao):
             texto, auditoria = consultar_llm(
                 instrucoes=INSTRUCOES,
                 entrada=json.dumps(pedido, ensure_ascii=False),
-                nome_configuracao="principal",
+                nome_configuracao=nome_configuracao,
             )
 
             if auditoria_anterior is not None:
@@ -821,6 +823,7 @@ def _gerar_resposta(pergunta, evidencias, dados_cidadao):
             if len(documentos_recuperados) >= 2:
                 contradicao, auditoria_verificacao = _verificar_contradicao(
                     pergunta, resposta, contexto, evidencias, fontes, vigencia,
+                    nome_configuracao,
                 )
 
                 if auditoria_verificacao:
@@ -845,8 +848,79 @@ def _gerar_resposta(pergunta, evidencias, dados_cidadao):
             }
 
         except (ValueError, TypeError, KeyError, json.JSONDecodeError) as erro:
+            if isinstance(erro, ErroProvedor):
+                # Falha do serviço de geração: a auditoria da tentativa é preservada.
+                return _abstencao(
+                    pergunta,
+                    motivo=f"Falha no provedor de geração: {erro}",
+                    auditoria=erro.auditoria,
+                )
+
             return _abstencao(
                 pergunta, motivo=f"Falha na validação: {erro}", auditoria=auditoria,
             )
 
     return _abstencao(pergunta, auditoria=auditoria)
+
+
+def responder_rf19(
+    pergunta,
+    top_k=15,
+    dados_cidadao=None,
+    nome_configuracao="principal",
+    registrar=True,
+):
+    """Executa o RF19 e registra a consulta na trilha de auditoria (RF21).
+
+    `nome_configuracao` escolhe a geração em `config.json` (`adaptador_llm`). A
+    recuperação e o índice são os mesmos para qualquer configuração: trocar a
+    geração não reconstrói o índice. Com `registrar=False` nada é gravado.
+    O resultado traz `id_consulta`, o mesmo identificador do registro, para ligar
+    a decisão humana.
+    """
+
+    if not isinstance(pergunta, str) or not pergunta.strip():
+        raise ValueError("Pergunta vazia.")
+
+    if not isinstance(top_k, int) or top_k < 1:
+        raise ValueError("top_k inválido.")
+
+    rastro = {"configuracao": nome_configuracao}
+    inicio = datetime.now().astimezone().isoformat(timespec="milliseconds")
+    marca = perf_counter()
+    resultado = None
+    erro_execucao = None
+
+    try:
+        resultado = _responder_rf19(pergunta, top_k, dados_cidadao, nome_configuracao, rastro)
+        return resultado
+    except Exception as erro:
+        erro_execucao = f"{type(erro).__name__}: {erro}"
+        raise
+    finally:
+        if registrar:
+            try:
+                rastro["versao_indice"] = versao_indice_atual()
+            except Exception:
+                rastro["versao_indice"] = None
+
+            try:
+                evento = registrar_consulta_rag(
+                    pergunta=pergunta,
+                    top_k=top_k,
+                    resultado=resultado,
+                    rastro=rastro,
+                    inicio=inicio,
+                    fim=datetime.now().astimezone().isoformat(timespec="milliseconds"),
+                    latencia_total=perf_counter() - marca,
+                    erro=erro_execucao,
+                    versao_prompt=versao_do_prompt(INSTRUCOES, INSTRUCOES_VERIFICACAO),
+                )
+            except OSError:
+                if resultado is not None:
+                    resultado["aviso_auditoria"] = (
+                        "A consulta não pôde ser gravada na trilha de auditoria."
+                    )
+            else:
+                if resultado is not None:
+                    resultado["id_consulta"] = evento["id_execucao"]
