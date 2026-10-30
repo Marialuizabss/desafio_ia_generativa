@@ -226,3 +226,4 @@ indice/*
 # ChromaDB - indices vetoriais locais do RF17
 /dados/indice_vetorial/
 /dados/indice_teste_rf17/
+/dados/indice_avaliacao_rf18/
