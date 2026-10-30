@@ -186,8 +186,15 @@ ESTILOS = """
     background: transparent;
   }
 
-  [data-testid="stToolbar"] {
+  /* O botão de reabrir a barra lateral fica nesta toolbar.
+     Esconde o restante e mantém só ele. */
+  [data-testid="stToolbar"] > div:not(:has([data-testid="stExpandSidebarButton"])) {
     display: none;
+  }
+
+  [data-testid="stExpandSidebarButton"] {
+    display: inline-flex;
+    visibility: visible;
   }
 
   footer {
