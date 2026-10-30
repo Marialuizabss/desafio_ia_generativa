@@ -1,4 +1,3 @@
-
 """Testes automatizados do complemento RF19."""
 
 import json
@@ -135,7 +134,7 @@ def test_citacao_inventada_gera_abstencao(monkeypatch):
         [
             {
                 "chunk_id": "chunk-inexistente",
-                "trecho": "A matrícula deverá ser realizada presencialmente",
+                "trecho": "O prazo para recurso é de quinze dias corridos",
             }
         ],
     )
@@ -146,6 +145,28 @@ def test_citacao_inventada_gera_abstencao(monkeypatch):
 
     assert resultado["status"] == rf19.STATUS_SEM_EVIDENCIA
     assert resultado["decisao"] == "revisar"
+
+
+def test_trecho_verdadeiro_com_chunk_id_inexistente_e_atribuido_ao_chunk_certo(monkeypatch):
+    e = evidencia()
+
+    resposta = resposta_base(
+        rf19.STATUS_FUNDAMENTADA,
+        [
+            {
+                "chunk_id": "chunk-inexistente",
+                "trecho": "A matrícula deverá ser realizada presencialmente",
+            }
+        ],
+    )
+
+    preparar_mocks(monkeypatch, [e], resposta)
+
+    resultado = rf19.responder_rf19("Pergunta")
+
+    assert resultado["status"] == rf19.STATUS_FUNDAMENTADA
+    assert resultado["fontes"][0]["chunk_id"] == "chunk-01"
+    assert resultado["fontes"][0]["chunk_id_corrigido_de"] == "chunk-inexistente"
 
 
 def test_conflito_exige_documentos_distintos(monkeypatch):
