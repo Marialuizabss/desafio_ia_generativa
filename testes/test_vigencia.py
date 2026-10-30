@@ -454,3 +454,38 @@ def test_resposta_que_cita_o_documento_alertado_vai_para_revisao(monkeypatch):
     assert resultado["status"] == "fundamentada"
     assert resultado["decisao"] == "revisar"
     assert resultado["alertas"]
+
+
+def test_configuracao_de_geracao_e_repassada_as_duas_chamadas(monkeypatch):
+    nomes = []
+    c = _preparar(monkeypatch, CHUNKS_DIVULGACAO, [DIVULGACAO])
+    original = rf19.consultar_llm
+
+    def espiao(**kwargs):
+        nomes.append(kwargs["nome_configuracao"])
+        return original(**kwargs)
+
+    monkeypatch.setattr(rf19, "consultar_llm", espiao)
+
+    resultado = rf19.responder_rf19("Pergunta qualquer sobre divulgação", nome_configuracao="forte")
+
+    assert resultado["status"] == "fundamentada"
+    # Resposta e segunda leitura usam a mesma configuração escolhida.
+    assert nomes == ["forte", "forte"]
+    assert len(c.pedidos) == 1 and len(c.verificacoes) == 1
+
+
+def test_configuracao_padrao_e_a_principal(monkeypatch):
+    nomes = []
+    _preparar(monkeypatch, ["ACV-06-p2-s1-c1"], [VIGENTE])
+    original = rf19.consultar_llm
+
+    def espiao(**kwargs):
+        nomes.append(kwargs["nome_configuracao"])
+        return original(**kwargs)
+
+    monkeypatch.setattr(rf19, "consultar_llm", espiao)
+
+    rf19.responder_rf19("Pergunta qualquer sobre o cronograma")
+
+    assert nomes == ["principal"]

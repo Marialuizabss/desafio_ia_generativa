@@ -42,7 +42,7 @@ SOBREPOSICAO_PADRAO = 100
 
 # Pastas com resultados derivados do acervo (respostas, trechos recuperados,
 # métricas). Servem só para avisar o que cita um documento excluído.
-PASTAS_DERIVADOS = ("dados/resultados", "resultados/metricas")
+PASTAS_DERIVADOS = ("dados/resultados", "resultados/metricas", "resultados/rag")
 
 
 def indexar_acervo(

@@ -397,6 +397,8 @@ def _imprimir_resumo(avaliacoes, resumo):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("--top-k", type=int, default=TOP_K_PADRAO)
+    parser.add_argument("--configuracao", default="principal",
+                        help="configuração de geração do config.json (adaptador_llm)")
     parser.add_argument("--repeticoes", type=int, default=1,
                         help="roda as perguntas N vezes e mostra em quantas cada uma passa")
     args = parser.parse_args(argv)
@@ -410,14 +412,17 @@ def main(argv=None):
     rodadas = []
 
     for numero in range(1, args.repeticoes + 1):
-        avaliacoes, resumo = executar(responder_rf19, top_k=args.top_k)
+        avaliacoes, resumo = executar(
+            responder_rf19, top_k=args.top_k,
+            nome_configuracao=None if args.configuracao == "principal" else args.configuracao,
+        )
         rodadas.append(avaliacoes)
 
         dados = {
             "rf": "RF19/RF23",
             "data_hora": datetime.now().astimezone().isoformat(timespec="seconds"),
             "top_k": args.top_k,
-            "configuracao": "principal",
+            "configuracao": args.configuracao,
             "resumo": resumo,
             "avaliacoes": avaliacoes,
         }
