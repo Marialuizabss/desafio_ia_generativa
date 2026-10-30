@@ -47,8 +47,31 @@ def formatar_fonte(resultado: dict) -> dict:
         "distancia": resultado["distancia"],
     }
 
+
 def montar_contexto(evidencias: list[dict]) -> str:
-    """Organiza os trechos recuperados com suas fontes."""
+    """Monta contexto documental com indicação de versões históricas."""
+    import re
+    import unicodedata
+
+    def normalizar(texto):
+        texto = unicodedata.normalize("NFKD", texto.casefold())
+        return "".join(
+            c for c in texto if not unicodedata.combining(c)
+        )
+
+    def classificar_trecho(texto):
+        normalizado = normalizar(texto)
+
+        onde = re.search(r"onde\s+se\s+le\s*:", normalizado)
+        leia = re.search(r"leia\s*-?\s*se\s*:", normalizado)
+
+        if onde and leia:
+            return "CONTEM_VERSAO_ANTIGA_E_NOVA"
+        if onde:
+            return "CONTEM_VERSAO_ANTIGA"
+        if leia:
+            return "CONTEM_VERSAO_NOVA"
+        return "TRECHO_DOCUMENTAL"
 
     blocos = []
 
@@ -61,19 +84,24 @@ def montar_contexto(evidencias: list[dict]) -> str:
             else f"Seção {fonte['secao'] or 'não identificada'}"
         )
 
+        classificacao = classificar_trecho(fonte["trecho"])
+
         bloco = (
             f"[FONTE {indice}]\n"
             f"Documento: {fonte['doc_id']}\n"
             f"Versão: {fonte['versao']}\n"
             f"Localização: {localizacao}\n"
             f"Chunk ID: {fonte['chunk_id']}\n"
+            f"Classificação: {classificacao}\n"
             f"Trecho:\n{fonte['trecho']}\n"
             f"[/FONTE {indice}]"
         )
 
         blocos.append(bloco)
 
-    return "\n\n".join(blocos)    
+    return "\n\n".join(blocos)
+
+
 
 INSTRUCOES_RAG = """
 Você é um assistente de atendimento institucional.
