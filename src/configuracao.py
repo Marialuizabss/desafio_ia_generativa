@@ -54,6 +54,12 @@ PADROES = {
         "limite_imagem_mb": 20,
     },
     "custos_estimados_usd": {"voz_por_minuto": 0.015, "imagem": 0.063},
+    "guardrails": {
+        "max_chamadas_analise": 2,
+        "teto_analise": 8000,
+        "max_chamadas_rag": 3,
+        "teto_rag": 60000,
+    },
 }
 
 

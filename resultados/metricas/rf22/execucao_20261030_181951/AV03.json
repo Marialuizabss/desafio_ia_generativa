@@ -1,0 +1,47 @@
+{
+  "id": "AV03",
+  "modo": "real",
+  "canal": "e-mail",
+  "data": "2026-06-17",
+  "polaridade": "positiva",
+  "situacao": "clara",
+  "justificativa": "O atendimento foi elogiado pela rapidez e clareza na resposta. O autor recomenda o serviço.",
+  "confianca": 0.9,
+  "rotulo_confianca": "estimativa não calibrada",
+  "contem_instrucao": false,
+  "revisao": false,
+  "motivos_revisao": [],
+  "rejeitada": false,
+  "termo_proibido": null,
+  "versao_esquema": "1.0",
+  "versao_prompt": "ee74f9f56985",
+  "arquivo_prompt": "sentimento_v1.md",
+  "chamadas": [
+    {
+      "provedor": "openai",
+      "modelo": "gpt-4o-mini",
+      "configuracao": "principal",
+      "simulado": false,
+      "temperatura": 0,
+      "inicio": "2026-10-30T18:19:57.570-04:00",
+      "fim": "2026-10-30T18:19:59.046-04:00",
+      "tempo_resposta_segundos": 1.476,
+      "tokens_entrada": 577,
+      "tokens_saida": 68,
+      "tokens_total": 645,
+      "custo_estimado_usd": 0.000127,
+      "status": "sucesso",
+      "erro": null
+    }
+  ],
+  "tentativas": [
+    {
+      "numero": 1,
+      "erros": []
+    }
+  ],
+  "polaridade_esperada": "positiva",
+  "revisao_esperada": false,
+  "acerto_polaridade": true,
+  "acerto_revisao": true
+}

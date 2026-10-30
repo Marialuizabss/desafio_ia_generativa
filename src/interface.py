@@ -29,17 +29,19 @@ from pathlib import Path
 import streamlit as st
 
 try:
-    from audit import registrar_decisao
+    from audit import decisoes_ligadas, registrar_decisao, traduzir_decisao
+    from consulta_acervo import transicionar
     from fluxo import (
-        DADOS_CRITICOS, MODELOS_LEITURA, aplicar_edicao, assinar_minuta, decisao_de_aprovacao,
+        DADOS_CRITICOS, MODELOS_LEITURA, aplicar_edicao, assinar_minuta,
         caminho_no_projeto, descartar_minuta_aprovada, gerar_audio_da_minuta, motivos_da_revisao,
         nome_do_pdf, preservar_extracao, processar_entrada, rodape_da_minuta, salvar_minuta_aprovada,
         salvar_pdf_aprovado,
     )
 except ImportError:
-    from src.audit import registrar_decisao
+    from src.audit import decisoes_ligadas, registrar_decisao, traduzir_decisao
+    from src.consulta_acervo import transicionar
     from src.fluxo import (
-        DADOS_CRITICOS, MODELOS_LEITURA, aplicar_edicao, assinar_minuta, decisao_de_aprovacao,
+        DADOS_CRITICOS, MODELOS_LEITURA, aplicar_edicao, assinar_minuta,
         caminho_no_projeto, descartar_minuta_aprovada, gerar_audio_da_minuta, motivos_da_revisao,
         nome_do_pdf, preservar_extracao, processar_entrada, rodape_da_minuta, salvar_minuta_aprovada,
         salvar_pdf_aprovado,
@@ -805,15 +807,37 @@ def obter_entrada() -> dict | None:
     return st.session_state.get("entrada")
 
 
+def _area_rf20() -> str:
+    try:
+        from telas_rf20 import seletor
+    except ImportError:
+        from src.telas_rf20 import seletor
+    return seletor()
+
+
+def _renderizar_rf20() -> None:
+    try:
+        from telas_rf20 import renderizar_area
+    except ImportError:
+        from src.telas_rf20 import renderizar_area
+    with st.container(key="folha"):
+        st.markdown('<p class="marca">Central de atendimento</p>', unsafe_allow_html=True)
+        renderizar_area(st.session_state.get("rf20_area") or "acervo")
+    _mostrar_avisos()
+
+
 def renderizar() -> None:
     """Desenha uma etapa por vez e guarda a escolha na sessão."""
     st.set_page_config(
         page_title="Central de atendimento",
         layout="centered",
-        initial_sidebar_state="collapsed",
+        initial_sidebar_state="expanded",
     )
     st.markdown(ESTILOS, unsafe_allow_html=True)
     _iniciar_estado()
+    if _area_rf20() != "atendimento":
+        _renderizar_rf20()
+        return
     _ajustar_etapa()
     animacao = st.session_state.animacao
     st.session_state.animacao = ""
@@ -874,6 +898,9 @@ def _iniciar_estado() -> None:
     st.session_state.setdefault("decisao_erro", None)
     st.session_state.setdefault("decisao_etapa", None)
     st.session_state.setdefault("decisao_justificativa", "")
+    st.session_state.setdefault("decisao_formulario", None)
+    st.session_state.setdefault("decisao_corrigindo", False)
+    st.session_state.setdefault("pendente_gravado", None)
     st.session_state.setdefault("avisos", [])
 
 
@@ -884,8 +911,8 @@ def _ajustar_etapa() -> None:
     registro = st.session_state.get("extracao_registro") or {}
     if etapa > 3 and not registro.get("minuta_gerada_de_campos"):
         etapa = 3
-    if st.session_state.get("decisao_estado") == "aprovada" and registro:
-        # Atendimento aprovado fica encerrado na etapa da minuta
+    if st.session_state.get("decisao_estado") in {"aprovada", "rejeitada"} and registro:
+        # Atendimento encerrado fica na etapa da minuta
         etapa = 4
     st.session_state.etapa = etapa
 
@@ -897,8 +924,8 @@ def _ir(destino: int) -> None:
     atual = int(st.session_state.get("etapa") or 1)
     if destino == atual:
         return
-    if destino < atual and st.session_state.get("decisao_estado"):
-        st.session_state.decisao_estado = None
+    if destino < atual and st.session_state.get("decisao_formulario"):
+        st.session_state.decisao_formulario = None
         st.session_state.decisao_erro = None
     st.session_state.animacao = "avancar" if destino > atual else "voltar"
     st.session_state.etapa = destino
@@ -1029,6 +1056,7 @@ def _prosseguir_revisao() -> None:
         avisar("Não foi possível montar a minuta.", "erro")
         return
     avisar("Minuta montada com os campos revisados.")
+    _retomar_pendente()
     _ir(4)
 
 
@@ -1086,8 +1114,7 @@ def _etapa_revisao() -> None:
             unsafe_allow_html=True,
         )
     pronto = bool(st.session_state.extracao_registro) and not st.session_state.extracao_erro
-    if pronto and _decisao_em_curso():
-        _navegacao(None)
+    if pronto and _painel_substitui_edicao():
         _painel_decisao()
         return
     if pronto and _exige_conferencia_por_dado(st.session_state.extracao_registro):
@@ -1109,12 +1136,11 @@ def _etapa_minuta() -> None:
     st.caption("Revisão humana obrigatória antes de qualquer envio.")
     if st.session_state.get("decisao_estado") != "aprovada":
         st.caption("O PDF fica disponível depois da aprovação.")
-    if st.session_state.get("decisao_estado") == "aprovada":
-        # Sem Voltar: mudar algo depois de aprovar é um novo envio (nova execução)
-        _painel_decisao()
-        return
-    if _decisao_em_curso():
-        _navegacao(None)
+    if not st.session_state.get("decisao_formulario"):
+        _garantir_pendente()
+    estado = st.session_state.get("decisao_estado")
+    if estado in {"aprovada", "rejeitada"} or st.session_state.get("decisao_formulario") or estado == "revisar":
+        # Encerrado ou em revisão: a próxima decisão não reabre esta execução
         _painel_decisao()
         return
     _acoes_da_minuta()
@@ -1154,34 +1180,41 @@ def _botao_baixar_pdf() -> None:
     )
 
 
-def _decisao_em_curso() -> bool:
-    return st.session_state.get("decisao_estado") in {"rejeitando", "rejeitada", "aprovada"}
+def _painel_substitui_edicao() -> bool:
+    if st.session_state.get("decisao_corrigindo"):
+        return False
+    if st.session_state.get("decisao_formulario"):
+        return True
+    return st.session_state.get("decisao_estado") in {"revisar", "rejeitada", "aprovada"}
 
 
 def _painel_decisao() -> None:
-    estado = st.session_state.get("decisao_estado")
-    if estado == "rejeitando":
-        _formulario_rejeicao()
+    if st.session_state.get("decisao_formulario"):
+        _formulario_decisao()
         return
+    estado = st.session_state.get("decisao_estado")
     if estado == "rejeitada":
-        _passos_apos_rejeicao()
+        _passo_apos_rejeicao()
         return
     if estado == "aprovada":
         _passo_apos_aprovacao()
         return
-    if st.session_state.etapa == 3:
+    if estado == "revisar" and not st.session_state.get("decisao_corrigindo"):
+        _passos_enquanto_revisa()
+        return
+    if st.session_state.etapa == 3 and not st.session_state.get("decisao_corrigindo"):
         st.markdown(
-            "<p class=\"orientacao\">Rejeite se a extração não servir: pessoa errada, "
+            "<p class=\"orientacao\">Peça revisão se a extração não servir: pessoa errada, "
             "protocolo inventado, transcrição ilegível ou alerta de manipulação.</p>",
             unsafe_allow_html=True,
         )
-        st.button("Rejeitar", key="rejeitar", width="stretch", on_click=_abrir_rejeicao)
+        st.button("Pedir revisão", key="pedir_revisao", width="stretch", on_click=_abrir_revisao)
 
 
 def _acoes_da_minuta() -> None:
     st.markdown(
         "<p class=\"orientacao\">A minuta é o modelo preenchido com os campos confirmados. "
-        "Se algo estiver errado, rejeite e corrija os campos. Uma nova chamada ao modelo "
+        "Aprove, rejeite ou peça revisão. Uma nova chamada ao modelo "
         "só entra se a falha foi a extração.</p>",
         unsafe_allow_html=True,
     )
@@ -1230,15 +1263,17 @@ def _acoes_da_minuta() -> None:
     motivos = motivos_da_revisao(registro)
     if motivos:
         st.markdown(
-            f'<p class="orientacao">A aprovação entra como aprovado com revisão: '
-            f'{escape("; ".join(motivos))}.</p>',
+            f'<p class="orientacao">A aprovação fica como Aprovada. '
+            f'Confira antes de usar a minuta: {escape("; ".join(motivos))}.</p>',
             unsafe_allow_html=True,
         )
     if st.session_state.decisao_erro:
         _cartao_erro(st.session_state.decisao_erro)
-    aprovar, rejeitar = st.columns(2, gap="small")
+    aprovar, revisar, rejeitar = st.columns(3, gap="small")
     with aprovar:
         st.button("Aprovar", key="aprovar", type="primary", width="stretch", on_click=_aprovar)
+    with revisar:
+        st.button("Pedir revisão", key="pedir_revisao", width="stretch", on_click=_abrir_revisao)
     with rejeitar:
         st.button("Rejeitar", key="rejeitar", width="stretch", on_click=_abrir_rejeicao)
 
@@ -1324,17 +1359,32 @@ def _dados_conferidos(registro: dict) -> list[str]:
     return [campo for campo, _ in DADOS_CRITICOS]
 
 
-def _formulario_rejeicao() -> None:
-    if st.session_state.etapa == 4:
+def _formulario_decisao() -> None:
+    revisar = st.session_state.get("decisao_formulario") == "revisar"
+    if revisar:
+        texto = (
+            "Diga o que precisa de correção. Sem a justificativa, a revisão não é gravada. "
+            "A minuta não segue enquanto o atendimento estiver em revisão."
+        )
+        chave_texto = "justificativa_revisao"
+        rotulo = "Registrar revisão"
+        chave_botao = "confirmar_revisao"
+    elif st.session_state.etapa == 4:
         texto = (
             "Diga o que está errado. Sem a justificativa, a rejeição não é gravada. "
             "A minuta não será refeita e nenhum áudio será gerado."
         )
+        chave_texto = "justificativa_rejeicao"
+        rotulo = "Registrar rejeição"
+        chave_botao = "confirmar_rejeicao"
     else:
         texto = (
             "Diga o que está errado na extração. Sem a justificativa, a rejeição não é gravada. "
             "A minuta não será montada e nenhum áudio será gerado."
         )
+        chave_texto = "justificativa_rejeicao"
+        rotulo = "Registrar rejeição"
+        chave_botao = "confirmar_rejeicao"
     st.markdown(f'<p class="orientacao">{escape(texto)}</p>', unsafe_allow_html=True)
     st.text_input(
         "Servidor(a) responsável",
@@ -1345,7 +1395,7 @@ def _formulario_rejeicao() -> None:
     )
     st.text_area(
         "Justificativa",
-        key="justificativa_rejeicao",
+        key=chave_texto,
         on_change=_limpar_erro_decisao,
         height=88,
         placeholder="Ex.: protocolo inventado, pessoa errada, transcrição ilegível.",
@@ -1354,30 +1404,22 @@ def _formulario_rejeicao() -> None:
         _cartao_erro(st.session_state.decisao_erro)
     cancelar, confirmar = st.columns(2, gap="small")
     with cancelar:
-        st.button("Cancelar", key="cancelar_rejeicao", width="stretch", on_click=_cancelar_rejeicao)
+        st.button("Cancelar", key="cancelar_rejeicao", width="stretch", on_click=_cancelar_formulario)
     with confirmar:
-        st.button(
-            "Registrar rejeição",
-            key="confirmar_rejeicao",
-            width="stretch",
-            on_click=_rejeitar,
-        )
+        st.button(rotulo, key=chave_botao, width="stretch", on_click=_confirmar_formulario)
 
 
-def _passos_apos_rejeicao() -> None:
+def _passos_enquanto_revisa() -> None:
     etapa = st.session_state.get("decisao_etapa") or st.session_state.etapa
     if etapa == 4:
         texto = (
-            "A rejeição ficou no registro, ligada a esta execução. "
-            "A minuta não foi refeita e nenhum áudio foi gerado. "
-            "O arquivo original e o JSON da extração continuam no lugar. "
-            "Se os campos estão errados, corrija na etapa anterior. "
-            "Gerar de novo chama o modelo outra vez e só cabe quando a falha foi a extração, "
-            "não um ajuste que você já pode fazer na tela."
+            "A revisão ficou no registro, ligada a esta execução. "
+            "Corrija os campos ou gere a extração de novo. "
+            "Gerar de novo chama o modelo outra vez e só cabe quando a falha foi a extração."
         )
     else:
         texto = (
-            "A rejeição ficou no registro, ligada a esta execução. "
+            "A revisão ficou no registro, ligada a esta execução. "
             "A minuta não foi montada e nenhum áudio foi gerado. "
             "O arquivo original e o JSON da extração continuam no lugar. "
             "Você pode corrigir os campos, gerar a extração de novo ou encerrar e escolher outra entrada. "
@@ -1408,11 +1450,29 @@ def _passos_apos_rejeicao() -> None:
     )
 
 
+def _passo_apos_rejeicao() -> None:
+    st.markdown(
+        '<p class="orientacao">A rejeição ficou no registro, ligada a esta execução. '
+        "A minuta não foi refeita e nenhum áudio foi gerado. "
+        "Este atendimento está encerrado. Para alterar algo, envie a solicitação de novo: "
+        "ela vira uma nova execução.</p>",
+        unsafe_allow_html=True,
+    )
+    if st.session_state.decisao_erro:
+        _cartao_erro(st.session_state.decisao_erro)
+    st.button(
+        "Escolher outra entrada",
+        key="encerrar_caso",
+        width="stretch",
+        on_click=_encerrar_caso,
+    )
+
+
 def _passo_apos_aprovacao() -> None:
-    if st.session_state.get("decisao_tipo") == "aprovado_com_revisao":
-        motivos = "; ".join(st.session_state.get("decisao_motivos") or [])
+    motivos = "; ".join(st.session_state.get("decisao_motivos") or [])
+    if motivos:
         texto = (
-            f"A decisão ficou como aprovado com revisão ({motivos}). "
+            f"A decisão ficou como Aprovada ({motivos}). "
             "Confira esses pontos antes de usar a minuta."
         )
     else:
@@ -1579,47 +1639,115 @@ def formatar_data(valor: str | None) -> str:
 
 
 def _abrir_rejeicao() -> None:
-    st.session_state.decisao_estado = "rejeitando"
+    st.session_state.decisao_formulario = "rejeitar"
     st.session_state.decisao_erro = None
     st.session_state.decisao_etapa = st.session_state.etapa
 
 
-def _cancelar_rejeicao() -> None:
-    st.session_state.decisao_estado = None
+def _abrir_revisao() -> None:
+    st.session_state.decisao_formulario = "revisar"
     st.session_state.decisao_erro = None
+    st.session_state.decisao_etapa = st.session_state.etapa
+
+
+def _cancelar_formulario() -> None:
+    st.session_state.decisao_formulario = None
+    st.session_state.decisao_erro = None
+
+
+def _id_da_execucao() -> str:
+    registro = st.session_state.get("extracao_registro") or {}
+    return (registro.get("id_execucao") or "").strip()
+
+
+def _estado_gravado(id_execucao: str) -> str | None:
+    decisoes = decisoes_ligadas(id_execucao)
+    if not decisoes:
+        return None
+    return traduzir_decisao(decisoes[-1].get("decisao", ""))
+
+
+def _garantir_pendente() -> None:
+    """Grava pendente uma vez quando a minuta fica pronta e ainda não houve decisão."""
+    if st.session_state.get("decisao_estado") in {"pendente", "revisar", "aprovada", "rejeitada"}:
+        return
+    if st.session_state.get("decisao_formulario"):
+        return
+    id_execucao = _id_da_execucao()
+    if not id_execucao:
+        return
+    gravado = _estado_gravado(id_execucao)
+    if gravado in {"aprovada", "rejeitada", "revisar"}:
+        st.session_state.decisao_estado = gravado
+        return
+    if gravado == "pendente" or st.session_state.get("pendente_gravado") == id_execucao:
+        st.session_state.decisao_estado = "pendente"
+        st.session_state.pendente_gravado = id_execucao
+        return
+    registrar_decisao(id_execucao, "pendente")
+    st.session_state.decisao_estado = "pendente"
+    st.session_state.pendente_gravado = id_execucao
+
+
+def _retomar_pendente() -> None:
+    """Depois da correção, revisar volta a pendente."""
+    if st.session_state.get("decisao_estado") != "revisar":
+        return
+    id_execucao = _id_da_execucao()
+    if not id_execucao:
+        return
+    novo = transicionar("revisar", "retomar")
+    registrar_decisao(id_execucao, novo)
+    st.session_state.decisao_estado = novo
+    st.session_state.pendente_gravado = id_execucao
+    st.session_state.decisao_corrigindo = False
 
 
 def _revisor() -> str:
     return (st.session_state.get("revisor") or "").strip()
 
 
-def _rejeitar() -> None:
-    justificativa = (st.session_state.get("justificativa_rejeicao") or "").strip()
+def _confirmar_formulario() -> None:
+    modo = st.session_state.get("decisao_formulario")
+    revisar = modo == "revisar"
+    chave = "justificativa_revisao" if revisar else "justificativa_rejeicao"
+    justificativa = (st.session_state.get(chave) or "").strip()
     if not justificativa:
-        st.session_state.decisao_erro = "Informe a justificativa para rejeitar."
-        avisar("Rejeição não registrada: falta a justificativa.", "alerta")
+        mensagem = "Informe a justificativa." if revisar else "Informe a justificativa para rejeitar."
+        st.session_state.decisao_erro = mensagem
+        avisar("Decisão não registrada: falta a justificativa.", "alerta")
         return
     revisor = _revisor()
     if not revisor:
         st.session_state.decisao_erro = "Informe o nome do revisor."
-        avisar("Rejeição não registrada: falta o nome do servidor responsável.", "alerta")
+        avisar("Decisão não registrada: falta o nome do servidor responsável.", "alerta")
         return
-    registro = st.session_state.get("extracao_registro") or {}
+    id_execucao = _id_da_execucao()
+    atual = st.session_state.get("decisao_estado")
     try:
-        registrar_decisao(
-            registro.get("id_execucao") or "",
-            "rejeitado",
-            justificativa=justificativa,
-            revisor=revisor,
-        )
+        if revisar and atual not in {"pendente", "revisar"}:
+            novo = "revisar"
+        else:
+            novo = transicionar(
+                atual or "pendente",
+                "revisar" if revisar else "rejeitar",
+                justificativa=justificativa,
+                revisor=revisor,
+            )
+        registrar_decisao(id_execucao, novo, justificativa=justificativa, revisor=revisor)
     except ValueError as erro:
         st.session_state.decisao_erro = str(erro)
         return
+    st.session_state.decisao_formulario = None
     st.session_state.decisao_erro = None
     st.session_state.decisao_justificativa = justificativa
-    avisar("Rejeição registrada. Nenhuma minuta foi gravada.")
-    st.session_state.decisao_estado = "rejeitada"
+    st.session_state.decisao_estado = novo
     st.session_state.decisao_etapa = st.session_state.etapa
+    st.session_state.decisao_corrigindo = False
+    if novo == "rejeitada":
+        avisar("Rejeição registrada. Nenhuma minuta foi gravada.")
+    else:
+        avisar("Revisão registrada. Corrija os campos ou gere a extração de novo.", "alerta")
 
 
 def _aprovar() -> None:
@@ -1649,7 +1777,18 @@ def _aprovar() -> None:
         avisar("Aprovação não registrada: " + pendencia, "alerta")
         return
 
-    decisao = decisao_de_aprovacao(registro)
+    motivos = motivos_da_revisao(registro)
+    try:
+        transicionar(
+            st.session_state.get("decisao_estado") or "pendente",
+            "aprovar",
+            revisor=revisor,
+            cargo=cargo,
+        )
+    except ValueError as erro:
+        st.session_state.decisao_erro = str(erro)
+        avisar("A aprovação não foi registrada.", "erro")
+        return
     assinada = {**registro, "minuta": assinar_minuta(registro.get("minuta") or "", revisor, cargo)}
     try:
         arquivo = salvar_minuta_aprovada(assinada)
@@ -1663,7 +1802,7 @@ def _aprovar() -> None:
         pdf = salvar_pdf_aprovado(arquivo, dados)
         registrar_decisao(
             registro.get("id_execucao") or "",
-            decisao,
+            "aprovada",
             justificativa=justificativa,
             revisor=revisor,
             conferencia_dados_criticos=True,
@@ -1671,6 +1810,7 @@ def _aprovar() -> None:
             arquivo_pdf=pdf,
             cargo_setor=cargo,
             dados_conferidos=conferidos,
+            motivos=motivos,
         )
     except (OSError, ValueError, RuntimeError) as erro:
         # Sem decisão no registro, nada pode ficar como aprovado
@@ -1682,8 +1822,8 @@ def _aprovar() -> None:
         return
     avisar("Minuta aprovada, assinada e salva.")
     st.session_state.decisao_erro = None
-    st.session_state.decisao_tipo = decisao
-    st.session_state.decisao_motivos = motivos_da_revisao(registro)
+    st.session_state.decisao_tipo = "aprovada"
+    st.session_state.decisao_motivos = motivos
     st.session_state.arquivo_minuta_aprovada = arquivo
     st.session_state.arquivo_pdf_aprovado = pdf
     st.session_state.arquivo_audio_minuta = None
@@ -1694,7 +1834,7 @@ def _aprovar() -> None:
 
 def _corrigir_campos() -> None:
     avisar("Corrija os campos e prossiga de novo.", "alerta")
-    st.session_state.decisao_estado = None
+    st.session_state.decisao_corrigindo = True
     st.session_state.decisao_erro = None
     if st.session_state.etapa != 3:
         _ir(3)
@@ -1702,27 +1842,14 @@ def _corrigir_campos() -> None:
 
 def _gerar_extracao_de_novo() -> None:
     registro = st.session_state.get("extracao_registro") or {}
-    justificativa = (st.session_state.get("decisao_justificativa") or "").strip()
-    revisor = _revisor()
-    if not revisor:
-        st.session_state.decisao_erro = "Informe o nome do revisor."
-        avisar("Falta o nome do servidor responsável.", "alerta")
-        return
     try:
-        preservado = preservar_extracao(registro)
-        registrar_decisao(
-            registro.get("id_execucao") or "",
-            "nova_geracao",
-            justificativa=justificativa,
-            revisor=revisor,
-            arquivo_preservado=preservado,
-        )
+        preservar_extracao(registro)
     except (OSError, ValueError) as erro:
         st.session_state.decisao_erro = str(erro)
         avisar("Não foi possível pedir a nova extração.", "erro")
         return
     st.session_state.decisao_erro = None
-    st.session_state.decisao_estado = None
+    st.session_state.decisao_corrigindo = True
     st.session_state.gerando_de_novo = True
     st.session_state.id_execucao_anterior = registro.get("id_execucao")
     st.session_state.extracao_registro = None
@@ -1752,6 +1879,9 @@ def _encerrar_caso() -> None:
     st.session_state.decisao_erro = None
     st.session_state.decisao_etapa = None
     st.session_state.decisao_justificativa = ""
+    st.session_state.decisao_formulario = None
+    st.session_state.decisao_corrigindo = False
+    st.session_state.pendente_gravado = None
     st.session_state.decisao_tipo = None
     st.session_state.decisao_motivos = None
     st.session_state.arquivo_minuta_aprovada = None
@@ -2329,19 +2459,25 @@ def _material(modalidade, origem, nome, mime, dados, texto) -> dict:
 
 
 def conferir_arquivo(modalidade: str, nome: str | None, dados: bytes | None) -> str | None:
-    """Confere existência, extensão aceita e conteúdo não vazio."""
+    """Confere existência, extensão e tamanho com a validação do RF16."""
     if nome is None or dados is None or not str(nome).strip():
         return "O arquivo não foi encontrado."
-    if Path(nome).name in {"", ".", ".."}:
+    nome_arquivo = Path(nome).name
+    if nome_arquivo in {"", ".", ".."}:
         return "O arquivo não foi encontrado."
-    extensao = Path(nome).suffix.lower()
-    if extensao not in EXTENSOES[modalidade]:
-        return "Essa extensão não é aceita."
-    if len(dados) == 0:
+    try:
+        from guardrails import BLOQUEAR, validar_material
+    except ImportError:
+        from src.guardrails import BLOQUEAR, validar_material
+    decisao = validar_material(nome_arquivo, len(dados), modalidade)
+    if decisao.decisao != BLOQUEAR:
+        return None
+    motivo = decisao.motivos[0] if decisao.motivos else ""
+    if motivo == "entrada_vazia":
         return "O arquivo está vazio."
-    if len(dados) > LIMITE_BYTES[modalidade]:
+    if motivo == "tamanho_excedido":
         return f"O arquivo passa de {formatar_tamanho(LIMITE_BYTES[modalidade])}."
-    return None
+    return "Essa extensão não é aceita."
 
 
 def guardar_copia(nome: str, dados: bytes, pasta: Path | None = None) -> dict:

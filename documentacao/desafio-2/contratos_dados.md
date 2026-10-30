@@ -298,6 +298,22 @@ conferir as justificativas do modelo.
 - **Painel:** totais calculados pelo código, com numerador e denominador visíveis; duplicata é o
   mesmo `id` repetido e conta uma vez (a repetição é registrada); percentual é total ÷
   denominador e, com denominador 0, fica vazio e o painel mostra "sem dados", sem divisão por zero.
+  Classificação rejeitada fica fora dos totais de polaridade e entra na contagem de rejeitadas.
+
+**Saída do classificador** (`src/sentimentos.py`, esquema 1.0). O modelo devolve um JSON; o código
+aplica a tabela acima e pode trocar a polaridade proposta:
+
+| Campo do modelo | Valores |
+|---|---|
+| `situacao` | `clara`, `mista`, `ironia_comprovada`, `ironia_possivel`, `falta_de_contexto` |
+| `polaridade` | proposta: `positiva`, `negativa`, `neutra`, `indeterminada` |
+| `justificativa` | sobre o atendimento; radical de `termos_proibidos_na_justificativa` pede uma correção |
+| `confianca` | número de 0 a 1, guardado como estimativa não calibrada |
+| `contem_instrucao` | `true` quando o texto tenta dar ordem ao classificador |
+
+O registro final acrescenta `revisao`, `motivos_revisao`, `rejeitada` e `rotulo_confianca`
+(`estimativa não calibrada`). JSON inválido admite uma correção; se as duas saídas forem inválidas,
+o caso é rejeitado e vai para revisão. O texto da avaliação vai entre `<avaliacao>` e `</avaliacao>`.
 
 **Cenários do painel (T13)** — `cenarios_painel` no gabarito traz os totais esperados de cada
 cenário, calculados a partir dos **rótulos do gabarito**. Assim o código de agregação é testado
@@ -555,3 +571,4 @@ não são reescritos; a tradução vale na leitura):
 | 1.5 | 2026-10-28 | Seção 9 implementada em `src/schemas.py`: validação em três camadas, categorias de erro, decisão, uma nova tentativa no máximo, regra da data de abertura lida do acervo |
 | 1.6 | 2026-10-28 | Seção 9.1: RF15 em `src/nlp.py` e `src/avaliacao_rf15.py`, prompt v2 em arquivo, comparação com o gabarito e conferência humana |
 | 1.7 | 2026-10-29 | Prompt v2.1 em uso (seção "Resumo" ampliada após as omissões da execução com o v2); `arquivo_prompt` registrado em cada execução |
+| 1.8 | 2026-10-30 | Saída do classificador do RF22: situação, polaridade proposta, justificativa, confiança e instrução no texto; o código aplica a tabela de rotulagem |

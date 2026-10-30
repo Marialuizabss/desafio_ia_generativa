@@ -1,0 +1,14 @@
+{
+  "experimento": "T15 — regressão de texto e áudio até minuta e revisão",
+  "executado_em": "2026-10-30T18:20:36-04:00",
+  "casos": [
+    "CASO-04",
+    "CASO-05"
+  ],
+  "estados": {
+    "CASO-04": "revisar",
+    "CASO-05": "revisar"
+  },
+  "minutas_montadas": 2,
+  "enviadas": 0
+}

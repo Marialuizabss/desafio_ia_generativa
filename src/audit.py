@@ -22,8 +22,19 @@ except ImportError:
 BASE_DIR = Path(__file__).resolve().parent.parent
 ARQUIVO_REGISTRO = BASE_DIR / CAMINHOS["registro"]
 
-DECISOES = ("aprovado", "aprovado_com_revisao", "rejeitado", "nova_geracao")
+DECISOES_V1 = ("aprovado", "aprovado_com_revisao", "rejeitado", "nova_geracao")
+DECISOES_V2 = ("pendente", "aprovada", "rejeitada", "revisar")
+DECISOES = DECISOES_V1 + DECISOES_V2
 APROVACOES = ("aprovado", "aprovado_com_revisao")
+FINAIS_V2 = ("aprovada", "rejeitada")
+
+# Só na leitura. O registro antigo permanece com o nome do Desafio 1.
+TRADUCAO_LEITURA = {
+    "aprovado": "aprovada",
+    "aprovado_com_revisao": "aprovada",
+    "rejeitado": "rejeitada",
+    "nova_geracao": "revisar",
+}
 
 _CHAVE_API = re.compile(r"sk-[A-Za-z0-9_-]{8,}")
 _NOME_SECRETO = re.compile(r"api_?key|secret|senha|password|authorization", re.IGNORECASE)
@@ -62,6 +73,39 @@ def registrar_execucao(dados: dict) -> str:
     return id_execucao
 
 
+def traduzir_decisao(decisao: str) -> str:
+    """Nome do Desafio 2 para exibir um registro. O valor gravado não muda."""
+    return TRADUCAO_LEITURA.get(decisao, decisao)
+
+
+def _encerrado(id_execucao: str) -> bool:
+    for evento in ler_registro():
+        if evento.get("evento") != "decisao" or evento.get("id_execucao") != id_execucao:
+            continue
+        if traduzir_decisao(evento.get("decisao", "")) in FINAIS_V2:
+            return True
+    return False
+
+
+def _validar_decisao_v2(
+    id_execucao: str,
+    decisao: str,
+    justificativa: str,
+    revisor: str,
+    cargo: str,
+) -> None:
+    if _encerrado(id_execucao):
+        raise ValueError("Este atendimento já foi encerrado.")
+    if decisao == "aprovada":
+        if not revisor:
+            raise ValueError("Informe o nome do servidor.")
+        if not cargo:
+            raise ValueError("Informe o cargo do servidor.")
+        return
+    if decisao in ("rejeitada", "revisar") and not justificativa:
+        raise ValueError("Informe a justificativa.")
+
+
 def registrar_decisao(
     id_execucao: str,
     decisao: str,
@@ -73,20 +117,30 @@ def registrar_decisao(
     arquivo_pdf: str = "",
     cargo_setor: str = "",
     dados_conferidos: list[str] | None = None,
+    motivos: list[str] | None = None,
 ) -> dict:
-    """Grava a decisão humana sobre uma execução já registrada."""
+    """Grava a decisão humana sobre uma execução já registrada.
+
+    Os nomes do Desafio 1 seguem as regras antigas. Os do Desafio 2
+    (``pendente``, ``aprovada``, ``rejeitada``, ``revisar``) não exigem a
+    conferência de dados críticos e não reescrevem uma decisão final.
+    """
     if not id_execucao:
         raise ValueError("A execução avaliada não foi identificada.")
     if decisao not in DECISOES:
         raise ValueError(f"Decisão desconhecida: {decisao}")
     justificativa = (justificativa or "").strip()
-    if decisao not in APROVACOES and not justificativa:
-        raise ValueError("Informe a justificativa para rejeitar ou gerar de novo.")
     revisor = (revisor or "").strip()
-    if not revisor:
-        raise ValueError("Informe o nome do revisor.")
-    if decisao in APROVACOES and conferencia_dados_criticos is not True:
-        raise ValueError("Confira nome, protocolo e datas antes de aprovar.")
+    cargo = (cargo_setor or "").strip()
+    if decisao in DECISOES_V2:
+        _validar_decisao_v2(id_execucao, decisao, justificativa, revisor, cargo)
+    else:
+        if decisao not in APROVACOES and not justificativa:
+            raise ValueError("Informe a justificativa para rejeitar ou gerar de novo.")
+        if not revisor:
+            raise ValueError("Informe o nome do revisor.")
+        if decisao in APROVACOES and conferencia_dados_criticos is not True:
+            raise ValueError("Confira nome, protocolo e datas antes de aprovar.")
 
     evento = {
         "evento": "decisao",
@@ -106,11 +160,12 @@ def registrar_decisao(
     pdf = (arquivo_pdf or "").strip()
     if pdf:
         evento["arquivo_pdf"] = pdf
-    cargo = (cargo_setor or "").strip()
     if cargo:
         evento["cargo_setor"] = cargo
     if dados_conferidos:
         evento["dados_conferidos"] = list(dados_conferidos)
+    if motivos:
+        evento["motivos"] = list(motivos)
     return _gravar(evento)
 
 

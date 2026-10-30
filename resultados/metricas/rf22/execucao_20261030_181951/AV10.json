@@ -1,0 +1,49 @@
+{
+  "id": "AV10",
+  "modo": "real",
+  "canal": "presencial",
+  "data": "2026-06-19",
+  "polaridade": "indeterminada",
+  "situacao": "ironia_possivel",
+  "justificativa": "O texto elogia o atendimento, mas menciona a necessidade de voltar várias vezes, o que pode indicar uma crítica implícita. A ironia é possível, mas não é comprovada.",
+  "confianca": 0.7,
+  "rotulo_confianca": "estimativa não calibrada",
+  "contem_instrucao": false,
+  "revisao": true,
+  "motivos_revisao": [
+    "Ironia possível, não comprovável pelo texto."
+  ],
+  "rejeitada": false,
+  "termo_proibido": null,
+  "versao_esquema": "1.0",
+  "versao_prompt": "ee74f9f56985",
+  "arquivo_prompt": "sentimento_v1.md",
+  "chamadas": [
+    {
+      "provedor": "openai",
+      "modelo": "gpt-4o-mini",
+      "configuracao": "principal",
+      "simulado": false,
+      "temperatura": 0,
+      "inicio": "2026-10-30T18:20:10.846-04:00",
+      "fim": "2026-10-30T18:20:12.484-04:00",
+      "tempo_resposta_segundos": 1.638,
+      "tokens_entrada": 566,
+      "tokens_saida": 91,
+      "tokens_total": 657,
+      "custo_estimado_usd": 0.00014,
+      "status": "sucesso",
+      "erro": null
+    }
+  ],
+  "tentativas": [
+    {
+      "numero": 1,
+      "erros": []
+    }
+  ],
+  "polaridade_esperada": "negativa",
+  "revisao_esperada": true,
+  "acerto_polaridade": false,
+  "acerto_revisao": true
+}

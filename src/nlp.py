@@ -26,6 +26,10 @@ try:
         ResultadoValidacao, Solicitacao, data_abertura_processo, datas_no_texto,
         esquema_saida_restrita, validar_com_correcao, comparavel,
     )
+    from guardrails import (
+        BLOQUEAR, ORIGEM_ANALISE, REVISAR, DecisaoGuardrail, OrcamentoEstourado,
+        avaliar_entrada, com_orcamento, registrar_bloqueio, sanear_saida,
+    )
 except ImportError:
     from src import llm_client
     from src.llm_client import _embrulhar
@@ -33,6 +37,10 @@ except ImportError:
     from src.schemas import (
         ResultadoValidacao, Solicitacao, data_abertura_processo, datas_no_texto,
         esquema_saida_restrita, validar_com_correcao, comparavel,
+    )
+    from src.guardrails import (
+        BLOQUEAR, ORIGEM_ANALISE, REVISAR, DecisaoGuardrail, OrcamentoEstourado,
+        avaliar_entrada, com_orcamento, registrar_bloqueio, sanear_saida,
     )
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -87,6 +95,26 @@ class Analise:
     texto_minimizado: str
     versao_prompt: str
     chamadas: list[dict] = field(default_factory=list)
+    guardrail: DecisaoGuardrail | None = None
+
+
+class _SaidaBloqueada(Exception):
+    """A resposta do modelo trazia segredo e foi descartada."""
+
+
+def _validacao_bloqueada(arquivo: str, texto) -> ResultadoValidacao:
+    """Recusa sem saída de modelo: a minuta não é montada."""
+
+    bruto = texto if isinstance(texto, str) else ""
+    entrada = {
+        "arquivo": arquivo,
+        "sha256_texto": hashlib.sha256(bruto.encode("utf-8")).hexdigest(),
+    }
+    tentativa = {
+        "numero": 0,
+        "erros": [{"categoria": "guardrail", "campo": None, "mensagem": "entrada bloqueada"}],
+    }
+    return ResultadoValidacao("rejeitada", None, [tentativa], [], entrada, [])
 
 
 def analisar_solicitacao(
@@ -100,22 +128,57 @@ def analisar_solicitacao(
 
     ``chamar(instrucoes, entrada, esquema)`` devolve (texto, dados da chamada); o padrão é a
     API do provedor configurado (``llm_client.gerar_json_estrito``).
+
+    Entrada bloqueada pelo RF16 não chama o modelo. Injeção na solicitação segue
+    para revisão, com o texto ainda minimizado e delimitado.
     """
+
+    guardrail = avaliar_entrada(texto, ORIGEM_ANALISE)
+    if guardrail.decisao == BLOQUEAR:
+        registrar_bloqueio(guardrail, ORIGEM_ANALISE, texto if isinstance(texto, str) else "")
+        return Analise(
+            _validacao_bloqueada(arquivo, texto), "", versao_do_prompt(), [], guardrail
+        )
 
     chamar = chamar or llm_client.gerar_json_estrito
     minimizado = minimizar_texto(texto)
     instrucoes, esquema = carregar_prompt(), esquema_saida_restrita()
     chamadas = []
+    bloqueio_saida: DecisaoGuardrail | None = None
 
     def gerar(erros):
+        nonlocal bloqueio_saida
         bruto, chamada = chamar(instrucoes, montar_entrada(minimizado, arquivo, erros), esquema)
+        limpo, bloqueio = sanear_saida(bruto)
+        if bloqueio is not None:
+            bloqueio_saida = bloqueio
+            registrar_bloqueio(bloqueio, ORIGEM_ANALISE, texto)
+            raise _SaidaBloqueada()
         chamadas.append(chamada)
-        return bruto
+        return limpo
 
-    validacao = validar_com_correcao(
-        gerar, minimizado, arquivo, data_minima or data_abertura_processo(), hoje
-    )
-    return Analise(validacao, minimizado, versao_do_prompt(), chamadas)
+    try:
+        with com_orcamento(ORIGEM_ANALISE):
+            validacao = validar_com_correcao(
+                gerar, minimizado, arquivo, data_minima or data_abertura_processo(), hoje
+            )
+    except _SaidaBloqueada:
+        return Analise(
+            _validacao_bloqueada(arquivo, texto), minimizado, versao_do_prompt(), chamadas, bloqueio_saida
+        )
+    except OrcamentoEstourado as erro:
+        estouro = DecisaoGuardrail(BLOQUEAR, (erro.motivo,), True)
+        registrar_bloqueio(estouro, ORIGEM_ANALISE, texto)
+        return Analise(
+            _validacao_bloqueada(arquivo, texto), minimizado, versao_do_prompt(), chamadas, estouro
+        )
+
+    if guardrail.decisao == REVISAR and validacao.solicitacao is not None:
+        if "instrucao_na_entrada" not in validacao.solicitacao.alertas_seguranca:
+            validacao.solicitacao.alertas_seguranca.append("instrucao_na_entrada")
+        if validacao.decisao == "aceita":
+            validacao.decisao = "revisar"
+    return Analise(validacao, minimizado, versao_do_prompt(), chamadas, guardrail)
 
 
 # ---------------------------------------------------------------- comparação com o gabarito

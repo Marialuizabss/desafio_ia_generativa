@@ -1,0 +1,12 @@
+{
+  "id": "CASO-04",
+  "modalidade": "texto",
+  "origem": "dados/originais/entrada_texto.txt",
+  "decisao_ficha": "aceita",
+  "estado": "revisar",
+  "minuta_pronta": true,
+  "motivos": [],
+  "justificativa_revisao": "Regressão T15: a minuta foi montada com os fatos da solicitação. Documento, prazo e local não foram preenchidos porque esta passagem não consultou o acervo. O caso segue para revisão e nada é enviado.",
+  "enviada": false,
+  "id_execucao": "c69ef219-739d-452c-95b5-e737829e17e6"
+}

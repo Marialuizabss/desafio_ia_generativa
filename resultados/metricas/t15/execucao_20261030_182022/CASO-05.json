@@ -1,0 +1,14 @@
+{
+  "id": "CASO-05",
+  "modalidade": "audio",
+  "origem": "dados/processados/transcricao_entrada_audio.txt",
+  "decisao_ficha": "revisar",
+  "estado": "revisar",
+  "minuta_pronta": true,
+  "motivos": [
+    "modelo: O turno foi informado como \"noturno noturno\", aparentando duplicidade ou incoerência."
+  ],
+  "justificativa_revisao": "Regressão T15: a minuta foi montada com os fatos da solicitação. Documento, prazo e local não foram preenchidos porque esta passagem não consultou o acervo. O caso segue para revisão e nada é enviado.",
+  "enviada": false,
+  "id_execucao": "12db2152-fb87-4a8f-a148-9edd75f3f3b5"
+}

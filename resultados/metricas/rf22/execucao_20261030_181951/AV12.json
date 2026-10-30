@@ -1,0 +1,49 @@
+{
+  "id": "AV12",
+  "modo": "real",
+  "canal": "e-mail",
+  "data": "2026-07-01",
+  "polaridade": "indeterminada",
+  "situacao": "falta_de_contexto",
+  "justificativa": "O texto sugere uma comparação com uma experiência anterior, mas não fornece detalhes suficientes para avaliar o atendimento atual.",
+  "confianca": 0.5,
+  "rotulo_confianca": "estimativa não calibrada",
+  "contem_instrucao": false,
+  "revisao": true,
+  "motivos_revisao": [
+    "Falta contexto no texto para definir a polaridade."
+  ],
+  "rejeitada": false,
+  "termo_proibido": null,
+  "versao_esquema": "1.0",
+  "versao_prompt": "ee74f9f56985",
+  "arquivo_prompt": "sentimento_v1.md",
+  "chamadas": [
+    {
+      "provedor": "openai",
+      "modelo": "gpt-4o-mini",
+      "configuracao": "principal",
+      "simulado": false,
+      "temperatura": 0,
+      "inicio": "2026-10-30T18:20:13.864-04:00",
+      "fim": "2026-10-30T18:20:15.315-04:00",
+      "tempo_resposta_segundos": 1.451,
+      "tokens_entrada": 555,
+      "tokens_saida": 74,
+      "tokens_total": 629,
+      "custo_estimado_usd": 0.000128,
+      "status": "sucesso",
+      "erro": null
+    }
+  ],
+  "tentativas": [
+    {
+      "numero": 1,
+      "erros": []
+    }
+  ],
+  "polaridade_esperada": "indeterminada",
+  "revisao_esperada": true,
+  "acerto_polaridade": true,
+  "acerto_revisao": true
+}
