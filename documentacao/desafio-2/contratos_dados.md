@@ -2,7 +2,7 @@
 
 Formato de cada arquivo de dados e de gabarito do Desafio 2: o que contém, onde fica, quem
 produz e quem usa. O código de cada integrante deve seguir este documento; mudanças de formato
-são combinadas na equipe e registradas no histórico (seção 11).
+são combinadas na equipe e registradas no histórico (seção 12).
 
 | Integrante | Papel | Usa principalmente |
 |---|---|---|
@@ -592,7 +592,34 @@ não são reescritos; a tradução vale na leitura):
 | `rejeitado` | `rejeitada` |
 | `nova_geracao` | `revisar` |
 
-## 11. Histórico
+## 11. Retenção (RF24)
+
+Política da equipe para o sistema em uso real. Os dados deste projeto são fictícios e os prazos
+simulam a operação de uma secretaria: não são exigência legal. Seguem os princípios da LGPD de
+necessidade (art. 6º, III) e de término do tratamento (arts. 15 e 16): dado pessoal fica só
+enquanto serve à finalidade do atendimento.
+
+| Item | Onde | Prazo | No fim do prazo | Como |
+|---|---|---|---|---|
+| Documentos do acervo | `dados/acervo/` | Enquanto o edital estiver vigente | Sai do acervo ativo: exclusão do índice com motivo "retenção encerrada" | Tela Acervo ("Excluir do índice") ou `python -m src.indexar --excluir DOC_ID --motivo "retenção encerrada"`; fica em `exclusoes.json` |
+| Vetores do índice | `dados/indice_vetorial/` | Seguem o documento | Saem com a exclusão do documento; o índice é recriado (`--recriar`) quando o modelo de embeddings muda | Automático na exclusão; o índice não vai para o git |
+| Entradas (texto, áudio e imagem da ficha) | `dados/originais/` | 30 dias após a decisão final | Apagar | Manual, pelo responsável pelo sistema |
+| Extrações das solicitações | `dados/processados/` | 30 dias após a decisão final | Apagar | Manual |
+| Minuta aprovada, com o áudio e a imagem dela | `resultados/minutas/aprovadas/`, `resultados/minutas/rf20/`, `resultados/audios/`, `resultados/imagens/` | 1 ano após a decisão | Arquivar fora do sistema ou apagar | Manual |
+| Minuta rejeitada | — | Não é guardada | — | A rejeição grava só a decisão e a justificativa no log |
+| Log de auditoria | `resultados/logs/execucoes.jsonl` | 2 anos | Apagar as linhas vencidas | Manual; o log não guarda o texto da solicitação, só o hash |
+| Derivados de documento excluído | `resultados/metricas/`, `resultados/rag/` e `dados/resultados/` | Revisão no momento da exclusão | Corrigir ou apagar o que cita o documento | A exclusão lista os arquivos (`derivados_a_revisar`, também na tela) |
+| Resultados de avaliação | `resultados/avaliacao/`, `resultados/metricas/`, `resultados/rag/` | Enquanto o projeto existir | — | Evidência do trabalho, com dados fictícios |
+| Registro de exclusões | `dados/acervo/exclusoes.json` | Enquanto a exclusão vigorar | Sai na restauração | O histórico fica no log (`exclusao_documento` e `restauracao_documento`) |
+
+- **Automático:** a exclusão de documento apaga os vetores, registra data, motivo e responsável,
+  lista os derivados e não deixa a reindexação trazer o documento de volta. A minuta rejeitada não
+  é salva.
+- **Manual:** apagar entradas, extrações, minutas e linhas do log vencidas. A política define o
+  prazo; o projeto não tem rotina automática de expurgo.
+- **Neste repositório**, com dados fictícios, os arquivos ficam como evidência da entrega.
+
+## 12. Histórico
 
 | Versão | Data | Mudança |
 |---|---|---|
@@ -607,3 +634,4 @@ não são reescritos; a tradução vale na leitura):
 | 1.8 | 2026-10-30 | Saída do classificador do RF22: situação, polaridade proposta, justificativa, confiança e instrução no texto; o código aplica a tabela de rotulagem |
 | 1.9 | 2026-10-31 | Registro de exclusões `dados/acervo/exclusoes.json` (RF24): motivo obrigatório, responsável, exclusão e restauração pelo terminal e pela tela |
 | 1.10 | 2026-10-31 | Seção 10: correção dos campos pelo servidor ("informado pelo servidor"), categoria fora de matrícula vai para `revisar`, minuta aprovada salva e assinada em `resultados/minutas/rf20/` e seção Orientações reescrita quando traz recado para o servidor |
+| 1.11 | 2026-10-31 | Seção 11: política de retenção (RF24), com prazo, destino e forma de cada dado; histórico passa a ser a seção 12 |

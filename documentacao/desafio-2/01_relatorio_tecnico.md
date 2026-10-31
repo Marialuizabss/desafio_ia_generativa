@@ -293,7 +293,7 @@ Na execução final (31/10, `gpt-4o-mini`, código revisado), P03 a P08 passaram
 | P06, P07 (sem resposta) | 3/3 abstenção | 3/3 abstenção | 3/3 abstenção | 3/3 abstenção | |
 | P08 (contraditória) | 3/3 conflito | 3/3 conflito | 3/3 conflito | 3/3 conflito | |
 
-A execução final (`resultados/rag/execucao_20261031_145402`) usa o código revisado (subseção "Revisão final do RAG") e o gabarito 1.2. As notas por pergunta são só um indicador; a decisão sobre completude é a leitura humana (`documentacao/desafio-2/conferencia_humana_rf23.md`). Os arquivos `consolidado.md` das execuções anteriores guardam as notas do gabarito da época; a reavaliação das mesmas respostas com o gabarito 1.2 está em `resultados/rag/reavaliacao_gabarito_1_2.txt`.
+A execução final (`resultados/rag/execucao_20261031_145402`) usa o código revisado (subseção "Revisão final do RAG") e o gabarito 1.2. As notas por pergunta são só um indicador; a decisão sobre completude é a leitura humana (`documentacao/desafio-2/03_matriz_testes.md (conferência humana)`). Os arquivos `consolidado.md` das execuções anteriores guardam as notas do gabarito da época; a reavaliação das mesmas respostas com o gabarito 1.2 está em `resultados/rag/reavaliacao_gabarito_1_2.txt`.
 
 **Declaração sobre o ajuste do gabarito.** O gabarito 1.2 foi alterado depois de ver as respostas da API, não antes. A alteração acrescenta variantes de redação aos elementos esperados de P01 e P02 (registro no `historico` do arquivo e no commit `b2092cb`). Por isso as notas de antes e de depois aparecem lado a lado, e o resultado de referência é a leitura humana.
 
@@ -327,9 +327,10 @@ isso a avaliação roda as perguntas várias vezes (`--repeticoes 3`) e relata e
 
 ### 4.6 Exclusão de documento (RF24, parte do índice) e retenção
 
-`python -m src.indexar --excluir ACV-09` remove os vetores do documento, confere que nenhum restou,
-grava o evento `exclusao_documento` no log (data, motivo, versão do índice e derivados) e avisa quais
-arquivos de resultados citam o documento.
+`python -m src.indexar --excluir ACV-09 --motivo "…"` (motivo obrigatório) ou a tela Acervo removem
+os vetores do documento, conferem que nenhum restou, registram a exclusão em
+`dados/acervo/exclusoes.json` (data, motivo e responsável), gravam o evento `exclusao_documento` no
+log (versão do índice e derivados) e avisam quais arquivos de resultados citam o documento.
 
 **Demonstração real (T14), busca "A pesquisa socioeconômica é obrigatória?" (top-5):**
 
@@ -343,7 +344,15 @@ A versão do índice depois de reindexar (`3bb130336d90`) é idêntica à de ant
 
 **Retenção.** A exclusão do índice não apaga os resultados derivados (relatórios e métricas que já
 citaram o documento): eles aparecem na lista `derivados_a_revisar` e precisam de revisão manual.
-Reindexar traz o documento de volta enquanto ele constar em `acervo.json`.
+Os prazos de cada dado estão na seção 10 deste relatório e na seção 11 de `contratos_dados.md`.
+
+**Exclusão que dura (31/10/2026).** A tabela acima é da demonstração de 30/10, quando reindexar
+trazia o documento de volta. Com o registro em `exclusoes.json`, a indexação pula o documento
+excluído (e tira o que tiver sobrado dele no índice): reindexar mantém 100 trechos, e só a
+restauração (`--restaurar ACV-09` ou o botão "Restaurar") traz o ACV-09 de volta. Demonstração real
+pela tela Acervo, registrada em `resultados/logs/execucoes.jsonl`: exclusão do ACV-09 às 17:03
+(5 trechos removidos, com motivo e responsável), consulta sobre a pesquisa socioeconômica às 17:05
+respondida só com o edital (ACV-01, página 11) e restauração às 17:07 (5 trechos de volta).
 
 ### 4.7 Como reproduzir
 
@@ -600,14 +609,14 @@ O código não reclassifica esses dois textos por conta própria: a situação c
 
 ## 9. Avaliação integrada e regressão (RF23)
 
-A matriz completa, com entrada, esperado, obtido, evidência e situação, está em `documentacao/desafio-2/matriz_rf23.md`. Os números abaixo são os que a matriz consolida. O indicador automático e a leitura humana ficam separados quando discordam.
+A matriz completa, com entrada, esperado, obtido, evidência e situação, está em `documentacao/desafio-2/03_matriz_testes.md`. Os números abaixo são os que a matriz consolida. O indicador automático e a leitura humana ficam separados quando discordam.
 
 | Métrica | Resultado | Onde |
 |---|---|---|
 | Acurácia da categoria | 7/7; 6/6 nas solicitações do enunciado | `resultados/metricas/rf15/execucao_20261029_105629/metricas_rf15.md` |
 | Acerto de recuperação (configuração média, Acerto@10) | 5/5 | `documentacao/desafio-2/avaliacao_rf18.md` |
 | Respostas respondíveis com todos os elementos do gabarito (automático, configuração forte, cada rodada) | 3/5 | `resultados/rag/execucao_20261030_114938/consolidado.md` |
-| As mesmas cinco, depois da leitura humana de P01 e P02 | 5/5 nas três rodadas | `documentacao/desafio-2/conferencia_humana_rf23.md` |
+| As mesmas cinco, depois da leitura humana de P01 e P02 | 5/5 nas três rodadas | `documentacao/desafio-2/03_matriz_testes.md (conferência humana)` |
 | Abstenção nas duas perguntas sem resposta | 2/2 nas três rodadas | mesma execução |
 | Caso contraditório (P08) | conflito e revisão, 3/3 | mesma execução |
 | Acurácia da polaridade | 10/12 | `resultados/metricas/rf22/execucao_20261030_181951/` |
@@ -619,7 +628,9 @@ P01 e P02 falham no indicador automático porque ele procura palavras que a resp
 
 Só entram acervo, solicitações e avaliações fictícias. CPF, RG, e-mail, telefone, nascimento, naturalidade e filiação saem do texto antes do provedor (RF12). O log guarda hash quando o texto não precisa estar lá, mascara chave no formato `sk-…` e não grava o nome de campos de segredo.
 
-**Retenção.** O índice vive em `dados/indice_vetorial/` e se recria a partir do catálogo. Excluir um documento (`python -m src.indexar --excluir DOC_ID --motivo "…"`) apaga os vetores, grava `exclusao_documento` e lista os resultados derivados que ainda citam o documento (`derivados_a_revisar`). Esses arquivos não são apagados sozinhos: a retenção deles termina na revisão manual. Reindexar traz o documento de volta enquanto ele estiver em `acervo.json`. A demonstração com o ACV-09 está na seção 4.6: 105 trechos antes, 100 depois, nenhum trecho do documento na busca, e a mesma versão do índice ao reindexar.
+**Retenção.** A política completa, com prazo, destino e forma de cada dado, está na seção 11 de `documentacao/desafio-2/contratos_dados.md`. Em resumo: o documento do acervo fica enquanto o edital estiver vigente e sai do índice com motivo registrado; os vetores seguem o documento; entradas e extrações ficam 30 dias depois da decisão final; a minuta aprovada, com o áudio e a imagem dela, 1 ano; a minuta rejeitada não é guardada; o log de auditoria, que não guarda o texto da solicitação, 2 anos. Os prazos são da equipe, para um uso simulado, e seguem os princípios de necessidade e de término do tratamento da LGPD.
+
+A exclusão de documento é automática e dura: a tela Acervo ou `python -m src.indexar --excluir DOC_ID --motivo "…"` apagam os vetores, registram a exclusão em `dados/acervo/exclusoes.json` (data, motivo e responsável), gravam `exclusao_documento` e listam os resultados derivados que ainda citam o documento (`derivados_a_revisar`). Reindexar não traz o documento de volta; só a restauração (`--restaurar` ou a tela) traz. Apagar entradas, extrações, minutas e linhas do log vencidas é manual: o projeto define o prazo, mas não tem rotina automática de expurgo. A demonstração com o ACV-09 está na seção 4.6.
 
 **Revisão.** A minuta identifica a participação da IA e não é enviada. `aprovada` exige nome e cargo; `rejeitada` e `revisar` exigem justificativa. As duas finais não são reescritas. A prova automática está em `testes/test_rf20_regras.py` (aprovação persistida e segunda decisão recusada) e `testes/test_rf20_telas.py` (rejeição com justificativa). Na regressão T15 os dois casos ficaram em `revisar`, com revisor e justificativa no log, e nenhuma minuta foi enviada.
 

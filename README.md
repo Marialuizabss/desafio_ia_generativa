@@ -248,6 +248,7 @@ desafio_ia_generativa/
 - Conteúdo do cidadão delimitado e tratado como dado; alertas de injection destacados na revisão.
 - Nenhum envio automático; a minuta só é salva depois da aprovação do servidor.
 - Entrega gerada com `git archive --format=zip -o entrega.zip HEAD`, que não inclui o `.env`.
+- Retenção (RF24): prazo, destino e forma de cada dado na seção 11 de [`documentacao/desafio-2/contratos_dados.md`](documentacao/desafio-2/contratos_dados.md).
 
 Detalhes em [`documentacao/desafio-1/rf12_lgpd_privacidade.md`](documentacao/desafio-1/rf12_lgpd_privacidade.md).
 
@@ -373,7 +374,7 @@ Detalhes na seção 6 de `documentacao/desafio-2/01_relatorio_tecnico.md`.
 | Testes | `python -m pytest testes/test_rf20_regras.py testes/test_rf20_telas.py -q` | Não |
 | Interface | `python -m src.main` | Só ao analisar ou consultar |
 
-Código: `src/consulta_acervo.py`, `src/acervo_operacao.py`, `src/painel.py` e `src/telas_rf20.py`. A matriz T01–T15 está em `documentacao/desafio-2/matriz_rf23.md`. Detalhes nas seções 7 a 13 de `documentacao/desafio-2/01_relatorio_tecnico.md`.
+Código: `src/consulta_acervo.py`, `src/acervo_operacao.py`, `src/painel.py` e `src/telas_rf20.py`. A matriz T01–T15 está em `documentacao/desafio-2/03_matriz_testes.md`. Detalhes nas seções 7 a 13 de `documentacao/desafio-2/01_relatorio_tecnico.md`.
 
 ---
 
