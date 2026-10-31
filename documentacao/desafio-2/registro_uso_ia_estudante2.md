@@ -1,15 +1,12 @@
 # Registro de uso de IA: Estudante 2 (Maria Luiza)
 
-*Rascunho para a seção 13 do relatório. Conferir e ajustar antes de entregar: cada afirmação abaixo
-deve refletir o que de fato aconteceu.*
-
 ## Ferramentas
 
 - Assistente de IA generativa (Claude, da Anthropic), em conversa de chat com envio de arquivos do
   projeto, usado para revisar código, propor implementações, escrever testes e rascunhar textos.
 - O código sugerido foi colado e executado por mim; as execuções com a API (OpenAI) foram feitas na
   minha máquina.
-- Modelo: Claude (Anthropic). Na sessão de 30 e 31/10 foi o Claude Sonnet 5.5; confirmar no histórico o modelo das sessões anteriores.
+- Modelo: Claude Sonnet 5.5 na sessão de 30 e 31/10. O modelo das sessões anteriores não foi registrado na época.
 
 ## Solicitações relevantes
 
@@ -31,7 +28,9 @@ deve refletir o que de fato aconteceu.*
 
 - **Aceitas:** índice reproduzível por comando; avaliação de chunking com as perguntas do gabarito;
   correção dos acentos e das expressões regulares; segunda leitura de contradição; avaliação em várias
-  rodadas (`--repeticoes`).
+  rodadas (`--repeticoes`); consulta ao acervo por assunto na minuta (regra por categoria de pedido, não por caso);
+  ajuste do gabarito para a versão 1.2, com variantes de redação em P01 e P02, feito depois de ver as
+  respostas da API (declarado no relatório).
 - **Modificadas:** a ideia de manter as regras específicas com um interruptor para comparar "com e sem"
   foi trocada por removê-las (os resultados anteriores já estavam gravados); a regra de enviar à revisão
   qualquer resposta com trecho suspeito recuperado foi restringida a respostas que citam o documento
@@ -53,7 +52,7 @@ deve refletir o que de fato aconteceu.*
 
 ## Como o código e o conteúdo foram validados
 
-- Testes automáticos (398 na última execução), incluindo testes que quebram o código de propósito para
+- Testes automáticos (473 na última execução), incluindo testes que quebram o código de propósito para
   confirmar que falham.
 - Execuções reais com a API (três rodadas por configuração) e conferência das respostas e das
   citações; a conferência automática por palavras foi tratada como indicador, e a leitura humana,
@@ -65,3 +64,6 @@ deve refletir o que de fato aconteceu.*
 
 - O resultado dos modelos varia entre execuções; por isso os números vêm de três rodadas.
 - Os custos são estimativas pela tabela de preços do projeto.
+- A minuta fundamentada depende de a busca trazer o trecho certo para cada assunto: a lista de documentos
+  gerada com o `gpt-4o-mini` vai até a alínea f, e com a configuração `forte` a consulta de documentos se
+  absteve (ver relatório).
