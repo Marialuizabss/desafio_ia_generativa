@@ -2,9 +2,12 @@
 
 from src.ingestion import carregar_catalogo
 from src.vector_store import (
+    IndiceIncompletoError,
     buscar_chunks,
     carregar_modelo_embeddings,
-    obter_colecao,
+    conferir_indice,
+    mensagem_de_pendencias,
+    obter_colecao_se_existir,
 )
 from src.provider_adapter import consultar_llm
 
@@ -15,13 +18,23 @@ STATUS_CONFLITO = "conflito"
 
 
 def recuperar_evidencias(pergunta: str, top_k: int = 10) -> list[dict]:
-    """Recupera trechos relevantes do acervo indexado."""
+    """Recupera trechos relevantes do acervo indexado.
+
+    Antes da busca, confere o índice com o catálogo. Vazio, incompleto ou
+    desatualizado levanta `IndiceIncompletoError` com o motivo e o que fazer, sem
+    carregar o modelo: um índice sem o retificador responderia com a regra antiga.
+    """
 
     if not pergunta.strip():
         raise ValueError("A pergunta não pode estar vazia.")
 
+    colecao = obter_colecao_se_existir()
+    conferencia = conferir_indice(carregar_catalogo(), colecao)
+
+    if not conferencia["completo"]:
+        raise IndiceIncompletoError(mensagem_de_pendencias(conferencia))
+
     modelo = carregar_modelo_embeddings()
-    colecao = obter_colecao()
 
     return buscar_chunks(
         pergunta=pergunta,

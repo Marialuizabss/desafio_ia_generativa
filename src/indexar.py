@@ -25,10 +25,12 @@ from src.ingestion import (
     validar_documentos,
 )
 from src.vector_store import (
+    DESCRICOES_SITUACAO,
     NOME_COLECAO,
     PASTA_INDICE,
     calcular_versao_indice,
     carregar_modelo_embeddings,
+    conferir_indice,
     excluir_documento,
     indexar_documento,
     listar_documentos_indexados,
@@ -162,6 +164,7 @@ def main(argv=None):
             "versao_indice": calcular_versao_indice(colecao),
             "total_chunks": colecao.count(),
             "documentos": listar_documentos_indexados(colecao),
+            "conferencia": conferir_indice(carregar_catalogo(), colecao),
         }
         print(json.dumps(saida, ensure_ascii=False, indent=2))
         return 0
@@ -189,8 +192,26 @@ def main(argv=None):
     print(f"\nTotal no índice: {colecao.count()} chunks")
     print(f"Versão do índice: {calcular_versao_indice(colecao)}")
 
+    conferencia = conferir_indice(carregar_catalogo(), colecao)
+    imprimir_conferencia(conferencia)
+
     problemas = [r for r in relatorio if r["status"] not in ("indexado", "sem_alteracoes")]
-    return 1 if problemas else 0
+    return 1 if problemas or not conferencia["completo"] else 0
+
+
+def imprimir_conferencia(conferencia):
+    """Resumo da conferência catálogo × índice para quem está no terminal."""
+
+    if conferencia["completo"]:
+        indexados = sum(d["situacao"] == "indexado" for d in conferencia["documentos"])
+        print(f"Conferência: índice completo ({indexados} documentos indexados).")
+        return
+
+    print("Conferência: o índice não confere com o catálogo. A consulta fica bloqueada.")
+    for pendencia in conferencia["pendencias"]:
+        print(f"  {pendencia['doc_id']}: {DESCRICOES_SITUACAO[pendencia['situacao']]}")
+    print("Rode `python -m src.indexar` de novo depois de corrigir o arquivo ou o catálogo; "
+          "para documento fora do catálogo, `python -m src.indexar --recriar`.")
 
 
 if __name__ == "__main__":

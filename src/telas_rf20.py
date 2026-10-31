@@ -15,7 +15,10 @@ try:
         classificar_ficha,
         combinar_estado,
         minuta_do_atendimento,
+        pendentes_de_indexar,
+        pendentes_de_remover,
         preparar_acervo,
+        resumo_do_indice,
         transicionar,
     )
 except ImportError:
@@ -26,7 +29,10 @@ except ImportError:
         classificar_ficha,
         combinar_estado,
         minuta_do_atendimento,
+        pendentes_de_indexar,
+        pendentes_de_remover,
         preparar_acervo,
+        resumo_do_indice,
         transicionar,
     )
 
@@ -96,11 +102,14 @@ def _tela_acervo() -> None:
         from ingestion import carregar_catalogo, validar_documentos
     except ImportError:
         from src.ingestion import carregar_catalogo, validar_documentos
+    conferencia = _conferencia_do_indice()
     try:
-        linhas = preparar_acervo(carregar_catalogo(), validar_documentos(carregar_catalogo()))
+        catalogo = carregar_catalogo()
+        linhas = preparar_acervo(catalogo, validar_documentos(catalogo), conferencia)
     except (OSError, ValueError) as erro:
         st.error(f"Não foi possível ler o acervo. {erro}")
         return
+    _mostrar_resumo_do_indice(conferencia)
     if not linhas:
         st.info("O catálogo não tem documentos.")
     else:
@@ -112,14 +121,71 @@ def _tela_acervo() -> None:
             )
             if linha["aviso"]:
                 st.warning(f"{linha['doc_id']}: {linha['aviso']}")
-        _indexar_acervo(linhas)
+            if linha["indice"] in ("nao_indexado", "desatualizado"):
+                st.warning(linha["texto_indice"])
+            elif linha["indice"]:
+                st.caption(linha["texto_indice"])
+        _remover_do_indice(conferencia)
+        _indexar_acervo(linhas, pendentes_de_indexar(conferencia))
     _incluir_documento()
 
 
-def _indexar_acervo(linhas: list[dict]) -> None:
+def _conferencia_do_indice() -> dict | None:
+    """Catálogo × índice. None quando o índice não pôde ser lido."""
+    try:
+        from acervo_operacao import situacao_do_indice
+    except ImportError:
+        from src.acervo_operacao import situacao_do_indice
+    try:
+        return situacao_do_indice()
+    except Exception:
+        return None
+
+
+def _mostrar_resumo_do_indice(conferencia: dict | None) -> None:
+    aviso = st.session_state.pop("rf20_aviso_acervo", None)
+    if aviso:
+        st.success(aviso)
+    if conferencia is None:
+        st.warning("Não foi possível ler o índice. A consulta ao acervo pode não funcionar.")
+    elif conferencia["completo"]:
+        st.success(resumo_do_indice(conferencia))
+    else:
+        st.warning(resumo_do_indice(conferencia))
+
+
+def _remover_do_indice(conferencia: dict | None) -> None:
+    for item in pendentes_de_remover(conferencia):
+        st.warning(f"{item['doc_id']}: {item['texto']}.")
+        if not st.button("Remover do índice", key=f"rf20_remover_{item['doc_id']}"):
+            continue
+        try:
+            from acervo_operacao import remover_do_indice
+        except ImportError:
+            from src.acervo_operacao import remover_do_indice
+        try:
+            resultado = remover_do_indice(item["doc_id"])
+        except ValueError as erro:
+            st.error(str(erro))
+            return
+        except Exception:
+            st.error("Não foi possível remover o documento do índice.")
+            return
+        st.session_state["rf20_aviso_acervo"] = (
+            f"{item['doc_id']} removido do índice ({resultado['chunks_removidos']} trechos)."
+        )
+        st.rerun()
+
+
+def _indexar_acervo(linhas: list[dict], marcados: list[str]) -> None:
     st.markdown("**Indexar**")
     ids = [linha["doc_id"] for linha in linhas]
-    escolha = st.multiselect("Documentos", ids, key="rf20_indexar_ids")
+    escolha = st.multiselect(
+        "Documentos",
+        ids,
+        default=[doc_id for doc_id in marcados if doc_id in ids],
+        key="rf20_indexar_ids",
+    )
     if st.button("Indexar selecionados", key="rf20_indexar"):
         try:
             from acervo_operacao import indexar_ids
@@ -134,6 +200,11 @@ def _indexar_acervo(linhas: list[dict]) -> None:
         except Exception:
             st.error("Não foi possível indexar. Confira se o modelo de embeddings está disponível.")
             return
+        # Recarrega a tela para o resumo e os selos já mostrarem o índice novo.
+        st.session_state["rf20_relatorio_indexacao"] = relatorio
+        st.rerun()
+    relatorio = st.session_state.pop("rf20_relatorio_indexacao", None)
+    if relatorio:
         for item in relatorio["itens"]:
             st.markdown(f"- {item['doc_id']}: {item['status']} ({item['chunks']} trechos)")
         st.success(

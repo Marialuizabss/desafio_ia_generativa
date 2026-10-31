@@ -49,6 +49,18 @@ AVISOS_ACERVO = {
     "hash_divergente": "O hash do arquivo não confere com o catálogo.",
 }
 
+# Situação de cada documento na conferência catálogo × índice (vector_store.conferir_indice).
+SITUACOES_INDICE = {
+    "indexado": "indexado",
+    "nao_indexado": "não indexado",
+    "desatualizado": "desatualizado: o documento mudou depois da indexação",
+    "excluido": "excluído do índice",
+    "excluido_no_indice": "excluído, mas continua no índice",
+    "fora_do_catalogo": "está no índice, mas não no catálogo",
+}
+SITUACOES_A_INDEXAR = ("nao_indexado", "desatualizado")
+SITUACOES_A_REMOVER = ("fora_do_catalogo", "excluido_no_indice")
+
 ROTULOS_CAMPOS = {
     "protocolo": "Protocolo",
     "data_solicitacao": "Data da solicitação",
@@ -72,12 +84,18 @@ ROTULOS_ENTIDADES = {
 }
 
 
-def preparar_acervo(catalogo: dict, validacoes: list[dict]) -> list[dict]:
-    """Junta o catálogo com a conferência de arquivo e hash, para a tela só de leitura."""
+def preparar_acervo(
+    catalogo: dict, validacoes: list[dict], conferencia: dict | None = None
+) -> list[dict]:
+    """Junta o catálogo com a conferência de arquivo e hash e, se houver, com a do índice."""
     por_id = {item["doc_id"]: item["status"] for item in validacoes}
+    no_indice = {
+        item["doc_id"]: item for item in (conferencia or {}).get("documentos", [])
+    }
     linhas = []
     for documento in catalogo.get("documentos", []):
         status = por_id.get(documento["doc_id"], "nao_conferido")
+        indice = no_indice.get(documento["doc_id"])
         linhas.append({
             "doc_id": documento["doc_id"],
             "titulo": documento.get("titulo") or "",
@@ -86,8 +104,62 @@ def preparar_acervo(catalogo: dict, validacoes: list[dict]) -> list[dict]:
             "sha256": documento.get("sha256") or "",
             "status": status,
             "aviso": AVISOS_ACERVO.get(status),
+            "indice": indice["situacao"] if indice else None,
+            "texto_indice": _texto_do_indice(indice),
         })
     return linhas
+
+
+def _texto_do_indice(item: dict | None) -> str:
+    if not item:
+        return ""
+    texto = f"Índice: {SITUACOES_INDICE.get(item['situacao'], item['situacao'])}"
+    if item["situacao"] == "indexado":
+        texto += f" ({item['chunks']} trechos)"
+    return texto
+
+
+def resumo_do_indice(conferencia: dict) -> str:
+    """Uma linha para o topo da tela Acervo."""
+    documentos = conferencia["documentos"]
+    no_catalogo = [d for d in documentos if d["situacao"] != "fora_do_catalogo"]
+    ativos = [d for d in no_catalogo if d["situacao"] not in ("excluido", "excluido_no_indice")]
+    indexados = sum(d["situacao"] == "indexado" for d in ativos)
+    excluidos = len(no_catalogo) - len(ativos)
+
+    if conferencia["completo"]:
+        texto = (
+            f"Índice: {conferencia['total_chunks']} trechos · "
+            f"{indexados} de {len(ativos)} documentos indexados"
+        )
+        return texto + (f" · {excluidos} excluído(s)" if excluidos else "")
+    if conferencia["vazio"]:
+        return (
+            'Índice vazio: nenhum documento indexado. Use "Indexar selecionados" abaixo; '
+            "os documentos pendentes já vêm marcados."
+        )
+    return (
+        f"Índice incompleto: {len(conferencia['pendencias'])} pendência(s). "
+        "A consulta ao acervo fica bloqueada até resolver."
+    )
+
+
+def pendentes_de_indexar(conferencia: dict | None) -> list[str]:
+    """Documentos que já vêm marcados em "Indexar selecionados"."""
+    return [
+        item["doc_id"]
+        for item in (conferencia or {}).get("pendencias", [])
+        if item["situacao"] in SITUACOES_A_INDEXAR
+    ]
+
+
+def pendentes_de_remover(conferencia: dict | None) -> list[dict]:
+    """Documentos que ganham o botão "Remover do índice"."""
+    return [
+        {"doc_id": item["doc_id"], "texto": SITUACOES_INDICE[item["situacao"]]}
+        for item in (conferencia or {}).get("pendencias", [])
+        if item["situacao"] in SITUACOES_A_REMOVER
+    ]
 
 
 def classificar_consulta(resultado: dict | None = None, erro: BaseException | None = None) -> dict:
@@ -99,6 +171,9 @@ def classificar_consulta(resultado: dict | None = None, erro: BaseException | No
     erro é interno e o detalhe técnico fica só no registro da consulta.
     """
     if erro is not None:
+        if type(erro).__name__ == "IndiceIncompletoError":
+            # A mensagem já diz o que falta e o que fazer; não há resposta para decidir.
+            return _consulta("indice_desatualizado", str(erro), None, None, [], "")
         if type(erro).__name__ == "IndiceDesatualizadoError":
             return _consulta("indice_desatualizado", MENSAGEM_INDICE, None, None, [], "")
         if not isinstance(erro, ValueError):
@@ -305,7 +380,7 @@ def _bloco_de_orientacao(consulta: dict | None) -> str:
     if tipo == "bloqueio":
         return consulta.get("texto") or MENSAGEM_BLOQUEIO
     if tipo == "indice_desatualizado":
-        return MENSAGEM_INDICE
+        return consulta.get("texto") or MENSAGEM_INDICE
     if tipo == "falha":
         return consulta.get("texto") or MENSAGEM_FALHA
     if tipo in {"sem_evidencia", "conflito"}:

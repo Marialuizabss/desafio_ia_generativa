@@ -150,11 +150,15 @@ class TestTelasRF20(unittest.TestCase):
         self.assertIn("Início das aulas 21/07/2026", _texto(fontes))
 
     def test_acervo_permite_indexar_e_incluir(self):
-        tela = self._abrir("acervo")
+        # Índice completo simulado: nada vem pré-marcado e o índice real não é aberto.
+        completo = {"documentos": [], "pendencias": [], "completo": True, "vazio": False, "total_chunks": 0}
+        with patch("src.acervo_operacao.situacao_do_indice", return_value=completo):
+            tela = self._abrir("acervo")
         rotulos = [botao.label for botao in tela.button]
         self.assertIn("Indexar selecionados", rotulos)
         self.assertIn("Incluir no acervo", rotulos)
-        tela.button(key="rf20_indexar").click().run()
+        with patch("src.acervo_operacao.situacao_do_indice", return_value=completo):
+            tela.button(key="rf20_indexar").click().run()
         self.assertFalse(tela.exception)
         self.assertIn("Selecione ao menos um documento", _texto(tela))
 

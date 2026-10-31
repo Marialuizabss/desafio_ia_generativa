@@ -323,6 +323,12 @@ recuperados, tempos e custos, sem chave de API e com identificadores mascarados)
 configuração de geração não reconstrói o índice. Detalhes, resultados e limitações:
 `documentacao/desafio-2/01_relatorio_tecnico.md`, seções 4 e 5.
 
+Antes de cada consulta, o índice é conferido com o catálogo (`doc_id` e hash de cada documento).
+Índice vazio, documento não indexado, desatualizado ou fora do catálogo bloqueiam a consulta sem
+chamar o modelo, com o motivo e o que fazer. A tela Acervo mostra a situação de cada documento, já
+marca os pendentes em "Indexar selecionados" e oferece "Remover do índice" para o que está fora do
+catálogo. `python -m src.indexar --status` traz a mesma conferência.
+
 ### Sentimentos e painel (RF22)
 
 O classificador pede ao modelo a situação e a polaridade, e o código aplica as regras de mensagem

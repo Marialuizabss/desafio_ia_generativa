@@ -145,6 +145,48 @@ def indexar_ids(doc_ids: list[str]) -> dict:
     }
 
 
+def situacao_do_indice() -> dict:
+    """Conferência catálogo × índice para a tela, sem carregar o modelo nem criar o índice."""
+    from src.vector_store import conferir_indice, obter_colecao_se_existir
+
+    return conferir_indice(carregar_catalogo(), obter_colecao_se_existir())
+
+
+def remover_do_indice(doc_id: str) -> dict:
+    """Tira do índice um documento que não deveria estar nele e registra na auditoria.
+
+    Só vale para o que a conferência aponta para remover (fora do catálogo ou já
+    excluído). Documento do acervo em uso não sai por aqui.
+    """
+    from src.audit import registrar_evento
+    from src.vector_store import (
+        calcular_versao_indice,
+        conferir_indice,
+        excluir_documento,
+        obter_colecao,
+    )
+
+    colecao = obter_colecao()
+    conferencia = conferir_indice(carregar_catalogo(), colecao)
+    motivos = {
+        item["doc_id"]: item["situacao"]
+        for item in conferencia["pendencias"]
+        if item["situacao"] in ("fora_do_catalogo", "excluido_no_indice")
+    }
+    if doc_id not in motivos:
+        raise ValueError(f"{doc_id} não está entre os documentos a remover do índice.")
+
+    resultado = excluir_documento(colecao, doc_id)
+    resultado["versao_indice_apos"] = calcular_versao_indice(colecao)
+    registrar_evento("remocao_do_indice", {
+        "doc_id": doc_id,
+        "chunks_removidos": resultado["chunks_removidos"],
+        "motivo": motivos[doc_id],
+        "versao_indice_apos": resultado["versao_indice_apos"],
+    })
+    return resultado
+
+
 def proximo_doc_id(catalogo: dict) -> str:
     numeros = []
     for documento in catalogo.get("documentos", []):
