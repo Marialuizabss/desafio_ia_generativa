@@ -1,0 +1,76 @@
+{
+  "id": "AV09",
+  "modo": "real",
+  "canal": "presencial",
+  "data": "2026-06-15",
+  "polaridade": "indeterminada",
+  "situacao": "falta_de_contexto",
+  "justificativa": "O texto relata uma experiência de matrícula, mas não fornece uma avaliação clara sobre o atendimento recebido. A emoção expressa não é suficiente para determinar um sentimento positivo ou negativo.",
+  "confianca": 0.6,
+  "rotulo_confianca": "estimativa não calibrada",
+  "contem_instrucao": false,
+  "revisao": true,
+  "motivos_revisao": [
+    "Falta contexto no texto para definir a polaridade."
+  ],
+  "rejeitada": false,
+  "termo_proibido": null,
+  "versao_esquema": "1.0",
+  "versao_prompt": "ee74f9f56985",
+  "arquivo_prompt": "sentimento_v1.md",
+  "chamadas": [
+    {
+      "provedor": "openai",
+      "modelo": "gpt-4o-mini",
+      "configuracao": "principal",
+      "simulado": false,
+      "temperatura": 0,
+      "inicio": "2026-10-30T18:20:07.772-04:00",
+      "fim": "2026-10-30T18:20:09.408-04:00",
+      "tempo_resposta_segundos": 1.637,
+      "tokens_entrada": 578,
+      "tokens_saida": 81,
+      "tokens_total": 659,
+      "custo_estimado_usd": 0.000135,
+      "status": "sucesso",
+      "erro": null
+    },
+    {
+      "provedor": "openai",
+      "modelo": "gpt-4o-mini",
+      "configuracao": "principal",
+      "simulado": false,
+      "temperatura": 0,
+      "inicio": "2026-10-30T18:20:09.413-04:00",
+      "fim": "2026-10-30T18:20:10.844-04:00",
+      "tempo_resposta_segundos": 1.431,
+      "tokens_entrada": 647,
+      "tokens_saida": 86,
+      "tokens_total": 733,
+      "custo_estimado_usd": 0.000149,
+      "status": "sucesso",
+      "erro": null
+    }
+  ],
+  "tentativas": [
+    {
+      "numero": 1,
+      "erros": [
+        {
+          "camada": "esquema",
+          "categoria": "valor_fora_do_dominio",
+          "campo": "situacao",
+          "mensagem": "Input should be 'clara', 'mista', 'ironia_comprovada', 'ironia_possivel' or 'falta_de_contexto'"
+        }
+      ]
+    },
+    {
+      "numero": 2,
+      "erros": []
+    }
+  ],
+  "polaridade_esperada": "neutra",
+  "revisao_esperada": false,
+  "acerto_polaridade": false,
+  "acerto_revisao": false
+}

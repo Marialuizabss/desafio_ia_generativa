@@ -12,7 +12,7 @@ from time import perf_counter
 from uuid import uuid4
 
 try:
-    from audit import decisoes_ligadas, registrar_audio_minuta, registrar_execucao, registrar_revisao
+    from audit import decisoes_ligadas, registrar_audio_minuta, registrar_execucao, registrar_revisao, traduzir_decisao
     from audio import IDIOMA as IDIOMA_TRANSCRICAO
     from configuracao import CAMINHOS, MODELOS
     from audio import MODELO as MODELO_TRANSCRICAO
@@ -23,7 +23,7 @@ try:
     from privacidade import contar_remocoes, minimizar_texto
     from vision import ler_texto_visual
 except ImportError:
-    from src.audit import decisoes_ligadas, registrar_audio_minuta, registrar_execucao, registrar_revisao
+    from src.audit import decisoes_ligadas, registrar_audio_minuta, registrar_execucao, registrar_revisao, traduzir_decisao
     from src.audio import IDIOMA as IDIOMA_TRANSCRICAO
     from src.configuracao import CAMINHOS, MODELOS
     from src.audio import MODELO as MODELO_TRANSCRICAO
@@ -390,7 +390,7 @@ def _decisao_impede_reuso(id_execucao: str | None) -> bool:
     decisoes = decisoes_ligadas(id_execucao)
     if not decisoes:
         return False
-    return decisoes[-1].get("decisao") in {"rejeitado", "nova_geracao"}
+    return traduzir_decisao(decisoes[-1].get("decisao", "")) in {"rejeitada", "revisar"}
 
 
 def _versao_prompt(idioma: str | None) -> str:

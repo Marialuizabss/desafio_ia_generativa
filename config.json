@@ -59,5 +59,11 @@
     },
     "timeout_segundos": 120,
     "max_retries": 1
+  },
+  "guardrails": {
+    "max_chamadas_analise": 2,
+    "teto_analise": 8000,
+    "max_chamadas_rag": 3,
+    "teto_rag": 60000
   }
 }

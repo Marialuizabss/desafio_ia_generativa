@@ -102,6 +102,12 @@ class TestDecisaoInterface(unittest.TestCase):
         linhas = [json.loads(linha) for linha in self.log.read_text(encoding="utf-8").splitlines() if linha.strip()]
         return [linha for linha in linhas if linha.get("evento") == "decisao"]
 
+    def _nomes(self):
+        return [evento["decisao"] for evento in self._eventos()]
+
+    def _evento(self, decisao):
+        return next(evento for evento in reversed(self._eventos()) if evento["decisao"] == decisao)
+
     def _revisoes(self):
         if not self.log.is_file():
             return []
@@ -110,12 +116,12 @@ class TestDecisaoInterface(unittest.TestCase):
 
     def test_rejeicao_sem_justificativa_nao_grava(self):
         tela = self._ate_revisao()
-        tela.button(key="rejeitar").click().run()
-        tela.text_area(key="justificativa_rejeicao").set_value("   ").run()
-        tela.button(key="confirmar_rejeicao").click().run()
+        tela.button(key="pedir_revisao").click().run()
+        tela.text_area(key="justificativa_revisao").set_value("   ").run()
+        tela.button(key="confirmar_revisao").click().run()
 
         self.assertFalse(tela.exception)
-        self.assertIn("Informe a justificativa para rejeitar.", _texto(tela))
+        self.assertIn("Informe a justificativa.", _texto(tela))
         self.assertEqual(self._eventos(), [])
         self.assertEqual(self.extracao.read_text(encoding="utf-8"), '{"evidencia": true}\n')
         self.assertEqual(self.original.read_text(encoding="utf-8"), "Pedido original")
@@ -125,10 +131,10 @@ class TestDecisaoInterface(unittest.TestCase):
     def test_rejeicao_na_etapa_3_grava_e_pode_gerar_de_novo(self):
         tela = self._ate_revisao()
         antes = list(self.chamadas)
-        tela.button(key="rejeitar").click().run()
+        tela.button(key="pedir_revisao").click().run()
         tela.text_input(key="revisor").set_value("Ana").run()
-        tela.text_area(key="justificativa_rejeicao").set_value("Protocolo inventado.").run()
-        tela.button(key="confirmar_rejeicao").click().run()
+        tela.text_area(key="justificativa_revisao").set_value("Protocolo inventado.").run()
+        tela.button(key="confirmar_revisao").click().run()
 
         self.assertFalse(tela.exception)
         self.assertIn("Gerar de novo chama o modelo outra vez.", _texto(tela))
@@ -137,7 +143,7 @@ class TestDecisaoInterface(unittest.TestCase):
         self.assertEqual(self.extracao.read_text(encoding="utf-8"), '{"evidencia": true}\n')
         eventos = self._eventos()
         self.assertEqual(len(eventos), 1)
-        self.assertEqual(eventos[0]["decisao"], "rejeitado")
+        self.assertEqual(eventos[0]["decisao"], "revisar")
         self.assertEqual(eventos[0]["id_execucao"], "teste-edicao")
         self.assertEqual(eventos[0]["justificativa"], "Protocolo inventado.")
         self.assertEqual(eventos[0]["revisor"], "Ana")
@@ -149,14 +155,17 @@ class TestDecisaoInterface(unittest.TestCase):
         self.assertEqual(tela.text_input(key="edit_solicitante").value, "Nova Pessoa")
         self.assertEqual(self.chamadas[-1]["forcar"], True)
         self.assertEqual(self.chamadas[-1]["anterior"], "teste-edicao")
-        eventos = self._eventos()
-        self.assertEqual([evento["decisao"] for evento in eventos], ["rejeitado", "nova_geracao"])
-        self.assertTrue(all(evento["id_execucao"] == "teste-edicao" for evento in eventos))
-        preservado = self.base / eventos[1]["arquivo_preservado"]
+        self.assertEqual(self._nomes(), ["revisar"])
+        preservado = self.base / "dados" / "processados" / "extracao_pedido__teste-edicao.json"
         self.assertEqual(preservado.read_text(encoding="utf-8"), '{"evidencia": true}\n')
         self.assertEqual(self.extracao.read_text(encoding="utf-8"), '{"evidencia": true}\n')
 
-    def test_rejeicao_na_etapa_4_volta_para_corrigir_os_campos(self):
+        tela.button(key="prosseguir").click().run()
+        self.assertFalse(tela.exception)
+        self.assertEqual(self._nomes(), ["revisar", "pendente"])
+        self.assertEqual(self._eventos()[-1]["id_execucao"], "teste-nova")
+
+    def test_rejeicao_na_etapa_4_encerra_sem_correcao(self):
         tela = self._ate_revisao()
         tela.text_input(key="edit_solicitante").set_value("Joana Lima").run()
         tela.button(key="prosseguir").click().run()
@@ -169,54 +178,66 @@ class TestDecisaoInterface(unittest.TestCase):
         tela.button(key="confirmar_rejeicao").click().run()
 
         self.assertFalse(tela.exception)
-        self.assertIn("corrija na etapa anterior", _texto(tela))
+        self.assertIn("nova execução", _texto(tela))
         self.assertIn("Joana Lima", _texto(tela))
         self.assertEqual(self.extracao.read_text(encoding="utf-8"), gravado)
-        self.assertEqual(self._eventos()[0]["decisao"], "rejeitado")
+        self.assertEqual(self._nomes(), ["pendente", "rejeitada"])
+        self.assertEqual(self._evento("rejeitada")["justificativa"], "Nome do solicitante errado.")
+        chaves = [botao.key for botao in tela.button]
+        self.assertNotIn("corrigir_campos", chaves)
+        self.assertNotIn("gerar_de_novo", chaves)
+        self.assertNotIn("voltar", chaves)
         self.audio.assert_not_called()
 
-        tela.button(key="corrigir_campos").click().run()
-        self.assertFalse(tela.exception)
-        self.assertIn("Avaliação humana", _texto(tela))
-        self.assertEqual(tela.text_input(key="edit_solicitante").value, "Joana Lima")
-        self.assertEqual(self.extracao.read_text(encoding="utf-8"), gravado)
-        self.assertEqual(len(self._eventos()), 1)
+        with self.assertRaises(ValueError):
+            audit.registrar_decisao(
+                "teste-edicao", "aprovada", revisor="Ana", cargo_setor="Secretaria",
+            )
+        self.assertEqual(len(self._eventos()), 2)
 
     def test_aprovacao_na_etapa_4_grava_sem_gerar_audio(self):
         tela = self._ate_revisao()
         tela.button(key="prosseguir").click().run()
         tela.button(key="aprovar").click().run()
         self.assertIn("Informe o nome do revisor.", _texto(tela))
-        self.assertEqual(self._eventos(), [])
+        self.assertEqual(self._nomes(), ["pendente"])
 
         tela.text_input(key="revisor").set_value("Ana").run()
         tela.button(key="aprovar").click().run()
         self.assertIn("Informe o cargo ou setor de quem assina.", _texto(tela))
-        self.assertEqual(self._eventos(), [])
+        self.assertEqual(self._nomes(), ["pendente"])
 
         tela.text_input(key="cargo_setor").set_value("Secretaria Escolar").run()
         tela.button(key="aprovar").click().run()
         self.assertIn("Confira nome, protocolo e datas antes de aprovar.", _texto(tela))
-        self.assertEqual(self._eventos(), [])
+        self.assertEqual(self._nomes(), ["pendente"])
 
         tela.checkbox(key="conferencia_critica").set_value(True).run()
         tela.button(key="aprovar").click().run()
 
         self.assertFalse(tela.exception)
-        self.assertIn("aprovado com revisão", _texto(tela))
+        self.assertIn("Aprovada", _texto(tela))
+        self.assertIn("faltam dados da solicitação", _texto(tela))
         eventos = self._eventos()
-        self.assertEqual(len(eventos), 1)
-        self.assertEqual(eventos[0]["decisao"], "aprovado_com_revisao")
-        self.assertEqual(eventos[0]["id_execucao"], "teste-edicao")
-        self.assertEqual(eventos[0]["revisor"], "Ana")
-        self.assertEqual(eventos[0]["justificativa"], "")
-        self.assertTrue(eventos[0]["conferencia_dados_criticos"])
+        self.assertEqual(self._nomes(), ["pendente", "aprovada"])
+        self.assertNotIn("motivos", eventos[0])
+        self.assertEqual(eventos[1]["decisao"], "aprovada")
+        self.assertEqual(eventos[1]["motivos"], ["faltam dados da solicitação"])
+        self.assertEqual(eventos[1]["id_execucao"], "teste-edicao")
+        self.assertEqual(eventos[1]["revisor"], "Ana")
+        self.assertEqual(eventos[1]["justificativa"], "")
+        self.assertTrue(eventos[1]["conferencia_dados_criticos"])
         self.audio.assert_not_called()
 
-        aprovada = self.base / eventos[0]["arquivo_minuta"]
+        aprovada = self.base / eventos[1]["arquivo_minuta"]
         self.assertEqual(aprovada.parent, self.base / "resultados" / "minutas" / "aprovadas")
         self.assertIn("Prezado(a) Ana", aprovada.read_text(encoding="utf-8"))
-        self.assertIn(eventos[0]["arquivo_minuta"], "\n".join(item.value for item in tela.caption))
+        self.assertIn(eventos[1]["arquivo_minuta"], "\n".join(item.value for item in tela.caption))
+        with self.assertRaises(ValueError):
+            audit.registrar_decisao(
+                "teste-edicao", "rejeitada", justificativa="Mudei de ideia.",
+            )
+        self.assertEqual(self._nomes(), ["pendente", "aprovada"])
         self.assertEqual(self.extracao.read_text(encoding="utf-8"), '{"evidencia": true}\n')
 
     def test_aprovacao_recusada_nao_deixa_minuta_gravada(self):
@@ -229,7 +250,7 @@ class TestDecisaoInterface(unittest.TestCase):
             tela.button(key="aprovar").click().run()
 
         self.assertIn("Falhou.", _texto(tela))
-        self.assertEqual(self._eventos(), [])
+        self.assertEqual(self._nomes(), ["pendente"])
         aprovadas = self.base / "resultados" / "minutas" / "aprovadas"
         self.assertEqual(list(aprovadas.glob("*.md")) if aprovadas.exists() else [], [])
 
@@ -279,7 +300,7 @@ class TestDecisaoInterface(unittest.TestCase):
         tela.checkbox(key="conferencia_critica").set_value(True).run()
         tela.button(key="aprovar").click().run()
 
-        decisao = self._eventos()[0]
+        decisao = self._evento("aprovada")
         self.assertEqual(decisao["revisor"], "Ana Beatriz")
         self.assertEqual(decisao["cargo_setor"], "Secretaria Escolar")
         aprovada = (self.base / decisao["arquivo_minuta"]).read_text(encoding="utf-8")
@@ -291,19 +312,22 @@ class TestDecisaoInterface(unittest.TestCase):
     def test_outra_entrada_limpa_servidor_e_cargo(self):
         tela = self._aprovar_texto(self._ate_minuta())
         tela.button(key="encerrar_caso").click().run()
+        self.assertEqual(tela.session_state["revisor"], "")
+        self.assertEqual(tela.session_state["cargo_setor"], "")
         tela.text_area(key="rascunho_texto").set_value("Outro pedido.").run()
         tela.button(key="prosseguir").click().run()
         tela.button(key="prosseguir").click().run()
 
-        self.assertEqual(tela.text_input(key="revisor").value, "")
-        self.assertEqual(tela.text_input(key="cargo_setor").value, "")
+        self.assertFalse(tela.exception)
+        self.assertNotIn("revisor", [campo.key for campo in tela.text_input])
+        self.assertIn("Atendimento encerrado.", "\n".join(item.value for item in tela.caption))
 
     def test_corrigir_campos_mantem_o_servidor(self):
         tela = self._ate_minuta()
-        tela.button(key="rejeitar").click().run()
+        tela.button(key="pedir_revisao").click().run()
         tela.text_input(key="revisor").set_value("Ana Beatriz").run()
-        tela.text_area(key="justificativa_rejeicao").set_value("Turno errado.").run()
-        tela.button(key="confirmar_rejeicao").click().run()
+        tela.text_area(key="justificativa_revisao").set_value("Turno errado.").run()
+        tela.button(key="confirmar_revisao").click().run()
         tela.button(key="corrigir_campos").click().run()
         tela.button(key="prosseguir").click().run()
 
@@ -339,7 +363,7 @@ class TestDecisaoInterface(unittest.TestCase):
         tela.text_input(key="revisor").set_value("Ana").run()
         tela.text_input(key="cargo_setor").set_value("Secretaria").run()
         tela.button(key="aprovar").click().run()
-        decisao = self._eventos()[0]
+        decisao = self._evento("aprovada")
         self.assertEqual(decisao["dados_conferidos"], ["solicitante", "protocolo", "data_solicitacao", "data_inicio"])
 
     def test_corrigir_campo_desmarca_so_a_conferencia_dele(self):
@@ -370,11 +394,11 @@ class TestDecisaoInterface(unittest.TestCase):
 
         tela = self._aprovar_texto(tela)
         self.assertIn("Há alerta de segurança: justifique a aprovação.", _texto(tela))
-        self.assertEqual(self._eventos(), [])
+        self.assertEqual(self._nomes(), ["pendente"])
 
         tela.text_area(key="justificativa_aprovacao").set_value("Instruções ignoradas; minuta correta.").run()
         tela.button(key="aprovar").click().run()
-        self.assertEqual(self._eventos()[0]["justificativa"], "Instruções ignoradas; minuta correta.")
+        self.assertEqual(self._evento("aprovada")["justificativa"], "Instruções ignoradas; minuta correta.")
 
     def test_avisos_de_sucesso_e_de_alerta(self):
         tela = self._ate_minuta()
@@ -414,7 +438,7 @@ class TestDecisaoInterface(unittest.TestCase):
         tela = self._aprovar_texto(tela, servidor="Ana Beatriz", cargo="SECITECI")
 
         self.assertEqual(len(tela.get("download_button")), 1)
-        decisao = self._eventos()[0]
+        decisao = self._evento("aprovada")
         pdf = self.base / decisao["arquivo_pdf"]
         self.assertEqual(pdf.with_suffix(".md"), self.base / decisao["arquivo_minuta"])
         with pymupdf.open(pdf) as documento:
@@ -438,7 +462,7 @@ class TestDecisaoInterface(unittest.TestCase):
         tela = self._ate_minuta()
         with patch("src.interface.gerar_pdf_minuta", side_effect=RuntimeError("PDF falhou.")):
             tela = self._aprovar_texto(tela)
-        self.assertEqual(self._eventos(), [])
+        self.assertEqual(self._nomes(), ["pendente"])
         aprovadas = self.base / "resultados" / "minutas" / "aprovadas"
         self.assertEqual(list(aprovadas.iterdir()) if aprovadas.exists() else [], [])
         self.assertIn("PDF falhou.", _texto(tela))
@@ -526,17 +550,16 @@ class TestDecisaoInterface(unittest.TestCase):
         tela.run()
         self.assertIn("Rascunho montado com os campos revisados.", _texto(tela))
         self.assertNotIn("aprovar", [botao.key for botao in tela.button])
-        self.assertEqual(len(self._eventos()), 1)
+        self.assertEqual(self._nomes(), ["pendente", "aprovada"])
 
-    def test_rejeicao_continua_podendo_voltar_e_corrigir(self):
+    def test_revisao_na_minuta_permite_corrigir(self):
         tela = self._ate_minuta()
-        tela.button(key="rejeitar").click().run()
+        tela.button(key="pedir_revisao").click().run()
         tela.text_input(key="revisor").set_value("Ana").run()
-        tela.text_area(key="justificativa_rejeicao").set_value("Turno errado.").run()
-        tela.button(key="confirmar_rejeicao").click().run()
-        chaves = [botao.key for botao in tela.button]
-        self.assertIn("voltar", chaves)
-        self.assertIn("corrigir_campos", chaves)
+        tela.text_area(key="justificativa_revisao").set_value("Turno errado.").run()
+        tela.button(key="confirmar_revisao").click().run()
+        self.assertIn("corrigir_campos", [botao.key for botao in tela.button])
+        self.assertEqual(self._nomes(), ["pendente", "revisar"])
 
     # ---- B4: peça de orientação (RF10)
 

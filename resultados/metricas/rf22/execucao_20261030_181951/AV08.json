@@ -1,0 +1,47 @@
+{
+  "id": "AV08",
+  "modo": "real",
+  "canal": "telefone",
+  "data": "2026-06-20",
+  "polaridade": "neutra",
+  "situacao": "clara",
+  "justificativa": "O texto relata uma interação sem expressar uma avaliação positiva ou negativa sobre o atendimento. Apenas informa um fato.",
+  "confianca": 0.8,
+  "rotulo_confianca": "estimativa não calibrada",
+  "contem_instrucao": false,
+  "revisao": false,
+  "motivos_revisao": [],
+  "rejeitada": false,
+  "termo_proibido": null,
+  "versao_esquema": "1.0",
+  "versao_prompt": "ee74f9f56985",
+  "arquivo_prompt": "sentimento_v1.md",
+  "chamadas": [
+    {
+      "provedor": "openai",
+      "modelo": "gpt-4o-mini",
+      "configuracao": "principal",
+      "simulado": false,
+      "temperatura": 0,
+      "inicio": "2026-10-30T18:20:05.732-04:00",
+      "fim": "2026-10-30T18:20:07.769-04:00",
+      "tempo_resposta_segundos": 2.038,
+      "tokens_entrada": 572,
+      "tokens_saida": 70,
+      "tokens_total": 642,
+      "custo_estimado_usd": 0.000128,
+      "status": "sucesso",
+      "erro": null
+    }
+  ],
+  "tentativas": [
+    {
+      "numero": 1,
+      "erros": []
+    }
+  ],
+  "polaridade_esperada": "neutra",
+  "revisao_esperada": false,
+  "acerto_polaridade": true,
+  "acerto_revisao": true
+}

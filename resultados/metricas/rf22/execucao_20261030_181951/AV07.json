@@ -1,0 +1,47 @@
+{
+  "id": "AV07",
+  "modo": "real",
+  "canal": "presencial",
+  "data": "2026-06-16",
+  "polaridade": "neutra",
+  "situacao": "clara",
+  "justificativa": "O texto relata uma ação realizada na secretaria sem expressar uma avaliação positiva ou negativa sobre o atendimento. Apenas descreve o procedimento de entrega.",
+  "confianca": 0.8,
+  "rotulo_confianca": "estimativa não calibrada",
+  "contem_instrucao": false,
+  "revisao": false,
+  "motivos_revisao": [],
+  "rejeitada": false,
+  "termo_proibido": null,
+  "versao_esquema": "1.0",
+  "versao_prompt": "ee74f9f56985",
+  "arquivo_prompt": "sentimento_v1.md",
+  "chamadas": [
+    {
+      "provedor": "openai",
+      "modelo": "gpt-4o-mini",
+      "configuracao": "principal",
+      "simulado": false,
+      "temperatura": 0,
+      "inicio": "2026-10-30T18:20:04.186-04:00",
+      "fim": "2026-10-30T18:20:05.729-04:00",
+      "tempo_resposta_segundos": 1.543,
+      "tokens_entrada": 568,
+      "tokens_saida": 76,
+      "tokens_total": 644,
+      "custo_estimado_usd": 0.000131,
+      "status": "sucesso",
+      "erro": null
+    }
+  ],
+  "tentativas": [
+    {
+      "numero": 1,
+      "erros": []
+    }
+  ],
+  "polaridade_esperada": "neutra",
+  "revisao_esperada": false,
+  "acerto_polaridade": true,
+  "acerto_revisao": true
+}

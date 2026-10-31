@@ -1,0 +1,49 @@
+{
+  "experimento": "RF22 — polaridade das avaliações e painel (T13)",
+  "modo": "real",
+  "chamou_api": true,
+  "simulado": false,
+  "executado_em": "2026-10-30T18:20:15-04:00",
+  "arquivo_prompt": "sentimento_v1.md",
+  "versao_prompt": "ee74f9f56985",
+  "versao_esquema": "1.0",
+  "rotulo_confianca": "estimativa não calibrada",
+  "acuracia_polaridade": {
+    "numerador": 10,
+    "denominador": 12,
+    "percentual": 83.3
+  },
+  "concordancia_revisao": {
+    "numerador": 11,
+    "denominador": 12,
+    "percentual": 91.7
+  },
+  "custo_estimado_usd": 0.001741,
+  "painel": {
+    "registros": 12,
+    "unicos": 12,
+    "duplicados": [],
+    "totais": {
+      "positiva": 3,
+      "negativa": 3,
+      "neutra": 2,
+      "indeterminada": 4
+    },
+    "fracoes": {
+      "positiva": "3/12",
+      "negativa": "3/12",
+      "neutra": "2/12",
+      "indeterminada": "4/12"
+    },
+    "percentuais": {
+      "positiva": 25.0,
+      "negativa": 25.0,
+      "neutra": 16.7,
+      "indeterminada": 33.3
+    },
+    "denominador": 12,
+    "rejeitadas": 0,
+    "revisao": 5,
+    "mensagem": null
+  }
+}

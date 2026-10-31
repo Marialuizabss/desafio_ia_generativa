@@ -21,6 +21,18 @@ from datetime import datetime
 from time import perf_counter
 
 from src.auditoria_rag import registrar_consulta_rag, versao_do_prompt, versao_indice_atual
+from src.guardrails import (
+    BLOQUEAR,
+    ORIGEM_RAG,
+    REVISAR,
+    DecisaoGuardrail,
+    OrcamentoEstourado,
+    avaliar_entrada,
+    com_orcamento,
+    instrucoes_no_documento,
+    registrar_bloqueio,
+    sanear_saida,
+)
 from src.provider_adapter import ErroProvedor
 from src.rag import (
     recuperar_evidencias,
@@ -135,19 +147,8 @@ Cada trecho citado deve ser copiado letra por letra de UM único chunk.
 """
 
 
-# Instruções dirigidas ao assistente dentro de um documento do acervo. O texto do
-# acervo é dado, nunca ordem: um trecho assim sai do contexto e vira alerta.
-_PADROES_INJECAO = {
-    "desconsiderar_regras": re.compile(r"desconsider\w* (todas )?as (regras|instrucoes)"),
-    "ignorar_regras": re.compile(r"ignor\w* (todas )?as (regras|instrucoes)"),
-    "ignore_previous": re.compile(r"ignore (all |any |the )?(previous|prior|above) (instructions|rules)"),
-    "nota_ao_assistente": re.compile(r"nota ao assistente"),
-    "pedir_segredo": re.compile(
-        r"(liste|revele|mostre|informe|envie)\b.{0,80}"
-        r"(variaveis? de ambiente|chave (da )?api|openai_api_key|arquivo \.env)"
-    ),
-    "envio_automatico": re.compile(r"envie a resposta automaticamente"),
-}
+# O texto do acervo é dado, nunca ordem. Os padrões ficam no RF16; aqui o trecho
+# suspeito sai do contexto e vira alerta.
 
 
 def _sem_acentos(texto):
@@ -159,11 +160,12 @@ def _sem_acentos(texto):
 
 
 def _instrucao_suspeita(texto):
-    """Nomes dos padrões de instrução ao assistente encontrados no texto."""
+    """Nomes dos padrões de instrução ao assistente encontrados no texto.
 
-    normalizado = _sem_acentos(texto)
+    Reexporta a regra do RF16 para os testes e para a quarentena dos trechos.
+    """
 
-    return [nome for nome, padrao in _PADROES_INJECAO.items() if padrao.search(normalizado)]
+    return instrucoes_no_documento(texto)
 
 
 def _separar_suspeitos(evidencias):
@@ -742,6 +744,10 @@ def _gerar_resposta(pergunta, evidencias, dados_cidadao, nome_configuracao="prin
                 entrada=json.dumps(pedido, ensure_ascii=False),
                 nome_configuracao=nome_configuracao,
             )
+            texto, bloqueio = sanear_saida(texto)
+            if bloqueio is not None:
+                registrar_bloqueio(bloqueio, ORIGEM_RAG, pergunta)
+                return _resultado_bloqueio(pergunta, bloqueio, auditoria)
 
             if auditoria_anterior is not None:
                 auditoria = _somar_auditoria(auditoria_anterior, auditoria)
@@ -863,6 +869,36 @@ def _gerar_resposta(pergunta, evidencias, dados_cidadao, nome_configuracao="prin
     return _abstencao(pergunta, auditoria=auditoria)
 
 
+def _resultado_bloqueio(pergunta, entrada: DecisaoGuardrail, auditoria=None):
+    """Resposta vazia: a entrada ou a saída foi bloqueada e o modelo não responde."""
+
+    return {
+        "pergunta": pergunta,
+        "status": None,
+        "decisao": BLOQUEAR,
+        "motivos_guardrail": list(entrada.motivos),
+        "resposta": "",
+        "justificativa": "A entrada foi bloqueada pelos guardrails.",
+        "fontes": [],
+        "alertas": [{"tipo": "bloqueio", "padroes": list(entrada.motivos)}],
+        "auditoria": auditoria or {},
+    }
+
+
+def _aplicar_revisao_da_entrada(resultado, entrada: DecisaoGuardrail):
+    """Injeção na pergunta não cancela a consulta: a decisão fica em revisão."""
+
+    if entrada.decisao != REVISAR:
+        return resultado
+    resultado["decisao"] = "revisar"
+    resultado["motivos_guardrail"] = list(entrada.motivos)
+    resultado.setdefault("alertas", []).append({
+        "tipo": "instrucao_na_entrada",
+        "padroes": list(entrada.motivos),
+    })
+    return resultado
+
+
 def responder_rf19(
     pergunta,
     top_k=15,
@@ -892,7 +928,21 @@ def responder_rf19(
     erro_execucao = None
 
     try:
-        resultado = _responder_rf19(pergunta, top_k, dados_cidadao, nome_configuracao, rastro)
+        with com_orcamento(ORIGEM_RAG):
+            entrada = avaliar_entrada(pergunta, ORIGEM_RAG)
+            if entrada.decisao == BLOQUEAR:
+                registrar_bloqueio(entrada, ORIGEM_RAG, pergunta)
+                resultado = _resultado_bloqueio(pergunta, entrada)
+            else:
+                resultado = _responder_rf19(
+                    pergunta, top_k, dados_cidadao, nome_configuracao, rastro
+                )
+                resultado = _aplicar_revisao_da_entrada(resultado, entrada)
+        return resultado
+    except OrcamentoEstourado as erro:
+        bloqueio = DecisaoGuardrail(BLOQUEAR, (erro.motivo,), True)
+        registrar_bloqueio(bloqueio, ORIGEM_RAG, pergunta)
+        resultado = _resultado_bloqueio(pergunta, bloqueio)
         return resultado
     except Exception as erro:
         erro_execucao = f"{type(erro).__name__}: {erro}"

@@ -6,7 +6,12 @@
 
 import pytest
 
-MODULOS_COM_RAG = ("testes.test_rf19", "testes.test_rf21", "testes.test_vigencia")
+MODULOS_COM_RAG = (
+    "testes.test_rf16",
+    "testes.test_rf19",
+    "testes.test_rf21",
+    "testes.test_vigencia",
+)
 
 
 @pytest.fixture(autouse=True)

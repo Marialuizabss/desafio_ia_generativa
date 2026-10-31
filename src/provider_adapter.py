@@ -20,6 +20,7 @@ from time import perf_counter
 from openai import OpenAI, OpenAIError
 
 from src.configuracao import CONFIG
+from src.guardrails import contabilizar_tokens, reservar_chamada
 from src.llm_client import _custo_estimado, _mensagem_de_falha
 
 PROVEDOR_OPENAI = "openai"
@@ -196,6 +197,7 @@ def consultar_llm(
     if not instrucoes.strip() or not entrada.strip():
         raise ValueError("Instruções e entrada não podem estar vazias.")
 
+    reservar_chamada()
     inicio = _agora()
     marca = perf_counter()
 
@@ -217,6 +219,7 @@ def consultar_llm(
         ) from erro
 
     duracao = round(perf_counter() - marca, 3)
+    contabilizar_tokens(uso.get("tokens_total"))
 
     return texto, _montar_auditoria(
         config, nome_configuracao, inicio, duracao, "sucesso", uso=uso

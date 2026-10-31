@@ -292,6 +292,9 @@ def gerar_json_estrito(
     transitória da rede ou do serviço (RF16).
     """
 
+    from src.guardrails import contabilizar_tokens, reservar_chamada
+
+    reservar_chamada()
     modelo_id = (modelo or MODELO).strip()
     consulta = {
         "model": modelo_id,
@@ -321,6 +324,7 @@ def gerar_json_estrito(
         "parametros": {chave: consulta[chave] for chave in ("reasoning", "store") if chave in consulta},
         "repeticoes_maximas": 1,
     })
+    contabilizar_tokens(chamada.get("tokens_total"))
     return conteudo, chamada
 
 

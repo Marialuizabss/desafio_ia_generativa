@@ -69,6 +69,12 @@ def montar_evento(
     auditoria = resultado.get("auditoria") or {}
     evidencias = rastro.get("evidencias") or []
     id_consulta = id_consulta or str(uuid4())
+    bloqueada = resultado.get("decisao") == "bloquear"
+    pergunta_registrada = (
+        hashlib.sha256((pergunta or "").encode("utf-8")).hexdigest()[:16]
+        if bloqueada
+        else mascarar_identificadores(pergunta)
+    )
 
     evento = {
         "id_execucao": id_consulta,
@@ -76,7 +82,7 @@ def montar_evento(
         "fim": fim,
         "latencia_total_segundos": round(latencia_total, 3),
         "latencia_recuperacao_segundos": rastro.get("latencia_recuperacao"),
-        "pergunta": mascarar_identificadores(pergunta),
+        "pergunta": pergunta_registrada,
         "top_k": top_k,
         "versao_esquema_resposta": VERSAO_ESQUEMA_RESPOSTA,
         "versao_prompt": versao_prompt,
@@ -96,20 +102,22 @@ def montar_evento(
         "status": resultado.get("status"),
         "decisao": resultado.get("decisao"),
         "erro": erro or auditoria.get("erro"),
-        "geracao": {
-            "provedor": auditoria.get("provedor"),
-            "modelo": auditoria.get("modelo"),
-            "configuracao": auditoria.get("configuracao") or rastro.get("configuracao"),
-            "simulado": auditoria.get("simulado"),
-            "status": auditoria.get("status") or "nao_chamada",
-            "chamadas": auditoria.get("tentativas", 1 if auditoria else 0),
-            "tempo_resposta_segundos": auditoria.get("tempo_resposta_segundos"),
-            "tokens_entrada": auditoria.get("tokens_entrada"),
-            "tokens_saida": auditoria.get("tokens_saida"),
-            "tokens_total": auditoria.get("tokens_total"),
-            "custo_estimado_usd": auditoria.get("custo_estimado_usd"),
-            "metricas_indisponiveis": auditoria.get("metricas_indisponiveis"),
-        },
+    }
+    if resultado.get("motivos_guardrail"):
+        evento["motivos_guardrail"] = list(resultado["motivos_guardrail"])
+    evento["geracao"] = {
+        "provedor": auditoria.get("provedor"),
+        "modelo": auditoria.get("modelo"),
+        "configuracao": auditoria.get("configuracao") or rastro.get("configuracao"),
+        "simulado": auditoria.get("simulado"),
+        "status": auditoria.get("status") or "nao_chamada",
+        "chamadas": auditoria.get("tentativas", 1 if auditoria else 0),
+        "tempo_resposta_segundos": auditoria.get("tempo_resposta_segundos"),
+        "tokens_entrada": auditoria.get("tokens_entrada"),
+        "tokens_saida": auditoria.get("tokens_saida"),
+        "tokens_total": auditoria.get("tokens_total"),
+        "custo_estimado_usd": auditoria.get("custo_estimado_usd"),
+        "metricas_indisponiveis": auditoria.get("metricas_indisponiveis"),
     }
 
     if not auditoria:

@@ -1,0 +1,49 @@
+{
+  "id": "AV11",
+  "modo": "real",
+  "canal": "presencial",
+  "data": "2026-06-18",
+  "polaridade": "indeterminada",
+  "situacao": "mista",
+  "justificativa": "O atendimento foi elogiado pela educação da atendente, mas houve uma crítica em relação à falta de clareza sobre a matrícula. Isso gera uma ambiguidade na avaliação.",
+  "confianca": 0.7,
+  "rotulo_confianca": "estimativa não calibrada",
+  "contem_instrucao": false,
+  "revisao": true,
+  "motivos_revisao": [
+    "Mensagem mista, sem lado predominante."
+  ],
+  "rejeitada": false,
+  "termo_proibido": null,
+  "versao_esquema": "1.0",
+  "versao_prompt": "ee74f9f56985",
+  "arquivo_prompt": "sentimento_v1.md",
+  "chamadas": [
+    {
+      "provedor": "openai",
+      "modelo": "gpt-4o-mini",
+      "configuracao": "principal",
+      "simulado": false,
+      "temperatura": 0,
+      "inicio": "2026-10-30T18:20:12.485-04:00",
+      "fim": "2026-10-30T18:20:13.858-04:00",
+      "tempo_resposta_segundos": 1.373,
+      "tokens_entrada": 570,
+      "tokens_saida": 85,
+      "tokens_total": 655,
+      "custo_estimado_usd": 0.000137,
+      "status": "sucesso",
+      "erro": null
+    }
+  ],
+  "tentativas": [
+    {
+      "numero": 1,
+      "erros": []
+    }
+  ],
+  "polaridade_esperada": "indeterminada",
+  "revisao_esperada": true,
+  "acerto_polaridade": true,
+  "acerto_revisao": true
+}

@@ -313,9 +313,44 @@ recuperados, tempos e custos, sem chave de API e com identificadores mascarados)
 configuração de geração não reconstrói o índice. Detalhes, resultados e limitações:
 `documentacao/desafio-2/01_relatorio_tecnico.md`, seções 4 e 5.
 
-### Guardrails, interface e sentimentos (RF16, RF20 e RF22)
+### Sentimentos e painel (RF22)
 
-*A preencher — Felipe.*
+O classificador pede ao modelo a situação e a polaridade, e o código aplica as regras de mensagem
+mista, ironia, falta de contexto e instrução no texto. A confiança fica registrada como estimativa
+não calibrada e não entra no percentual. O painel calcula totais, fração e denominador; filtro
+vazio mostra "sem dados".
+
+| O quê | Comando | Chama a API? |
+|---|---|---|
+| Testes | `python -m unittest testes.test_rf22` | Não |
+| Avaliação simulada das 12 | `python -m src.avaliacao_rf22 --simulado` | Não |
+| Avaliação real | `python -m src.avaliacao_rf22 --todos` | Sim, configuração `principal` |
+
+Resultados em `resultados/metricas/rf22/execucao_*/`. Detalhes na seção 8 de
+`documentacao/desafio-2/01_relatorio_tecnico.md`.
+
+### Guardrails (RF16)
+
+A moderação é por regras, em `src/guardrails.py`, sem chamada extra ao modelo. Vale para a análise da solicitação e para a pergunta do RAG. Segredo, texto vazio, tipo errado ou tamanho acima do limite bloqueiam e o modelo não é chamado. Injeção na solicitação ou na pergunta segue o atendimento, com alerta e revisão. Resposta com valor no formato de chave de API é descartada. Cada bloqueio fica em `resultados/logs/execucoes.jsonl` (motivo, origem e hash do texto, sem o trecho).
+
+O teto é por atendimento: análise e cada classificação de sentimento, 2 chamadas e 8 000 tokens; RAG, 3 chamadas e 60 000 tokens. A repetição de rede continua uma. A segunda chamada do sentimento é a correção da saída inválida.
+
+| O quê | Comando | Chama a API? |
+|---|---|---|
+| Testes | `python -m unittest testes.test_rf16` | Não |
+
+Detalhes na seção 6 de `documentacao/desafio-2/01_relatorio_tecnico.md`.
+
+### Interface (RF20)
+
+`python -m src.main` abre a interface. A barra lateral tem Acervo, Ficha, Consulta, Fontes e Painel; o atendimento do Desafio 1 continua na área padrão. No acervo dá para indexar os documentos selecionados e incluir um TXT ou PDF fictício. A ficha mostra ausência como "não localizado" e a minuta, com a participação da IA no rodapé. Sem consulta ao acervo, a minuta não preenche documento, prazo nem local. A consulta usa o RAG: sem evidência ou conflito vai para revisão, sem resposta inventada, e a resposta fundamentada entra na minuta com as fontes. Falha do serviço e índice desatualizado aparecem em português e não geram resposta. O painel conta polaridade, fração e denominador, desenha o gráfico e, com filtro vazio, mostra "sem dados". A decisão do servidor é `pendente`, `aprovada`, `rejeitada` ou `revisar`; `aprovada` e `rejeitada` encerram o atendimento e o registro não é reescrito.
+
+| O quê | Comando | Chama a API? |
+|---|---|---|
+| Testes | `python -m unittest testes.test_rf20_regras testes.test_rf20_telas` | Não |
+| Interface | `python -m src.main` | Só ao analisar ou consultar |
+
+Código: `src/consulta_acervo.py`, `src/acervo_operacao.py`, `src/painel.py` e `src/telas_rf20.py`. A matriz T01–T15 está em `documentacao/desafio-2/matriz_rf23.md`. Detalhes nas seções 7 a 13 de `documentacao/desafio-2/01_relatorio_tecnico.md`.
 
 ---
 
