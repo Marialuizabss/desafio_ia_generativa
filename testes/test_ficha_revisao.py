@@ -17,10 +17,15 @@ from streamlit.testing.v1 import AppTest
 import testes.test_ficha_orientacoes as base
 from src import audit, consulta_acervo, minuta_fundamentada
 from src.consulta_acervo import (
+    AVISO_ORIENTACOES_PENDENTES,
     GUIA_FICHA_BLOQUEADA,
     GUIA_FICHA_EM_REVISAO,
     MENSAGEM_APROVAR_SEM_MINUTA,
     MENSAGEM_AVISO_DE_IA_REMOVIDO,
+    MENSAGEM_ORIENTACAO_PENDENTE,
+    MENSAGEM_ORIENTACOES_COM_AVISO,
+    MENSAGEM_SEM_EVIDENCIA,
+    conferir_minuta_para_aprovar,
     guia_da_revisao,
     salvar_minuta_aprovada,
 )
@@ -210,6 +215,55 @@ class TestRevisaoNaFicha(unittest.TestCase):
         self.assertIn(MENSAGEM_APROVAR_SEM_MINUTA, "\n".join(item.value for item in tela.error))
         self.assertEqual(self._salvas(), [])
 
+    # F.1: recado para o servidor não vai ao cidadão
+
+    def _erros(self, tela):
+        return "\n".join(item.value for item in tela.error)
+
+    def test_sem_evidencia_exige_reescrever_as_orientacoes(self):
+        self.rag.sem_evidencia = {"documentos"}
+        tela = self._ficha()
+        tela.button(key="rf20_buscar_orientacoes").click().run()
+        self.assertIn(AVISO_ORIENTACOES_PENDENTES, "\n".join(item.value for item in tela.warning))
+
+        self._assinar(tela)
+        self.assertIn(MENSAGEM_ORIENTACOES_COM_AVISO, self._erros(tela))
+        self.assertEqual(self._salvas(), [])
+
+        self._editar_minuta(tela, MENSAGEM_SEM_EVIDENCIA, "Leve RG, CPF e o histórico escolar.")
+        tela.button(key="rf20_aprovar").click().run()
+
+        conteudo = self._salvas()[0].read_text(encoding="utf-8")
+        self.assertIn("Leve RG, CPF e o histórico escolar.", conteudo)
+        self.assertNotIn(MENSAGEM_SEM_EVIDENCIA, conteudo)
+        self.assertTrue(self._eventos("minuta_aprovada_ficha")[0]["editada_pelo_servidor"])
+
+    def test_orientacoes_nao_buscadas_exigem_reescrever(self):
+        tela = self._assinar(self._ficha())
+        self.assertIn(MENSAGEM_ORIENTACOES_COM_AVISO, self._erros(tela))
+
+        self._editar_minuta(tela, MENSAGEM_ORIENTACAO_PENDENTE, "Compareça à secretaria com RG e CPF.")
+        tela.button(key="rf20_aprovar").click().run()
+
+        conteudo = self._salvas()[0].read_text(encoding="utf-8")
+        self.assertIn("Compareça à secretaria com RG e CPF.", conteudo)
+        self.assertNotIn(MENSAGEM_ORIENTACAO_PENDENTE, conteudo)
+
+    def test_outra_categoria_exige_reescrever(self):
+        tela = self._assinar(self._ficha(categoria="frequencia_cancelamento"))
+
+        self.assertIn(MENSAGEM_ORIENTACOES_COM_AVISO, self._erros(tela))
+        self.assertEqual(self._salvas(), [])
+
+    def test_editar_fora_das_orientacoes_nao_basta(self):
+        tela = self._ficha()
+        self._editar_minuta(tela, "Permanecemos à disposição", "Seguimos à disposição")
+
+        self._assinar(tela)
+
+        self.assertIn(MENSAGEM_ORIENTACOES_COM_AVISO, self._erros(tela))
+        self.assertEqual(self._salvas(), [])
+
     def test_rejeitar_nao_salva_minuta(self):
         tela = self._ficha()
         tela.text_area(key="rf20_justificativa").input("Falta conferir a chamada.").run()
@@ -254,6 +308,26 @@ class TestCorrecaoNoContrato(unittest.TestCase):
     def test_campo_fora_do_contrato_e_recusado(self):
         with self.assertRaises(ValueError):
             corrigir_solicitacao(self.original, {"resumo": "outro resumo"})
+
+
+class TestOrientacoesNaAprovacao(unittest.TestCase):
+    GERADA = (
+        "Prezado(a) Ana,\n\n**Orientações**\n" + MENSAGEM_ORIENTACAO_PENDENTE
+        + "\n\n**Ciência das regras de matrícula**\nnão localizado\n\n"
+        "*Minuta elaborada com apoio de IA. Documento sujeito a revisão.*"
+    )
+
+    def test_mudar_so_espacos_nao_conta_como_reescrever(self):
+        texto = self.GERADA.replace(MENSAGEM_ORIENTACAO_PENDENTE, "  " + MENSAGEM_ORIENTACAO_PENDENTE + "\n")
+
+        with self.assertRaisesRegex(ValueError, "seção Orientações"):
+            conferir_minuta_para_aprovar(texto, gerada=self.GERADA, orientacoes_ok=False)
+
+    def test_orientacoes_fundamentadas_aprovam_como_geradas(self):
+        self.assertEqual(
+            conferir_minuta_para_aprovar(self.GERADA, gerada=self.GERADA, orientacoes_ok=True),
+            self.GERADA,
+        )
 
 
 class TestMinutaAprovadaSalva(unittest.TestCase):

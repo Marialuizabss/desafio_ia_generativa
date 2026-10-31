@@ -574,6 +574,9 @@ fatos sem suporte e saídas rejeitadas pelo RF14.
   aparece no texto original é aceito como "informado pelo servidor". Corrigir não aprova: o estado
   recomeça da ficha corrigida. O log grava `revisao_campos_ficha` só com os nomes dos campos.
 - **Aprovação na Ficha (RF24):** exige a minuta montada e o aviso de participação da IA no texto.
+  Se as orientações não vieram todas fundamentadas (não buscadas, sem evidência, em conflito ou
+  outra categoria), a seção Orientações traz um recado para o servidor: a aprovação só é aceita
+  depois que ele reescreve essa seção, para o recado não chegar ao cidadão.
   A minuta aprovada (editada ou não) é assinada com o nome e o cargo e salva em
   `resultados/minutas/rf20/ficha_<id_execucao>.md`, sem sobrescrever. O log grava
   `minuta_aprovada_ficha` (caminho, `editada_pelo_servidor` e hash) e a decisão com o caminho.
@@ -603,4 +606,4 @@ não são reescritos; a tradução vale na leitura):
 | 1.7 | 2026-10-29 | Prompt v2.1 em uso (seção "Resumo" ampliada após as omissões da execução com o v2); `arquivo_prompt` registrado em cada execução |
 | 1.8 | 2026-10-30 | Saída do classificador do RF22: situação, polaridade proposta, justificativa, confiança e instrução no texto; o código aplica a tabela de rotulagem |
 | 1.9 | 2026-10-31 | Registro de exclusões `dados/acervo/exclusoes.json` (RF24): motivo obrigatório, responsável, exclusão e restauração pelo terminal e pela tela |
-| 1.10 | 2026-10-31 | Seção 10: correção dos campos pelo servidor ("informado pelo servidor"), categoria fora de matrícula vai para `revisar` e minuta aprovada salva e assinada em `resultados/minutas/rf20/` |
+| 1.10 | 2026-10-31 | Seção 10: correção dos campos pelo servidor ("informado pelo servidor"), categoria fora de matrícula vai para `revisar`, minuta aprovada salva e assinada em `resultados/minutas/rf20/` e seção Orientações reescrita quando traz recado para o servidor |

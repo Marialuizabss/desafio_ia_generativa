@@ -45,6 +45,14 @@ AVISO_PRIMEIRA_CONSULTA = "A primeira consulta leva alguns segundos."
 AVISO_DE_IA = "Minuta elaborada com apoio de IA"
 MENSAGEM_AVISO_DE_IA_REMOVIDO = "O aviso de participação da IA não pode ser removido (RF24)."
 MENSAGEM_APROVAR_SEM_MINUTA = "A minuta não foi montada: corrija os campos antes de aprovar."
+MENSAGEM_ORIENTACOES_COM_AVISO = (
+    "A seção Orientações ainda tem avisos para o servidor. Edite a minuta e escreva a "
+    "orientação ao cidadão antes de aprovar."
+)
+AVISO_ORIENTACOES_PENDENTES = (
+    "A seção Orientações desta minuta tem avisos para o servidor (orientação não buscada, "
+    "sem evidência ou em conflito). Reescreva a seção antes de aprovar."
+)
 GUIA_FICHA_BLOQUEADA = (
     'A minuta não foi montada. Corrija os campos em "Corrigir campos da ficha" e aplique. '
     "Depois busque as orientações (se for matrícula) e decida."
@@ -454,12 +462,36 @@ def guia_da_revisao(ficha: dict | None, estado: str | None) -> str | None:
     return None
 
 
-def conferir_minuta_para_aprovar(texto: str | None) -> str:
-    """Texto que vai ser aprovado. Sem minuta ou sem o aviso de IA, a aprovação é recusada."""
+def orientacoes_resolvidas(consulta: dict | None) -> bool:
+    """Todas as orientações vieram fundamentadas do acervo: a seção pode ir como foi gerada."""
+    return isinstance(consulta, dict) and consulta.get("tipo") == STATUS_FUNDAMENTADA
+
+
+def secao_de_orientacoes(texto: str) -> str:
+    """O que está entre "Orientações" e "Ciência das regras", sem diferença de espaços."""
+    inicio = texto.find(MARCA_ORIENTACOES)
+    if inicio < 0:
+        return ""
+    fim = texto.find(MARCA_CIENCIA, inicio)
+    trecho = texto[inicio + len(MARCA_ORIENTACOES):fim if fim > inicio else None]
+    return " ".join(trecho.split())
+
+
+def conferir_minuta_para_aprovar(
+    texto: str | None, gerada: str | None = None, orientacoes_ok: bool = True
+) -> str:
+    """Texto que vai ser aprovado.
+
+    Sem minuta ou sem o aviso de IA, a aprovação é recusada. Com orientação não resolvida
+    (não buscada, sem evidência, em conflito ou outra categoria), a seção Orientações traz um
+    recado para o servidor: só aprova se ele a reescreveu, para o recado não ir ao cidadão.
+    """
     if not (texto or "").strip():
         raise ValueError(MENSAGEM_APROVAR_SEM_MINUTA)
     if AVISO_DE_IA not in texto:
         raise ValueError(MENSAGEM_AVISO_DE_IA_REMOVIDO)
+    if not orientacoes_ok and gerada and secao_de_orientacoes(texto) == secao_de_orientacoes(gerada):
+        raise ValueError(MENSAGEM_ORIENTACOES_COM_AVISO)
     return texto
 
 

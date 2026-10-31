@@ -10,6 +10,7 @@ import streamlit as st
 try:
     from audit import registrar_decisao, registrar_evento, registrar_execucao, traduzir_decisao
     from consulta_acervo import (
+        AVISO_ORIENTACOES_PENDENTES,
         CATEGORIAS,
         MENSAGEM_CONSULTA_FORA_DA_MINUTA,
         MENSAGENS_ENCERRAMENTO,
@@ -25,6 +26,7 @@ try:
         exigir_revisao_sem_orientacoes,
         guia_da_revisao,
         mensagem_de_correcao,
+        orientacoes_resolvidas,
         minuta_do_atendimento,
         opcoes_de_exclusao,
         pendentes_de_indexar,
@@ -39,6 +41,7 @@ try:
 except ImportError:
     from src.audit import registrar_decisao, registrar_evento, registrar_execucao, traduzir_decisao
     from src.consulta_acervo import (
+        AVISO_ORIENTACOES_PENDENTES,
         CATEGORIAS,
         MENSAGEM_CONSULTA_FORA_DA_MINUTA,
         MENSAGENS_ENCERRAMENTO,
@@ -54,6 +57,7 @@ except ImportError:
         exigir_revisao_sem_orientacoes,
         guia_da_revisao,
         mensagem_de_correcao,
+        orientacoes_resolvidas,
         minuta_do_atendimento,
         opcoes_de_exclusao,
         pendentes_de_indexar,
@@ -702,6 +706,8 @@ def _mostrar_minuta(ficha: dict) -> None:
     st.markdown("**Minuta**")
     st.session_state["rf20_minuta_base"] = minuta["texto"] if minuta["pronta"] else None
     st.session_state["rf20_chave_minuta"] = None
+    if minuta["pronta"] and not orientacoes_resolvidas(consulta):
+        st.warning(AVISO_ORIENTACOES_PENDENTES)
     if minuta["pronta"] and st.toggle("Editar o texto da minuta", key="rf20_editar_minuta"):
         # A chave segue o texto montado: se a ficha ou as orientações mudarem, a edição recomeça dele.
         chave = f"rf20_minuta_texto_{sha256(minuta['texto'].encode('utf-8')).hexdigest()[:12]}"
@@ -902,7 +908,11 @@ def _salvar_minuta_da_ficha(id_execucao: str) -> str:
 
     base = st.session_state.get("rf20_minuta_base")
     chave = st.session_state.get("rf20_chave_minuta")
-    texto = conferir_minuta_para_aprovar(st.session_state.get(chave) if chave else base)
+    texto = conferir_minuta_para_aprovar(
+        st.session_state.get(chave) if chave else base,
+        gerada=base,
+        orientacoes_ok=orientacoes_resolvidas(st.session_state.get("rf20_orientacoes")),
+    )
     assinada = assinar_minuta(
         texto,
         st.session_state.get("rf20_revisor") or "",
