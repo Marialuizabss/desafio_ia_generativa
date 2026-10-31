@@ -39,6 +39,7 @@ são combinadas na equipe e registradas no histórico (seção 11).
 | `dados/acervo/*.pdf`, `*.txt` | Documentos institucionais | Professor (PDF) e equipe (TXT) | Maria | RF17 |
 | `dados/acervo/acervo.json` | Catálogo e regras de prevalência | Ana | Maria | RF17, RF19 |
 | `dados/acervo/exclusoes.json` | Exclusões do índice em vigor (seção 3) | `--excluir` e tela Acervo | Indexação, conferência e RAG | RF24, T14 |
+| `resultados/minutas/rf20/ficha_<id>.md` | Minuta aprovada na Ficha, assinada (seção 10) | Tela Ficha | Revisão e auditoria | RF20, RF24, T11 |
 | `dados/originais/perguntas_rag.json` | 8 perguntas, sem resposta | Ana | Maria | RF18, RF19 |
 | `dados/gabaritos/gabarito_rag.json` | Esperado das 8 perguntas | Ana | Maria, RF23 | RF18, RF19 |
 | `dados/originais/adv03_tentativa_segredo.txt` | Ataque para obter segredo | Ana | Felipe | RF16 |
@@ -563,10 +564,20 @@ fatos sem suporte e saídas rejeitadas pelo RF14.
 | `revisar` | Encaminhada para correção ou análise | Justificativa (escrita pelo servidor ou o motivo automático) |
 
 - **Vai para `revisar` automaticamente** quando: a validação ou uma regra de negócio falha; o RAG
-  responde `sem_evidencia` ou `conflito`; um guardrail decide `revisar`; a categoria é ambígua.
+  responde `sem_evidencia` ou `conflito`; um guardrail decide `revisar`; a categoria é ambígua; a
+  categoria não é matrícula (não há busca de orientações no acervo para ela).
 - **Transições:** `pendente` → `aprovada`, `rejeitada` ou `revisar`; `revisar` → `pendente`
   depois da correção. `aprovada` e `rejeitada` são finais: um novo atendimento é uma nova execução.
 - Nenhuma resposta é enviada automaticamente; a minuta identifica a participação da IA.
+- **Correção na Ficha (RF20):** o servidor corrige os 11 campos e a categoria; resumo e entidades
+  ficam como a análise gerou. Data impossível ou incoerente bloqueia a correção. Campo que não
+  aparece no texto original é aceito como "informado pelo servidor". Corrigir não aprova: o estado
+  recomeça da ficha corrigida. O log grava `revisao_campos_ficha` só com os nomes dos campos.
+- **Aprovação na Ficha (RF24):** exige a minuta montada e o aviso de participação da IA no texto.
+  A minuta aprovada (editada ou não) é assinada com o nome e o cargo e salva em
+  `resultados/minutas/rf20/ficha_<id_execucao>.md`, sem sobrescrever. O log grava
+  `minuta_aprovada_ficha` (caminho, `editada_pelo_servidor` e hash) e a decisão com o caminho.
+  A rejeição não salva minuta.
 
 **Tradução dos estados do Desafio 1** (registros antigos em `resultados/logs/execucoes.jsonl`
 não são reescritos; a tradução vale na leitura):
@@ -592,3 +603,4 @@ não são reescritos; a tradução vale na leitura):
 | 1.7 | 2026-10-29 | Prompt v2.1 em uso (seção "Resumo" ampliada após as omissões da execução com o v2); `arquivo_prompt` registrado em cada execução |
 | 1.8 | 2026-10-30 | Saída do classificador do RF22: situação, polaridade proposta, justificativa, confiança e instrução no texto; o código aplica a tabela de rotulagem |
 | 1.9 | 2026-10-31 | Registro de exclusões `dados/acervo/exclusoes.json` (RF24): motivo obrigatório, responsável, exclusão e restauração pelo terminal e pela tela |
+| 1.10 | 2026-10-31 | Seção 10: correção dos campos pelo servidor ("informado pelo servidor"), categoria fora de matrícula vai para `revisar` e minuta aprovada salva e assinada em `resultados/minutas/rf20/` |

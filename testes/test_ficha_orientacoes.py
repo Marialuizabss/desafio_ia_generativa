@@ -241,7 +241,8 @@ class TestOrientacoesNaFicha(unittest.TestCase):
 
     def _assert_ficha_limpa(self, tela, aviso):
         self.assertFalse(tela.exception)
-        self.assertEqual([item.value for item in tela.toast], [aviso])
+        self.assertEqual(len(tela.toast), 1)
+        self.assertTrue(tela.toast[0].value.startswith(aviso))
         self.assertEqual(tela.text_area(key="rf20_texto_ficha").value, "")
         texto = _texto(tela)
         self.assertNotIn("**Minuta**", texto)

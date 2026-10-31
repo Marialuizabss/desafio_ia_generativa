@@ -10,15 +10,21 @@ import streamlit as st
 try:
     from audit import registrar_decisao, registrar_evento, registrar_execucao, traduzir_decisao
     from consulta_acervo import (
+        CATEGORIAS,
         MENSAGEM_CONSULTA_FORA_DA_MINUTA,
         MENSAGENS_ENCERRAMENTO,
         MENSAGEM_ORIENTACOES_SO_MATRICULA,
         MENSAGEM_SEM_FONTES,
         classificar_consulta,
         aviso_de_espera,
+        campos_para_corrigir,
         classificar_ficha,
+        classificar_ficha_corrigida,
         combinar_estado,
+        conferir_minuta_para_aprovar,
         exigir_revisao_sem_orientacoes,
+        guia_da_revisao,
+        mensagem_de_correcao,
         minuta_do_atendimento,
         opcoes_de_exclusao,
         pendentes_de_indexar,
@@ -27,20 +33,27 @@ try:
         preparar_acervo,
         resumo_das_orientacoes,
         resumo_do_indice,
+        salvar_minuta_aprovada,
         transicionar,
     )
 except ImportError:
     from src.audit import registrar_decisao, registrar_evento, registrar_execucao, traduzir_decisao
     from src.consulta_acervo import (
+        CATEGORIAS,
         MENSAGEM_CONSULTA_FORA_DA_MINUTA,
         MENSAGENS_ENCERRAMENTO,
         MENSAGEM_ORIENTACOES_SO_MATRICULA,
         MENSAGEM_SEM_FONTES,
         classificar_consulta,
         aviso_de_espera,
+        campos_para_corrigir,
         classificar_ficha,
+        classificar_ficha_corrigida,
         combinar_estado,
+        conferir_minuta_para_aprovar,
         exigir_revisao_sem_orientacoes,
+        guia_da_revisao,
+        mensagem_de_correcao,
         minuta_do_atendimento,
         opcoes_de_exclusao,
         pendentes_de_indexar,
@@ -49,6 +62,7 @@ except ImportError:
         preparar_acervo,
         resumo_das_orientacoes,
         resumo_do_indice,
+        salvar_minuta_aprovada,
         transicionar,
     )
 
@@ -72,9 +86,17 @@ ATENDIMENTO_ANTERIOR = (
     "rf20_id_ficha",
     "rf20_estado",
     "rf20_auto",
+    "rf20_solicitacao",
+    "rf20_texto_analisado",
+    "rf20_minuta_base",
+    "rf20_chave_minuta",
+    "rf20_editar_minuta",
+    "rf20_aviso_correcao",
     "rf20_bloqueado",
     "rf20_decisao_erro",
 )
+
+PREFIXOS_DO_ATENDIMENTO = ("rf20_corrigir_", "rf20_minuta_texto_")
 
 ROTULOS_ESTADO = {
     "pendente": "Pendente",
@@ -440,6 +462,14 @@ def _tela_fontes() -> None:
             st.markdown(f"> {trecho}")
 
 
+def _descartar_atendimento() -> None:
+    for chave in ATENDIMENTO_ANTERIOR:
+        st.session_state.pop(chave, None)
+    # Campos do formulário de correção e o texto editado da minuta da ficha anterior.
+    for chave in [c for c in list(st.session_state.keys()) if str(c).startswith(PREFIXOS_DO_ATENDIMENTO)]:
+        del st.session_state[chave]
+
+
 def _executar_ficha() -> None:
     texto = (st.session_state.get("rf20_texto_ficha") or "").strip()
     if not texto:
@@ -448,8 +478,7 @@ def _executar_ficha() -> None:
         )
         return
     # Solicitação nova, atendimento novo: nada do atendimento anterior entra nesta minuta.
-    for chave in ATENDIMENTO_ANTERIOR:
-        st.session_state.pop(chave, None)
+    _descartar_atendimento()
     try:
         try:
             from nlp import analisar_solicitacao
@@ -457,6 +486,11 @@ def _executar_ficha() -> None:
             from src.nlp import analisar_solicitacao
         analise = analisar_solicitacao(texto, "texto-da-ficha")
         classificacao = classificar_ficha(analise.validacao, analise.guardrail)
+        solicitacao = getattr(analise.validacao, "solicitacao", None)
+        if solicitacao is not None:
+            # A correção do servidor parte da solicitação validada e do texto que o modelo leu.
+            st.session_state["rf20_solicitacao"] = solicitacao.model_dump()
+            st.session_state["rf20_texto_analisado"] = texto
     except Exception as erro:
         classificacao = classificar_ficha(None)
         classificacao["texto"] = f"{classificacao['texto']} {erro}".strip()
@@ -492,6 +526,12 @@ def _executar_consulta() -> None:
 
 def _mostrar_ficha(classificacao: dict) -> None:
     _mostrar_mensagem(classificacao)
+    corrigida = st.session_state.pop("rf20_aviso_correcao", None)
+    if corrigida:
+        st.success(corrigida)
+    guia = guia_da_revisao(classificacao, st.session_state.get("rf20_estado"))
+    if guia:
+        st.info(guia)
     if classificacao.get("motivos"):
         st.markdown("**Motivos**")
         for motivo in classificacao["motivos"]:
@@ -507,7 +547,82 @@ def _mostrar_ficha(classificacao: dict) -> None:
         st.markdown("**Entidades**")
         for entidade in linhas["entidades"]:
             st.markdown(f"- {entidade['tipo']}: {entidade['texto']} ({entidade['origem']})")
+    _corrigir_campos(classificacao)
     _mostrar_minuta(classificacao)
+
+
+def _corrigir_campos(ficha: dict) -> None:
+    solicitacao = st.session_state.get("rf20_solicitacao")
+    if not solicitacao:
+        return
+    # A rodada muda depois de cada correção: o formulário volta com os valores novos.
+    rodada = st.session_state.get("rf20_rodada", 0)
+    aberto = bool(ficha.get("minuta_bloqueada")) or st.session_state.get("rf20_estado") == "revisar"
+    with st.expander("Corrigir campos da ficha", expanded=aberto):
+        st.caption(
+            'Campo vazio fica como "não localizado". O que não estiver no texto original '
+            "fica marcado como informado pelo servidor."
+        )
+        for nome, rotulo, valor in campos_para_corrigir(solicitacao):
+            st.text_input(rotulo, value=valor, key=f"rf20_corrigir_{nome}_{rodada}")
+        st.selectbox(
+            "Categoria",
+            CATEGORIAS,
+            index=CATEGORIAS.index(solicitacao["categoria"]),
+            key=f"rf20_corrigir_categoria_{rodada}",
+        )
+        if st.button("Aplicar correções", key="rf20_aplicar_correcoes"):
+            _aplicar_correcoes(rodada)
+
+
+def _aplicar_correcoes(rodada: int) -> None:
+    from src.schemas import (
+        CAMPOS_CORRIGIVEIS,
+        corrigir_solicitacao,
+        data_abertura_processo,
+        validar_correcao,
+    )
+
+    original = st.session_state["rf20_solicitacao"]
+    correcoes = {
+        nome: st.session_state.get(f"rf20_corrigir_{nome}_{rodada}") for nome in CAMPOS_CORRIGIVEIS
+    }
+    try:
+        corrigida = corrigir_solicitacao(original, correcoes)
+    except ValueError as erro:
+        st.error(str(erro))
+        return
+    bloqueios, alterados, informados = validar_correcao(
+        original, corrigida, st.session_state.get("rf20_texto_analisado") or "",
+        data_abertura_processo(),
+    )
+    if bloqueios:
+        st.error("Correção não aplicada: " + " ".join(erro.mensagem for erro in bloqueios))
+        return
+    if not alterados:
+        st.info("Nenhum campo foi alterado.")
+        return
+
+    ficha = exigir_revisao_sem_orientacoes(classificar_ficha_corrigida(corrigida, informados))
+    st.session_state["rf20_solicitacao"] = corrigida.model_dump()
+    st.session_state["rf20_ficha_classificacao"] = ficha
+    st.session_state["rf20_rodada"] = rodada + 1
+    if not pode_buscar_orientacoes(ficha):
+        st.session_state.pop("rf20_orientacoes", None)
+        st.session_state.pop("rf20_partes_orientacoes", None)
+    # O estado recomeça da ficha corrigida (e das orientações, se ainda valem).
+    st.session_state["rf20_estado"] = None
+    st.session_state.pop("rf20_auto", None)
+    _aplicar_estado("ficha", ficha)
+    if st.session_state.get("rf20_orientacoes"):
+        _aplicar_estado("ficha", st.session_state["rf20_orientacoes"])
+    registrar_evento("revisao_campos_ficha", {
+        "id_execucao": _id_para("ficha"),
+        "campos_alterados": alterados,
+        "informados_pelo_servidor": informados,
+    })
+    st.session_state["rf20_aviso_correcao"] = mensagem_de_correcao(alterados, informados)
+    st.rerun()
 
 
 def _mostrar_consulta(classificacao: dict) -> None:
@@ -585,7 +700,16 @@ def _mostrar_minuta(ficha: dict) -> None:
     consulta = st.session_state.get("rf20_orientacoes")
     minuta = minuta_do_atendimento(ficha, consulta)
     st.markdown("**Minuta**")
-    st.markdown(minuta["texto"])
+    st.session_state["rf20_minuta_base"] = minuta["texto"] if minuta["pronta"] else None
+    st.session_state["rf20_chave_minuta"] = None
+    if minuta["pronta"] and st.toggle("Editar o texto da minuta", key="rf20_editar_minuta"):
+        # A chave segue o texto montado: se a ficha ou as orientações mudarem, a edição recomeça dele.
+        chave = f"rf20_minuta_texto_{sha256(minuta['texto'].encode('utf-8')).hexdigest()[:12]}"
+        st.session_state["rf20_chave_minuta"] = chave
+        st.text_area("Texto da minuta", value=minuta["texto"], key=chave, height=420)
+        st.caption("O aviso de participação da IA precisa continuar no texto.")
+    else:
+        st.markdown(minuta["texto"])
     st.caption("Nenhuma resposta é enviada automaticamente.")
 
 
@@ -750,34 +874,64 @@ def _decidir(acao: str, origem: str = "consulta") -> None:
             id_execucao = _id_atual()
         if not id_execucao:
             raise ValueError("A execução avaliada não foi identificada.")
+        arquivo = ""
+        if origem == "ficha" and novo == "aprovada":
+            arquivo = _salvar_minuta_da_ficha(id_execucao)
         registrar_decisao(
             id_execucao,
             novo,
             justificativa=st.session_state.get("rf20_justificativa") or "",
             revisor=st.session_state.get("rf20_revisor") or "",
             cargo_setor=st.session_state.get("rf20_cargo") or "",
+            arquivo_minuta=arquivo,
         )
     except ValueError as erro:
         st.session_state["rf20_decisao_erro"] = str(erro)
         return
     if origem == "ficha" and novo in MENSAGENS_ENCERRAMENTO:
-        _limpar_ficha(novo)
+        _limpar_ficha(novo, f" Minuta salva em {arquivo}." if arquivo else "")
         return
     st.session_state["rf20_estado"] = novo
     st.session_state["rf20_travado"] = True
     st.session_state["rf20_decisao_erro"] = None
 
 
-def _limpar_ficha(decisao: str) -> None:
+def _salvar_minuta_da_ficha(id_execucao: str) -> str:
+    """Texto aprovado (o editado, se houver), assinado e salvo sem sobrescrever (RF24)."""
+    from src.fluxo import assinar_minuta
+
+    base = st.session_state.get("rf20_minuta_base")
+    chave = st.session_state.get("rf20_chave_minuta")
+    texto = conferir_minuta_para_aprovar(st.session_state.get(chave) if chave else base)
+    assinada = assinar_minuta(
+        texto,
+        st.session_state.get("rf20_revisor") or "",
+        st.session_state.get("rf20_cargo") or "",
+    )
+    try:
+        arquivo = salvar_minuta_aprovada(id_execucao, assinada)
+    except FileExistsError as erro:
+        raise ValueError("A minuta desta ficha já foi salva.") from erro
+    registrar_evento("minuta_aprovada_ficha", {
+        "id_execucao": id_execucao,
+        "arquivo_minuta": arquivo,
+        "editada_pelo_servidor": texto != base,
+        "sha256_minuta": sha256(assinada.encode("utf-8")).hexdigest(),
+    })
+    return arquivo
+
+
+def _limpar_ficha(decisao: str, detalhe: str = "") -> None:
     """Atendimento encerrado: a Ficha volta vazia, pronta para a próxima solicitação.
 
     Roda no callback do botão, antes de a tela ser redesenhada, então pode limpar os campos.
     """
-    for chave in ATENDIMENTO_ANTERIOR + ("rf20_ficha_classificacao", "rf20_travado"):
+    _descartar_atendimento()
+    for chave in ("rf20_ficha_classificacao", "rf20_travado"):
         st.session_state.pop(chave, None)
     for campo in ("rf20_texto_ficha", "rf20_revisor", "rf20_cargo", "rf20_justificativa"):
         st.session_state[campo] = ""
-    st.session_state["rf20_aviso_ficha"] = MENSAGENS_ENCERRAMENTO[decisao]
+    st.session_state["rf20_aviso_ficha"] = MENSAGENS_ENCERRAMENTO[decisao] + detalhe
 
 
 def _aplicar_estado(origem: str, classificacao: dict) -> None:

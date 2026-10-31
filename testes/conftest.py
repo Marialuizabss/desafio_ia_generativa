@@ -16,8 +16,9 @@ MODULOS_COM_RAG = (
 
 @pytest.fixture(autouse=True)
 def _isolar_exclusoes(tmp_path, monkeypatch):
-    """Nenhum teste grava no registro real de exclusões (RF24)."""
+    """Nenhum teste grava no registro real de exclusões (RF24) nem salva minuta aprovada."""
     monkeypatch.setattr("src.ingestion.CAMINHO_EXCLUSOES", tmp_path / "exclusoes.json")
+    monkeypatch.setattr("src.consulta_acervo.PASTA_MINUTAS_APROVADAS", tmp_path / "minutas_rf20")
 
 
 @pytest.fixture(autouse=True)

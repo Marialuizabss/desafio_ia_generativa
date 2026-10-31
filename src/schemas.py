@@ -307,6 +307,78 @@ def validar_com_correcao(
     return ResultadoValidacao("revisar" if revisar else "aceita", solicitacao, tentativas, erros_regras, entrada, saidas)
 
 
+# ---------------------------------------------------------------- correção pelo servidor
+
+CAMPOS_CORRIGIVEIS = CAMPOS_ANULAVEIS + ("categoria",)
+# Na correção humana, só data impossível ou incoerente bloqueia. Dado fora do texto
+# original vira "informado pelo servidor": ele pode ter a informação de outra fonte.
+REGRAS_QUE_BLOQUEIAM_A_CORRECAO = ("data_impossivel", "data_incoerente")
+
+
+def corrigir_solicitacao(original: dict, correcoes: dict) -> Solicitacao:
+    """Aplica as correções do servidor nos campos da ficha e na categoria.
+
+    Valor vazio vira ausente e `campos_ausentes` é recalculado. O resumo, as entidades
+    e os alertas de segurança ficam como a análise gerou; os motivos de revisão do
+    modelo saem, porque a revisão agora é do servidor.
+    """
+
+    dados = json.loads(json.dumps(original))
+    for nome, valor in correcoes.items():
+        if nome not in CAMPOS_CORRIGIVEIS:
+            raise ValueError(f"O campo {nome} não pode ser corrigido.")
+        valor = (valor or "").strip() or None
+        if nome in CAMPOS_DO_CURSO:
+            dados["dados_curso"][nome] = valor
+        else:
+            dados[nome] = valor
+
+    valores = {**{nome: dados[nome] for nome in CAMPOS_DA_SOLICITACAO}, **dados["dados_curso"]}
+    dados["campos_ausentes"] = [nome for nome in CAMPOS_ANULAVEIS if valores[nome] is None]
+    dados["requer_revisao"] = False
+    dados["motivos_revisao"] = []
+    try:
+        return Solicitacao.model_validate(dados)
+    except ValidationError as erro:
+        campos = sorted({str(item["loc"][0]) for item in erro.errors()})
+        raise ValueError(f"Correção inválida em: {', '.join(campos)}.") from erro
+
+
+def validar_correcao(
+    original: dict,
+    corrigida: Solicitacao,
+    texto_original: str,
+    data_minima: date | None = None,
+    hoje: date | None = None,
+) -> tuple[list[ErroValidacao], list[str], list[str]]:
+    """(o que bloqueia, campos alterados, campos informados pelo servidor).
+
+    Informado pelo servidor é o campo alterado cujo valor não aparece no texto original.
+    """
+
+    antes = Solicitacao.model_validate(original)
+    valores_antes = {**antes.valores(), "categoria": antes.categoria}
+    valores_depois = {**corrigida.valores(), "categoria": corrigida.categoria}
+    alterados = [nome for nome in CAMPOS_CORRIGIVEIS if valores_antes[nome] != valores_depois[nome]]
+
+    texto = comparavel(texto_original)
+    datas_do_texto = datas_no_texto(texto_original)
+    informados = []
+    for nome in alterados:
+        valor = valores_depois[nome]
+        if nome == "categoria" or valor is None:
+            continue
+        data = _ler_data(valor) if nome in ("data_solicitacao", "data_inicio") else None
+        if (data not in datas_do_texto) if data else (comparavel(valor) not in texto):
+            informados.append(nome)
+
+    bloqueios = [
+        erro for erro in validar_regras(corrigida, texto_original, data_minima, hoje)
+        if erro.categoria in REGRAS_QUE_BLOQUEIAM_A_CORRECAO
+    ]
+    return bloqueios, alterados, informados
+
+
 # ---------------------------------------------------------------- apoio
 
 def data_abertura_processo(acervo: Path = ACERVO) -> date | None:

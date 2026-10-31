@@ -3,7 +3,12 @@
 Sem Streamlit e sem chamada ao modelo. A interface só exibe o que este módulo devolve.
 """
 
-from src.schemas import CAMPOS_ANULAVEIS, para_exibicao
+from pathlib import Path
+
+from src.schemas import CAMPOS_ANULAVEIS, CATEGORIAS, ResultadoValidacao, para_exibicao
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+PASTA_MINUTAS_APROVADAS = BASE_DIR / "resultados" / "minutas" / "rf20"
 
 STATUS_FUNDAMENTADA = "fundamentada"
 STATUS_SEM_EVIDENCIA = "sem_evidencia"
@@ -37,6 +42,17 @@ MOTIVO_SEM_ORIENTACOES = (
     "Sem orientações do acervo para esta categoria: o servidor completa a minuta."
 )
 AVISO_PRIMEIRA_CONSULTA = "A primeira consulta leva alguns segundos."
+AVISO_DE_IA = "Minuta elaborada com apoio de IA"
+MENSAGEM_AVISO_DE_IA_REMOVIDO = "O aviso de participação da IA não pode ser removido (RF24)."
+MENSAGEM_APROVAR_SEM_MINUTA = "A minuta não foi montada: corrija os campos antes de aprovar."
+GUIA_FICHA_BLOQUEADA = (
+    'A minuta não foi montada. Corrija os campos em "Corrigir campos da ficha" e aplique. '
+    "Depois busque as orientações (se for matrícula) e decida."
+)
+GUIA_FICHA_EM_REVISAO = (
+    "O que fazer: confira os motivos, corrija os campos ou edite a minuta, se precisar, "
+    "e depois aprove ou rejeite."
+)
 MENSAGENS_ENCERRAMENTO = {
     "aprovada": "Ficha aprovada e registrada.",
     "rejeitada": "Ficha rejeitada e registrada.",
@@ -390,6 +406,74 @@ def exigir_revisao_sem_orientacoes(ficha: dict) -> dict:
     if MOTIVO_SEM_ORIENTACOES not in motivos:
         motivos.append(MOTIVO_SEM_ORIENTACOES)
     return {**ficha, "estado": "revisar", "motivos": motivos}
+
+
+def campos_para_corrigir(solicitacao: dict) -> list[tuple[str, str, str]]:
+    """(campo, rótulo, valor atual) do formulário de correção; ausente vira vazio."""
+    valores = {**solicitacao, **solicitacao.get("dados_curso", {})}
+    return [(nome, ROTULOS_CAMPOS[nome], valores.get(nome) or "") for nome in CAMPOS_ANULAVEIS]
+
+
+def classificar_ficha_corrigida(solicitacao, informados: list[str]) -> dict:
+    """Ficha refeita depois da correção do servidor.
+
+    Corrigir não aprova: alerta de segurança continua pedindo revisão, e o campo que o
+    servidor informou fica nos motivos, sem mudar o estado.
+    """
+    revisar = bool(solicitacao.alertas_seguranca)
+    validacao = ResultadoValidacao(
+        "revisar" if revisar else "aceita",
+        solicitacao,
+        [{"numero": "servidor", "erros": []}],
+        [],
+        {"arquivo": "correcao-do-servidor"},
+    )
+    ficha = classificar_ficha(validacao)
+    ficha["motivos"] = ficha["motivos"] + [
+        f"informado pelo servidor: {ROTULOS_CAMPOS[nome]}" for nome in informados
+    ]
+    return ficha
+
+
+def mensagem_de_correcao(alterados: list[str], informados: list[str]) -> str:
+    def rotulos(nomes):
+        return ", ".join(ROTULOS_CAMPOS.get(nome, "Categoria") for nome in nomes)
+
+    texto = f"Correções aplicadas: {rotulos(alterados)}."
+    return texto + (f" Informado pelo servidor: {rotulos(informados)}." if informados else "")
+
+
+def guia_da_revisao(ficha: dict | None, estado: str | None) -> str | None:
+    """O que o servidor faz com a ficha bloqueada ou em revisão."""
+    if not ficha or not ficha.get("linhas"):
+        return None
+    if ficha.get("minuta_bloqueada"):
+        return GUIA_FICHA_BLOQUEADA
+    if estado == "revisar":
+        return GUIA_FICHA_EM_REVISAO
+    return None
+
+
+def conferir_minuta_para_aprovar(texto: str | None) -> str:
+    """Texto que vai ser aprovado. Sem minuta ou sem o aviso de IA, a aprovação é recusada."""
+    if not (texto or "").strip():
+        raise ValueError(MENSAGEM_APROVAR_SEM_MINUTA)
+    if AVISO_DE_IA not in texto:
+        raise ValueError(MENSAGEM_AVISO_DE_IA_REMOVIDO)
+    return texto
+
+
+def salvar_minuta_aprovada(id_execucao: str, texto: str, pasta: Path | None = None) -> str:
+    """Grava a minuta aprovada, sem sobrescrever. Devolve o caminho relativo ao projeto."""
+    pasta = Path(pasta or PASTA_MINUTAS_APROVADAS)
+    pasta.mkdir(parents=True, exist_ok=True)
+    caminho = pasta / f"ficha_{id_execucao}.md"
+    with caminho.open("x", encoding="utf-8") as arquivo:
+        arquivo.write(texto.rstrip() + "\n")
+    try:
+        return caminho.relative_to(BASE_DIR).as_posix()
+    except ValueError:
+        return caminho.as_posix()
 
 
 def aviso_de_espera(texto: str, modelo_pronto: bool) -> str:
