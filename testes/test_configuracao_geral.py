@@ -77,9 +77,19 @@ class TestVersoes(unittest.TestCase):
         self.assertIsNotNone(resultado["openai"]["instalada"])
         self.assertIsNone(resultado["pacote-que-nao-existe"]["instalada"])
 
+    def test_variante_local_conta_como_a_versao_fixada(self):
+        # O torch só para CPU se instala como "2.15.0+cpu"
+        with TemporaryDirectory() as pasta:
+            arquivo = Path(pasta) / "requirements.txt"
+            arquivo.write_text("--extra-index-url https://exemplo\nopenai==0.0.1\n", encoding="utf-8")
+            self.assertEqual(versoes.exigidas(arquivo), [("openai", "0.0.1")])
+        self.assertEqual(versoes._publica("2.15.0+cpu"), "2.15.0")
+        self.assertEqual(versoes._publica("2.15.0"), "2.15.0")
+
     def test_requirements_do_projeto_esta_fixado(self):
         pacotes = dict(versoes.exigidas())
-        for nome in ("openai", "streamlit", "python-dotenv", "PyMuPDF", "Pillow", "mutagen"):
+        for nome in ("openai", "streamlit", "python-dotenv", "PyMuPDF", "Pillow", "mutagen", "pydantic",
+                     "torch", "chromadb", "sentence-transformers", "numpy", "pytest"):
             self.assertIn(nome, pacotes)
 
     def test_versao_do_python_registrada(self):

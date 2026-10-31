@@ -37,9 +37,14 @@ def conferir(requirements: Path | None = None) -> list[dict]:
             "pacote": nome,
             "exigida": versao,
             "instalada": instalada,
-            "ok": instalada == versao,
+            "ok": instalada is not None and _publica(instalada) == _publica(versao),
         })
     return resultado
+
+
+def _publica(versao: str) -> str:
+    """Versão sem a variante local: "2.15.0+cpu" (torch só para CPU) vale como "2.15.0"."""
+    return versao.split("+", 1)[0]
 
 
 def python_ok() -> bool:
@@ -57,7 +62,7 @@ def main() -> int:
             situacao = "✗ não instalada"
         else:
             situacao = f"✗ instalada {item['instalada']}"
-        print(f"{item['pacote']:<14} {item['exigida']:<10} {situacao}")
+        print(f"{item['pacote']:<22} {item['exigida']:<10} {situacao}")
         problemas += 0 if item["ok"] else 1
     if problemas:
         print("\nRode: pip install -r requirements.txt")
