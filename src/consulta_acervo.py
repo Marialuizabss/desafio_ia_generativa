@@ -28,6 +28,8 @@ MENSAGEM_ORIENTACAO_PENDENTE = (
 MARCA_ORIENTACOES = "**Orientações**"
 MARCA_CIENCIA = "**Ciência das regras de matrícula**"
 MENSAGEM_FALHA = "Não foi possível concluir a operação."
+MENSAGEM_FALHA_INESPERADA = "Não foi possível consultar o acervo agora. Tente de novo em instantes."
+JUSTIFICATIVA_FALHA_INESPERADA = "Falha técnica na consulta. O detalhe está no registro da consulta."
 MENSAGEM_BLOQUEIO = "A entrada foi bloqueada."
 
 MENSAGENS_BLOQUEIO = {
@@ -93,10 +95,17 @@ def classificar_consulta(resultado: dict | None = None, erro: BaseException | No
 
     Índice desatualizado e falha não trazem resposta. Sem evidência e conflito
     encaminham para revisão. Resposta fundamentada fica pendente do servidor.
+    Só ``ValueError`` (como a falha do provedor) traz mensagem para o usuário; outro
+    erro é interno e o detalhe técnico fica só no registro da consulta.
     """
     if erro is not None:
         if type(erro).__name__ == "IndiceDesatualizadoError":
             return _consulta("indice_desatualizado", MENSAGEM_INDICE, None, None, [], "")
+        if not isinstance(erro, ValueError):
+            return _consulta(
+                "falha", MENSAGEM_FALHA_INESPERADA, "revisar", None, [],
+                JUSTIFICATIVA_FALHA_INESPERADA,
+            )
         motivo = str(erro).strip() or MENSAGEM_FALHA
         return _consulta("falha", f"{MENSAGEM_FALHA} {motivo}", "revisar", None, [], motivo)
 

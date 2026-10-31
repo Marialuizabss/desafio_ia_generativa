@@ -188,7 +188,8 @@ def _tela_ficha() -> None:
     )
     st.text_area("Texto da solicitação", key="rf20_texto_ficha", height=160)
     if st.button("Analisar solicitação", key="rf20_analisar"):
-        _executar_ficha()
+        with st.spinner("Analisando a solicitação..."):
+            _executar_ficha()
     classificacao = st.session_state.get("rf20_ficha_classificacao")
     if classificacao:
         _mostrar_ficha(classificacao)
@@ -208,7 +209,9 @@ def _tela_consulta() -> None:
     )
     st.text_area("Pergunta", key="rf20_pergunta", height=120)
     if st.button("Consultar o acervo", key="rf20_consultar"):
-        _executar_consulta()
+        # Cada consulta recarrega o modelo de embeddings; sem aviso, parecia travada.
+        with st.spinner("Consultando o acervo... Cada consulta leva alguns segundos."):
+            _executar_consulta()
     classificacao = st.session_state.get("rf20_consulta_classificacao")
     if classificacao:
         _mostrar_consulta(classificacao)

@@ -7,6 +7,7 @@ então a troca de modelo exige reindexação.
 """
 
 import hashlib
+import threading
 from pathlib import Path
 
 import chromadb
@@ -20,6 +21,10 @@ MODELO_EMBEDDINGS = (
     "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 )
 DIMENSAO_EMBEDDINGS = 384
+
+# O Chroma guarda o sistema em cache antes de terminar de iniciá-lo. Duas aberturas
+# ao mesmo tempo (duas consultas na interface) pegavam o índice pela metade.
+_TRAVA_ABERTURA = threading.Lock()
 
 
 class IndiceDesatualizadoError(RuntimeError):
@@ -39,8 +44,16 @@ def obter_colecao(
     modelo_embeddings=MODELO_EMBEDDINGS,
     dimensao=DIMENSAO_EMBEDDINGS,
 ):
-    """Abre (ou cria) a coleção e confere modelo e dimensão de embeddings."""
+    """Abre (ou cria) a coleção e confere modelo e dimensão de embeddings.
 
+    Uma abertura por vez: quem chega depois espera e reaproveita o índice já aberto.
+    """
+
+    with _TRAVA_ABERTURA:
+        return _abrir_colecao(pasta, nome, modelo_embeddings, dimensao)
+
+
+def _abrir_colecao(pasta, nome, modelo_embeddings, dimensao):
     cliente = chromadb.PersistentClient(
         path=str(pasta or PASTA_INDICE)
     )
