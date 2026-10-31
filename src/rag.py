@@ -1,6 +1,6 @@
 """Geração fundamentada com RAG — RF19."""
 
-from src.ingestion import carregar_catalogo
+from src.ingestion import carregar_catalogo, carregar_exclusoes
 from src.vector_store import (
     IndiceIncompletoError,
     buscar_chunks,
@@ -29,7 +29,7 @@ def recuperar_evidencias(pergunta: str, top_k: int = 10) -> list[dict]:
         raise ValueError("A pergunta não pode estar vazia.")
 
     colecao = obter_colecao_se_existir()
-    conferencia = conferir_indice(carregar_catalogo(), colecao)
+    conferencia = conferir_indice(carregar_catalogo(), colecao, carregar_exclusoes())
 
     if not conferencia["completo"]:
         raise IndiceIncompletoError(mensagem_de_pendencias(conferencia))

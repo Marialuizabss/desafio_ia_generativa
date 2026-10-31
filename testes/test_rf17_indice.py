@@ -254,7 +254,7 @@ def test_t14_excluir_documento_inexistente(pasta, catalogo):
 
 def test_t14_exclusao_persiste_apos_reinicio(pasta, catalogo, registro):
     _, colecao, _ = _indexar(pasta, catalogo)
-    excluir_e_registrar(colecao, "ACV-08")
+    excluir_e_registrar(colecao, "ACV-08", motivo="retenção encerrada")
     del colecao
 
     colecao2 = obter_colecao(pasta=pasta)

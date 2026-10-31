@@ -15,6 +15,7 @@ try:
         classificar_ficha,
         combinar_estado,
         minuta_do_atendimento,
+        opcoes_de_exclusao,
         pendentes_de_indexar,
         pendentes_de_remover,
         preparar_acervo,
@@ -29,6 +30,7 @@ except ImportError:
         classificar_ficha,
         combinar_estado,
         minuta_do_atendimento,
+        opcoes_de_exclusao,
         pendentes_de_indexar,
         pendentes_de_remover,
         preparar_acervo,
@@ -127,6 +129,7 @@ def _tela_acervo() -> None:
                 st.caption(linha["texto_indice"])
         _remover_do_indice(conferencia)
         _indexar_acervo(linhas, pendentes_de_indexar(conferencia))
+        _excluir_ou_restaurar(linhas)
     _incluir_documento()
 
 
@@ -146,6 +149,11 @@ def _mostrar_resumo_do_indice(conferencia: dict | None) -> None:
     aviso = st.session_state.pop("rf20_aviso_acervo", None)
     if aviso:
         st.success(aviso)
+    derivados = st.session_state.pop("rf20_derivados", None)
+    if derivados and derivados[1]:
+        doc_id, arquivos = derivados
+        with st.expander(f"{len(arquivos)} resultado(s) derivado(s) citam {doc_id}: revisar"):
+            st.markdown("\n".join(f"- `{arquivo}`" for arquivo in arquivos))
     if conferencia is None:
         st.warning("Não foi possível ler o índice. A consulta ao acervo pode não funcionar.")
     elif conferencia["completo"]:
@@ -179,7 +187,7 @@ def _remover_do_indice(conferencia: dict | None) -> None:
 
 def _indexar_acervo(linhas: list[dict], marcados: list[str]) -> None:
     st.markdown("**Indexar**")
-    ids = [linha["doc_id"] for linha in linhas]
+    ids, _ = opcoes_de_exclusao(linhas)
     escolha = st.multiselect(
         "Documentos",
         ids,
@@ -210,6 +218,85 @@ def _indexar_acervo(linhas: list[dict], marcados: list[str]) -> None:
         st.success(
             f"Índice com {relatorio['total_chunks']} trechos. Versão {relatorio['versao_indice']}."
         )
+
+
+def _excluir_ou_restaurar(linhas: list[dict]) -> None:
+    st.markdown("**Excluir ou restaurar documento**")
+    st.caption(
+        "A exclusão tira o documento das consultas até ser restaurado (RF24) e fica registrada "
+        "com data, motivo e responsável. A tela não tem login: o responsável é declarado."
+    )
+    ativos, excluidos = opcoes_de_exclusao(linhas)
+    erro = st.session_state.pop("rf20_erro_exclusao", None)
+    if erro:
+        st.error(erro)
+    if ativos:
+        doc_id = st.selectbox("Documento a excluir", ativos, key="rf20_excluir_id")
+        st.text_input("Servidor(a) responsável", key="rf20_excluir_responsavel")
+        st.text_input("Motivo da exclusão", key="rf20_excluir_motivo")
+        st.checkbox(
+            f"Confirmo que {doc_id} sai das consultas até ser restaurado",
+            key="rf20_excluir_confirma",
+        )
+        st.button("Excluir do índice", key="rf20_excluir", on_click=_ao_excluir)
+    if excluidos:
+        doc_id = st.selectbox("Documento a restaurar", excluidos, key="rf20_restaurar_id")
+        st.text_input("Servidor(a) responsável", key="rf20_restaurar_responsavel")
+        if st.button("Restaurar", key="rf20_restaurar"):
+            try:
+                from acervo_operacao import restaurar_pela_tela
+            except ImportError:
+                from src.acervo_operacao import restaurar_pela_tela
+            try:
+                with st.spinner(f"Restaurando e indexando {doc_id}..."):
+                    resultado = restaurar_pela_tela(
+                        doc_id, st.session_state.get("rf20_restaurar_responsavel") or ""
+                    )
+            except ValueError as erro:
+                st.error(str(erro))
+                return
+            except Exception:
+                st.error("Não foi possível restaurar. Confira se o modelo de embeddings está disponível.")
+                return
+            st.session_state["rf20_aviso_acervo"] = (
+                f"{doc_id} restaurado e indexado ({resultado['chunks']} trechos)."
+            )
+            st.rerun()
+
+
+def _ao_excluir() -> None:
+    """Roda antes de a tela ser redesenhada: o resumo já sai atualizado e os campos limpos."""
+    estado = st.session_state
+    doc_id = estado.get("rf20_excluir_id")
+    if not (estado.get("rf20_excluir_responsavel") or "").strip():
+        estado["rf20_erro_exclusao"] = "Informe o(a) servidor(a) responsável pela exclusão."
+        return
+    if not (estado.get("rf20_excluir_motivo") or "").strip():
+        estado["rf20_erro_exclusao"] = "Informe o motivo da exclusão."
+        return
+    if not estado.get("rf20_excluir_confirma"):
+        estado["rf20_erro_exclusao"] = f"Marque a confirmação para excluir {doc_id}."
+        return
+    try:
+        from acervo_operacao import excluir_pela_tela
+    except ImportError:
+        from src.acervo_operacao import excluir_pela_tela
+    try:
+        resultado = excluir_pela_tela(
+            doc_id, estado["rf20_excluir_motivo"], estado["rf20_excluir_responsavel"]
+        )
+    except ValueError as erro:
+        estado["rf20_erro_exclusao"] = str(erro)
+        return
+    except Exception:
+        estado["rf20_erro_exclusao"] = "Não foi possível excluir o documento."
+        return
+    estado["rf20_aviso_acervo"] = (
+        f"{doc_id} excluído do índice ({resultado['chunks_removidos']} trechos removidos)."
+    )
+    estado["rf20_derivados"] = (doc_id, resultado["derivados_a_revisar"])
+    estado["rf20_excluir_motivo"] = ""
+    estado["rf20_excluir_confirma"] = False
 
 
 def _incluir_documento() -> None:

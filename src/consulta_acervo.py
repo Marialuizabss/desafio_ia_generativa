@@ -113,10 +113,21 @@ def preparar_acervo(
 def _texto_do_indice(item: dict | None) -> str:
     if not item:
         return ""
+    exclusao = item.get("exclusao")
+    if item["situacao"] == "excluido" and exclusao:
+        ano, mes, dia = exclusao["data"][:10].split("-")
+        return f"Índice: excluído em {dia}/{mes}/{ano} (motivo: {exclusao['motivo']})"
     texto = f"Índice: {SITUACOES_INDICE.get(item['situacao'], item['situacao'])}"
     if item["situacao"] == "indexado":
         texto += f" ({item['chunks']} trechos)"
     return texto
+
+
+def opcoes_de_exclusao(linhas: list[dict]) -> tuple[list[str], list[str]]:
+    """(documentos que podem ser excluídos, documentos que podem ser restaurados)."""
+    excluidos = [l["doc_id"] for l in linhas if l["indice"] in ("excluido", "excluido_no_indice")]
+    ativos = [l["doc_id"] for l in linhas if l["doc_id"] not in excluidos]
+    return ativos, excluidos
 
 
 def resumo_do_indice(conferencia: dict) -> str:

@@ -14,6 +14,7 @@ from src.ingestion import (
     CAMINHO_CATALOGO,
     PASTA_ACERVO,
     carregar_catalogo,
+    carregar_exclusoes,
     gerar_chunks_documento,
     validar_documentos,
 )
@@ -127,11 +128,16 @@ def indexar_ids(doc_ids: list[str]) -> dict:
     )
 
     validacao = {item["doc_id"]: item["status"] for item in validar_documentos(catalogo)}
+    exclusoes = carregar_exclusoes()
     modelo = carregar_modelo_embeddings()
     colecao = obter_colecao()
     relatorio = []
     for doc_id in doc_ids:
         documento = por_id[doc_id]
+        if doc_id in exclusoes:
+            # Excluído (RF24) só volta pela restauração.
+            relatorio.append({"doc_id": doc_id, "status": "excluido", "chunks": 0})
+            continue
         status_arquivo = validacao[doc_id]
         if status_arquivo != "valido":
             relatorio.append({"doc_id": doc_id, "status": status_arquivo, "chunks": 0})
@@ -149,7 +155,12 @@ def situacao_do_indice() -> dict:
     """Conferência catálogo × índice para a tela, sem carregar o modelo nem criar o índice."""
     from src.vector_store import conferir_indice, obter_colecao_se_existir
 
-    return conferir_indice(carregar_catalogo(), obter_colecao_se_existir())
+    exclusoes = carregar_exclusoes()
+    conferencia = conferir_indice(carregar_catalogo(), obter_colecao_se_existir(), exclusoes)
+    for documento in conferencia["documentos"]:
+        if documento["doc_id"] in exclusoes:
+            documento["exclusao"] = exclusoes[documento["doc_id"]]
+    return conferencia
 
 
 def remover_do_indice(doc_id: str) -> dict:
@@ -167,7 +178,7 @@ def remover_do_indice(doc_id: str) -> dict:
     )
 
     colecao = obter_colecao()
-    conferencia = conferir_indice(carregar_catalogo(), colecao)
+    conferencia = conferir_indice(carregar_catalogo(), colecao, carregar_exclusoes())
     motivos = {
         item["doc_id"]: item["situacao"]
         for item in conferencia["pendencias"]
@@ -185,6 +196,32 @@ def remover_do_indice(doc_id: str) -> dict:
         "versao_indice_apos": resultado["versao_indice_apos"],
     })
     return resultado
+
+
+def excluir_pela_tela(doc_id: str, motivo: str, responsavel: str) -> dict:
+    """Exclusão (RF24) pela tela Acervo: o mesmo registro e a mesma auditoria do terminal."""
+    responsavel = (responsavel or "").strip()
+    if not responsavel:
+        raise ValueError("Informe o(a) servidor(a) responsável pela exclusão.")
+
+    from src.indexar import excluir_e_registrar
+    from src.vector_store import obter_colecao
+
+    return excluir_e_registrar(obter_colecao(), doc_id, motivo, responsavel=responsavel)
+
+
+def restaurar_pela_tela(doc_id: str, responsavel: str) -> dict:
+    """Restauração pela tela Acervo: tira o registro e reindexa só o documento."""
+    responsavel = (responsavel or "").strip()
+    if not responsavel:
+        raise ValueError("Informe o(a) servidor(a) responsável pela restauração.")
+
+    from src.indexar import restaurar_e_registrar
+    from src.vector_store import carregar_modelo_embeddings, obter_colecao
+
+    return restaurar_e_registrar(
+        obter_colecao(), doc_id, carregar_modelo_embeddings(), responsavel=responsavel
+    )
 
 
 def proximo_doc_id(catalogo: dict) -> str:

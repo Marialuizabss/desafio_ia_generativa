@@ -15,6 +15,12 @@ MODULOS_COM_RAG = (
 
 
 @pytest.fixture(autouse=True)
+def _isolar_exclusoes(tmp_path, monkeypatch):
+    """Nenhum teste grava no registro real de exclusões (RF24)."""
+    monkeypatch.setattr("src.ingestion.CAMINHO_EXCLUSOES", tmp_path / "exclusoes.json")
+
+
+@pytest.fixture(autouse=True)
 def _isolar_auditoria_e_indice(request, tmp_path, monkeypatch):
     if not request.module.__name__.startswith(MODULOS_COM_RAG):
         return

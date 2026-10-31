@@ -38,6 +38,7 @@ são combinadas na equipe e registradas no histórico (seção 11).
 |---|---|---|---|---|
 | `dados/acervo/*.pdf`, `*.txt` | Documentos institucionais | Professor (PDF) e equipe (TXT) | Maria | RF17 |
 | `dados/acervo/acervo.json` | Catálogo e regras de prevalência | Ana | Maria | RF17, RF19 |
+| `dados/acervo/exclusoes.json` | Exclusões do índice em vigor (seção 3) | `--excluir` e tela Acervo | Indexação, conferência e RAG | RF24, T14 |
 | `dados/originais/perguntas_rag.json` | 8 perguntas, sem resposta | Ana | Maria | RF18, RF19 |
 | `dados/gabaritos/gabarito_rag.json` | Esperado das 8 perguntas | Ana | Maria, RF23 | RF18, RF19 |
 | `dados/originais/adv03_tentativa_segredo.txt` | Ataque para obter segredo | Ana | Felipe | RF16 |
@@ -119,6 +120,24 @@ demonstração de exclusão do índice (RF24, T14).
 
 **Conferência automática:** `python -m unittest testes.test_acervo` (arquivos, hash, páginas,
 catálogo e regras).
+
+**Registro de exclusões:** `dados/acervo/exclusoes.json` (versão 1.0). Guarda os documentos
+tirados do índice de propósito (RF24). O catálogo não muda: o documento continua catalogado, mas a
+indexação o pula e a conferência catálogo × índice não o cobra até ele ser restaurado.
+
+| Campo de cada exclusão | Significado |
+|---|---|
+| `doc_id` | Documento do catálogo excluído |
+| `data` | Data e hora da exclusão, ISO com fuso |
+| `motivo` | Obrigatório (por exemplo, "retenção encerrada") |
+| `responsavel` | Quem excluiu, declarado na tela; `terminal` quando vem do comando sem `--responsavel` |
+
+- **Quem grava:** `python -m src.indexar --excluir ACV-09 --motivo "..."` e a tela Acervo
+  ("Excluir do índice"); a restauração (`--restaurar` ou o botão "Restaurar") tira o registro.
+- **Formato fixo:** gravado sempre do mesmo jeito; excluir e restaurar devolve o arquivo idêntico.
+- **Histórico:** o arquivo mostra só as exclusões em vigor. Exclusões e restaurações ficam no log
+  (`exclusao_documento` e `restauracao_documento` em `resultados/logs/execucoes.jsonl`).
+- **Limite:** a aplicação não tem login; o responsável é declarado, não autenticado.
 
 ## 4. Perguntas de avaliação do RAG
 
@@ -572,3 +591,4 @@ não são reescritos; a tradução vale na leitura):
 | 1.6 | 2026-10-28 | Seção 9.1: RF15 em `src/nlp.py` e `src/avaliacao_rf15.py`, prompt v2 em arquivo, comparação com o gabarito e conferência humana |
 | 1.7 | 2026-10-29 | Prompt v2.1 em uso (seção "Resumo" ampliada após as omissões da execução com o v2); `arquivo_prompt` registrado em cada execução |
 | 1.8 | 2026-10-30 | Saída do classificador do RF22: situação, polaridade proposta, justificativa, confiança e instrução no texto; o código aplica a tabela de rotulagem |
+| 1.9 | 2026-10-31 | Registro de exclusões `dados/acervo/exclusoes.json` (RF24): motivo obrigatório, responsável, exclusão e restauração pelo terminal e pela tela |

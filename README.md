@@ -138,7 +138,7 @@ As saídas ficam em `resultados/minutas/aprovadas/` (minuta e PDF), `resultados/
 
 | O quê | Comando | Chama a API? |
 |---|---|---|
-| Todos os testes (459) | `python -m pytest testes -q` | Não |
+| Todos os testes (510) | `python -m pytest testes -q` | Não |
 | Versões do Python e das bibliotecas | `python -m src.versoes` | Não |
 | Varredura de credenciais e dados pessoais (RF12) | `python -m src.varredura_rf12` | Não |
 | Avaliação dos 7 casos (RF13) | `python -m src.avaliacao_rf13 --todos` | Sim, ~US$ 0,03 |
@@ -301,7 +301,8 @@ de 128 tokens por trecho). O modelo é baixado na primeira execução e depois r
 pip install -r requirements.txt
 python -m src.indexar                      # indexa o acervo (pode repetir: não duplica)
 python -m src.indexar --status             # documentos, chunks e versão do índice
-python -m src.indexar --excluir ACV-09 --motivo "retenção encerrada"
+python -m src.indexar --excluir ACV-09 --motivo "retenção encerrada"   # motivo obrigatório
+python -m src.indexar --restaurar ACV-09   # tira da lista de excluídos e reindexa
 python -m src.avaliacao_rf18               # compara 3 configurações de chunking (RF18)
 python -m src.avaliacao_rag --repeticoes 3 # oito perguntas do RAG, três rodadas (usa a API)
 python -m pytest testes -q                 # testes (não usam a API nem baixam o modelo)
@@ -328,6 +329,12 @@ Antes de cada consulta, o índice é conferido com o catálogo (`doc_id` e hash 
 chamar o modelo, com o motivo e o que fazer. A tela Acervo mostra a situação de cada documento, já
 marca os pendentes em "Indexar selecionados" e oferece "Remover do índice" para o que está fora do
 catálogo. `python -m src.indexar --status` traz a mesma conferência.
+
+A exclusão de documento (RF24, T14) dura: fica registrada em `dados/acervo/exclusoes.json`, com
+data, motivo e responsável, e a indexação pula o documento até ele ser restaurado. A tela Acervo
+também exclui (com responsável, motivo e confirmação) e restaura, e lista os resultados derivados
+que citam o documento excluído. A aplicação não tem login: o responsável é declarado, não
+autenticado.
 
 ### Sentimentos e painel (RF22)
 
