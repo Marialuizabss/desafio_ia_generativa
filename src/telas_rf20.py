@@ -8,25 +8,65 @@ from hashlib import sha256
 import streamlit as st
 
 try:
-    from audit import registrar_decisao, registrar_execucao, traduzir_decisao
+    from audit import registrar_decisao, registrar_evento, registrar_execucao, traduzir_decisao
     from consulta_acervo import (
+        AVISO_ORIENTACOES_PENDENTES,
+        CATEGORIAS,
+        MENSAGEM_CONSULTA_FORA_DA_MINUTA,
+        MENSAGENS_ENCERRAMENTO,
+        MENSAGEM_ORIENTACOES_SO_MATRICULA,
         MENSAGEM_SEM_FONTES,
         classificar_consulta,
+        aviso_de_espera,
+        campos_para_corrigir,
         classificar_ficha,
+        classificar_ficha_corrigida,
         combinar_estado,
+        conferir_minuta_para_aprovar,
+        exigir_revisao_sem_orientacoes,
+        guia_da_revisao,
+        mensagem_de_correcao,
+        orientacoes_resolvidas,
         minuta_do_atendimento,
+        opcoes_de_exclusao,
+        pendentes_de_indexar,
+        pendentes_de_remover,
+        pode_buscar_orientacoes,
         preparar_acervo,
+        resumo_das_orientacoes,
+        resumo_do_indice,
+        salvar_minuta_aprovada,
         transicionar,
     )
 except ImportError:
-    from src.audit import registrar_decisao, registrar_execucao, traduzir_decisao
+    from src.audit import registrar_decisao, registrar_evento, registrar_execucao, traduzir_decisao
     from src.consulta_acervo import (
+        AVISO_ORIENTACOES_PENDENTES,
+        CATEGORIAS,
+        MENSAGEM_CONSULTA_FORA_DA_MINUTA,
+        MENSAGENS_ENCERRAMENTO,
+        MENSAGEM_ORIENTACOES_SO_MATRICULA,
         MENSAGEM_SEM_FONTES,
         classificar_consulta,
+        aviso_de_espera,
+        campos_para_corrigir,
         classificar_ficha,
+        classificar_ficha_corrigida,
         combinar_estado,
+        conferir_minuta_para_aprovar,
+        exigir_revisao_sem_orientacoes,
+        guia_da_revisao,
+        mensagem_de_correcao,
+        orientacoes_resolvidas,
         minuta_do_atendimento,
+        opcoes_de_exclusao,
+        pendentes_de_indexar,
+        pendentes_de_remover,
+        pode_buscar_orientacoes,
         preparar_acervo,
+        resumo_das_orientacoes,
+        resumo_do_indice,
+        salvar_minuta_aprovada,
         transicionar,
     )
 
@@ -39,6 +79,28 @@ AREAS = (
     ("fontes", "Fontes"),
     ("painel", "Painel"),
 )
+
+# O que uma solicitação nova descarta: orientações, consulta, identificadores e estado.
+ATENDIMENTO_ANTERIOR = (
+    "rf20_orientacoes",
+    "rf20_partes_orientacoes",
+    "rf20_consulta_classificacao",
+    "rf20_consulta_resultado",
+    "rf20_id_consulta",
+    "rf20_id_ficha",
+    "rf20_estado",
+    "rf20_auto",
+    "rf20_solicitacao",
+    "rf20_texto_analisado",
+    "rf20_minuta_base",
+    "rf20_chave_minuta",
+    "rf20_editar_minuta",
+    "rf20_aviso_correcao",
+    "rf20_bloqueado",
+    "rf20_decisao_erro",
+)
+
+PREFIXOS_DO_ATENDIMENTO = ("rf20_corrigir_", "rf20_minuta_texto_")
 
 ROTULOS_ESTADO = {
     "pendente": "Pendente",
@@ -96,11 +158,14 @@ def _tela_acervo() -> None:
         from ingestion import carregar_catalogo, validar_documentos
     except ImportError:
         from src.ingestion import carregar_catalogo, validar_documentos
+    conferencia = _conferencia_do_indice()
     try:
-        linhas = preparar_acervo(carregar_catalogo(), validar_documentos(carregar_catalogo()))
+        catalogo = carregar_catalogo()
+        linhas = preparar_acervo(catalogo, validar_documentos(catalogo), conferencia)
     except (OSError, ValueError) as erro:
         st.error(f"Não foi possível ler o acervo. {erro}")
         return
+    _mostrar_resumo_do_indice(conferencia)
     if not linhas:
         st.info("O catálogo não tem documentos.")
     else:
@@ -112,14 +177,77 @@ def _tela_acervo() -> None:
             )
             if linha["aviso"]:
                 st.warning(f"{linha['doc_id']}: {linha['aviso']}")
-        _indexar_acervo(linhas)
+            if linha["indice"] in ("nao_indexado", "desatualizado"):
+                st.warning(linha["texto_indice"])
+            elif linha["indice"]:
+                st.caption(linha["texto_indice"])
+        _remover_do_indice(conferencia)
+        _indexar_acervo(linhas, pendentes_de_indexar(conferencia))
+        _excluir_ou_restaurar(linhas)
     _incluir_documento()
 
 
-def _indexar_acervo(linhas: list[dict]) -> None:
+def _conferencia_do_indice() -> dict | None:
+    """Catálogo × índice. None quando o índice não pôde ser lido."""
+    try:
+        from acervo_operacao import situacao_do_indice
+    except ImportError:
+        from src.acervo_operacao import situacao_do_indice
+    try:
+        return situacao_do_indice()
+    except Exception:
+        return None
+
+
+def _mostrar_resumo_do_indice(conferencia: dict | None) -> None:
+    aviso = st.session_state.pop("rf20_aviso_acervo", None)
+    if aviso:
+        st.success(aviso)
+    derivados = st.session_state.pop("rf20_derivados", None)
+    if derivados and derivados[1]:
+        doc_id, arquivos = derivados
+        with st.expander(f"{len(arquivos)} resultado(s) derivado(s) citam {doc_id}: revisar"):
+            st.markdown("\n".join(f"- `{arquivo}`" for arquivo in arquivos))
+    if conferencia is None:
+        st.warning("Não foi possível ler o índice. A consulta ao acervo pode não funcionar.")
+    elif conferencia["completo"]:
+        st.success(resumo_do_indice(conferencia))
+    else:
+        st.warning(resumo_do_indice(conferencia))
+
+
+def _remover_do_indice(conferencia: dict | None) -> None:
+    for item in pendentes_de_remover(conferencia):
+        st.warning(f"{item['doc_id']}: {item['texto']}.")
+        if not st.button("Remover do índice", key=f"rf20_remover_{item['doc_id']}"):
+            continue
+        try:
+            from acervo_operacao import remover_do_indice
+        except ImportError:
+            from src.acervo_operacao import remover_do_indice
+        try:
+            resultado = remover_do_indice(item["doc_id"])
+        except ValueError as erro:
+            st.error(str(erro))
+            return
+        except Exception:
+            st.error("Não foi possível remover o documento do índice.")
+            return
+        st.session_state["rf20_aviso_acervo"] = (
+            f"{item['doc_id']} removido do índice ({resultado['chunks_removidos']} trechos)."
+        )
+        st.rerun()
+
+
+def _indexar_acervo(linhas: list[dict], marcados: list[str]) -> None:
     st.markdown("**Indexar**")
-    ids = [linha["doc_id"] for linha in linhas]
-    escolha = st.multiselect("Documentos", ids, key="rf20_indexar_ids")
+    ids, _ = opcoes_de_exclusao(linhas)
+    escolha = st.multiselect(
+        "Documentos",
+        ids,
+        default=[doc_id for doc_id in marcados if doc_id in ids],
+        key="rf20_indexar_ids",
+    )
     if st.button("Indexar selecionados", key="rf20_indexar"):
         try:
             from acervo_operacao import indexar_ids
@@ -134,11 +262,95 @@ def _indexar_acervo(linhas: list[dict]) -> None:
         except Exception:
             st.error("Não foi possível indexar. Confira se o modelo de embeddings está disponível.")
             return
+        # Recarrega a tela para o resumo e os selos já mostrarem o índice novo.
+        st.session_state["rf20_relatorio_indexacao"] = relatorio
+        st.rerun()
+    relatorio = st.session_state.pop("rf20_relatorio_indexacao", None)
+    if relatorio:
         for item in relatorio["itens"]:
             st.markdown(f"- {item['doc_id']}: {item['status']} ({item['chunks']} trechos)")
         st.success(
             f"Índice com {relatorio['total_chunks']} trechos. Versão {relatorio['versao_indice']}."
         )
+
+
+def _excluir_ou_restaurar(linhas: list[dict]) -> None:
+    st.markdown("**Excluir ou restaurar documento**")
+    st.caption(
+        "A exclusão tira o documento das consultas até ser restaurado (RF24) e fica registrada "
+        "com data, motivo e responsável. A tela não tem login: o responsável é declarado."
+    )
+    ativos, excluidos = opcoes_de_exclusao(linhas)
+    erro = st.session_state.pop("rf20_erro_exclusao", None)
+    if erro:
+        st.error(erro)
+    if ativos:
+        doc_id = st.selectbox("Documento a excluir", ativos, key="rf20_excluir_id")
+        st.text_input("Servidor(a) responsável", key="rf20_excluir_responsavel")
+        st.text_input("Motivo da exclusão", key="rf20_excluir_motivo")
+        st.checkbox(
+            f"Confirmo que {doc_id} sai das consultas até ser restaurado",
+            key="rf20_excluir_confirma",
+        )
+        st.button("Excluir do índice", key="rf20_excluir", on_click=_ao_excluir)
+    if excluidos:
+        doc_id = st.selectbox("Documento a restaurar", excluidos, key="rf20_restaurar_id")
+        st.text_input("Servidor(a) responsável", key="rf20_restaurar_responsavel")
+        if st.button("Restaurar", key="rf20_restaurar"):
+            try:
+                from acervo_operacao import restaurar_pela_tela
+            except ImportError:
+                from src.acervo_operacao import restaurar_pela_tela
+            try:
+                with st.spinner(f"Restaurando e indexando {doc_id}..."):
+                    resultado = restaurar_pela_tela(
+                        doc_id, st.session_state.get("rf20_restaurar_responsavel") or ""
+                    )
+            except ValueError as erro:
+                st.error(str(erro))
+                return
+            except Exception:
+                st.error("Não foi possível restaurar. Confira se o modelo de embeddings está disponível.")
+                return
+            st.session_state["rf20_aviso_acervo"] = (
+                f"{doc_id} restaurado e indexado ({resultado['chunks']} trechos)."
+            )
+            st.rerun()
+
+
+def _ao_excluir() -> None:
+    """Roda antes de a tela ser redesenhada: o resumo já sai atualizado e os campos limpos."""
+    estado = st.session_state
+    doc_id = estado.get("rf20_excluir_id")
+    if not (estado.get("rf20_excluir_responsavel") or "").strip():
+        estado["rf20_erro_exclusao"] = "Informe o(a) servidor(a) responsável pela exclusão."
+        return
+    if not (estado.get("rf20_excluir_motivo") or "").strip():
+        estado["rf20_erro_exclusao"] = "Informe o motivo da exclusão."
+        return
+    if not estado.get("rf20_excluir_confirma"):
+        estado["rf20_erro_exclusao"] = f"Marque a confirmação para excluir {doc_id}."
+        return
+    try:
+        from acervo_operacao import excluir_pela_tela
+    except ImportError:
+        from src.acervo_operacao import excluir_pela_tela
+    try:
+        resultado = excluir_pela_tela(
+            doc_id, estado["rf20_excluir_motivo"], estado["rf20_excluir_responsavel"]
+        )
+    except ValueError as erro:
+        estado["rf20_erro_exclusao"] = str(erro)
+        return
+    except Exception:
+        estado["rf20_erro_exclusao"] = "Não foi possível excluir o documento."
+        return
+    estado["rf20_aviso_acervo"] = (
+        f"{doc_id} excluído do índice ({resultado['chunks_removidos']} trechos removidos)."
+    )
+    estado["rf20_derivados"] = (doc_id, resultado["derivados_a_revisar"])
+    estado["rf20_excluir_motivo"] = ""
+    estado["rf20_excluir_confirma"] = False
 
 
 def _incluir_documento() -> None:
@@ -186,13 +398,17 @@ def _tela_ficha() -> None:
         """,
         unsafe_allow_html=True,
     )
+    encerramento = st.session_state.pop("rf20_aviso_ficha", None)
+    if encerramento:
+        st.toast(encerramento, icon="✅")
     st.text_area("Texto da solicitação", key="rf20_texto_ficha", height=160)
     if st.button("Analisar solicitação", key="rf20_analisar"):
-        _executar_ficha()
+        with st.spinner("Analisando a solicitação..."):
+            _executar_ficha()
     classificacao = st.session_state.get("rf20_ficha_classificacao")
     if classificacao:
         _mostrar_ficha(classificacao)
-    _formulario_decisao()
+    _formulario_decisao("ficha")
 
 
 def _tela_consulta() -> None:
@@ -206,13 +422,15 @@ def _tela_consulta() -> None:
         """,
         unsafe_allow_html=True,
     )
+    st.caption(MENSAGEM_CONSULTA_FORA_DA_MINUTA)
     st.text_area("Pergunta", key="rf20_pergunta", height=120)
     if st.button("Consultar o acervo", key="rf20_consultar"):
-        _executar_consulta()
+        with st.spinner(_texto_de_espera("Consultando o acervo...")):
+            _executar_consulta()
     classificacao = st.session_state.get("rf20_consulta_classificacao")
     if classificacao:
         _mostrar_consulta(classificacao)
-    _formulario_decisao()
+    _formulario_decisao("consulta")
 
 
 def _tela_fontes() -> None:
@@ -248,6 +466,14 @@ def _tela_fontes() -> None:
             st.markdown(f"> {trecho}")
 
 
+def _descartar_atendimento() -> None:
+    for chave in ATENDIMENTO_ANTERIOR:
+        st.session_state.pop(chave, None)
+    # Campos do formulário de correção e o texto editado da minuta da ficha anterior.
+    for chave in [c for c in list(st.session_state.keys()) if str(c).startswith(PREFIXOS_DO_ATENDIMENTO)]:
+        del st.session_state[chave]
+
+
 def _executar_ficha() -> None:
     texto = (st.session_state.get("rf20_texto_ficha") or "").strip()
     if not texto:
@@ -255,6 +481,8 @@ def _executar_ficha() -> None:
             "Informe o texto da solicitação."
         )
         return
+    # Solicitação nova, atendimento novo: nada do atendimento anterior entra nesta minuta.
+    _descartar_atendimento()
     try:
         try:
             from nlp import analisar_solicitacao
@@ -262,9 +490,15 @@ def _executar_ficha() -> None:
             from src.nlp import analisar_solicitacao
         analise = analisar_solicitacao(texto, "texto-da-ficha")
         classificacao = classificar_ficha(analise.validacao, analise.guardrail)
+        solicitacao = getattr(analise.validacao, "solicitacao", None)
+        if solicitacao is not None:
+            # A correção do servidor parte da solicitação validada e do texto que o modelo leu.
+            st.session_state["rf20_solicitacao"] = solicitacao.model_dump()
+            st.session_state["rf20_texto_analisado"] = texto
     except Exception as erro:
         classificacao = classificar_ficha(None)
         classificacao["texto"] = f"{classificacao['texto']} {erro}".strip()
+    classificacao = exigir_revisao_sem_orientacoes(classificacao)
     st.session_state["rf20_ficha_classificacao"] = classificacao
     st.session_state["rf20_travado"] = False
     _aplicar_estado("ficha", classificacao)
@@ -296,6 +530,13 @@ def _executar_consulta() -> None:
 
 def _mostrar_ficha(classificacao: dict) -> None:
     _mostrar_mensagem(classificacao)
+    _mostrar_alertas(classificacao)
+    corrigida = st.session_state.pop("rf20_aviso_correcao", None)
+    if corrigida:
+        st.success(corrigida)
+    guia = guia_da_revisao(classificacao, st.session_state.get("rf20_estado"))
+    if guia:
+        st.info(guia)
     if classificacao.get("motivos"):
         st.markdown("**Motivos**")
         for motivo in classificacao["motivos"]:
@@ -311,27 +552,170 @@ def _mostrar_ficha(classificacao: dict) -> None:
         st.markdown("**Entidades**")
         for entidade in linhas["entidades"]:
             st.markdown(f"- {entidade['tipo']}: {entidade['texto']} ({entidade['origem']})")
+    _corrigir_campos(classificacao)
     _mostrar_minuta(classificacao)
+
+
+def _corrigir_campos(ficha: dict) -> None:
+    solicitacao = st.session_state.get("rf20_solicitacao")
+    if not solicitacao:
+        return
+    # A rodada muda depois de cada correção: o formulário volta com os valores novos.
+    rodada = st.session_state.get("rf20_rodada", 0)
+    aberto = bool(ficha.get("minuta_bloqueada")) or st.session_state.get("rf20_estado") == "revisar"
+    with st.expander("Corrigir campos da ficha", expanded=aberto):
+        st.caption(
+            'Campo vazio fica como "não localizado". O que não estiver no texto original '
+            "fica marcado como informado pelo servidor."
+        )
+        for nome, rotulo, valor in campos_para_corrigir(solicitacao):
+            st.text_input(rotulo, value=valor, key=f"rf20_corrigir_{nome}_{rodada}")
+        st.selectbox(
+            "Categoria",
+            CATEGORIAS,
+            index=CATEGORIAS.index(solicitacao["categoria"]),
+            key=f"rf20_corrigir_categoria_{rodada}",
+        )
+        if st.button("Aplicar correções", key="rf20_aplicar_correcoes"):
+            _aplicar_correcoes(rodada)
+
+
+def _aplicar_correcoes(rodada: int) -> None:
+    from src.schemas import (
+        CAMPOS_CORRIGIVEIS,
+        corrigir_solicitacao,
+        data_abertura_processo,
+        validar_correcao,
+    )
+
+    original = st.session_state["rf20_solicitacao"]
+    correcoes = {
+        nome: st.session_state.get(f"rf20_corrigir_{nome}_{rodada}") for nome in CAMPOS_CORRIGIVEIS
+    }
+    try:
+        corrigida = corrigir_solicitacao(original, correcoes)
+    except ValueError as erro:
+        st.error(str(erro))
+        return
+    bloqueios, alterados, informados = validar_correcao(
+        original, corrigida, st.session_state.get("rf20_texto_analisado") or "",
+        data_abertura_processo(),
+    )
+    if bloqueios:
+        st.error("Correção não aplicada: " + " ".join(erro.mensagem for erro in bloqueios))
+        return
+    if not alterados:
+        st.info("Nenhum campo foi alterado.")
+        return
+
+    ficha = exigir_revisao_sem_orientacoes(classificar_ficha_corrigida(corrigida, informados))
+    st.session_state["rf20_solicitacao"] = corrigida.model_dump()
+    st.session_state["rf20_ficha_classificacao"] = ficha
+    st.session_state["rf20_rodada"] = rodada + 1
+    if not pode_buscar_orientacoes(ficha):
+        st.session_state.pop("rf20_orientacoes", None)
+        st.session_state.pop("rf20_partes_orientacoes", None)
+    # O estado recomeça da ficha corrigida (e das orientações, se ainda valem).
+    st.session_state["rf20_estado"] = None
+    st.session_state.pop("rf20_auto", None)
+    _aplicar_estado("ficha", ficha)
+    if st.session_state.get("rf20_orientacoes"):
+        _aplicar_estado("ficha", st.session_state["rf20_orientacoes"])
+    registrar_evento("revisao_campos_ficha", {
+        "id_execucao": _id_para("ficha"),
+        "campos_alterados": alterados,
+        "informados_pelo_servidor": informados,
+    })
+    st.session_state["rf20_aviso_correcao"] = mensagem_de_correcao(alterados, informados)
+    st.rerun()
 
 
 def _mostrar_consulta(classificacao: dict) -> None:
     tipo = ROTULOS_TIPO.get(classificacao["tipo"], classificacao["tipo"])
     st.markdown(f"**Status:** {tipo}")
     _mostrar_mensagem(classificacao)
+    _mostrar_alertas(classificacao)
     if classificacao.get("resposta"):
         st.markdown(classificacao["resposta"])
     if classificacao.get("justificativa"):
         st.markdown(f"**Justificativa:** {classificacao['justificativa']}")
-    ficha = st.session_state.get("rf20_ficha_classificacao")
-    if ficha:
-        _mostrar_minuta(ficha)
+    # A consulta é livre e não entra na minuta: a minuta fica só na Ficha.
+
+
+def _mostrar_orientacoes(ficha: dict) -> None:
+    if not ficha.get("linhas") or ficha.get("minuta_bloqueada"):
+        return
+    st.markdown("**Orientações do acervo**")
+    if not pode_buscar_orientacoes(ficha):
+        st.info(MENSAGEM_ORIENTACOES_SO_MATRICULA)
+        return
+    if st.button("Buscar orientações no acervo", key="rf20_buscar_orientacoes"):
+        _buscar_orientacoes(ficha)
+    for linha in resumo_das_orientacoes(st.session_state.get("rf20_partes_orientacoes") or []):
+        st.markdown(f"- {linha}")
+
+
+def _buscar_orientacoes(ficha: dict) -> None:
+    """Três consultas ao acervo (documentos, local e período), só para esta ficha."""
+    try:
+        from acervo_operacao import mensagem_do_indice
+    except ImportError:
+        from src.acervo_operacao import mensagem_do_indice
+    try:
+        bloqueio = mensagem_do_indice()
+    except Exception:
+        bloqueio = ""
+    if bloqueio:
+        st.error(bloqueio)
+        return
+    try:
+        from minuta_fundamentada import consultar_orientacoes
+    except ImportError:
+        from src.minuta_fundamentada import consultar_orientacoes
+    with st.spinner(_texto_de_espera("Consultando o acervo: documentos, local e período...")):
+        orientacoes, partes = consultar_orientacoes(ficha["linhas"])
+    st.session_state["rf20_orientacoes"] = orientacoes
+    st.session_state["rf20_partes_orientacoes"] = partes
+    registrar_evento("orientacoes_da_ficha", {
+        "id_execucao": _id_para("ficha"),
+        "tipo": orientacoes.get("tipo"),
+        "consultas": [
+            {"assunto": p["assunto"], "id_consulta": p["id_consulta"], "tipo": p["consulta"].get("tipo")}
+            for p in partes
+        ],
+    })
+    _aplicar_estado("ficha", orientacoes)
+
+
+def _texto_de_espera(texto: str) -> str:
+    # O modelo fica em src.vector_store, o mesmo módulo que o RAG usa.
+    try:
+        from src.vector_store import modelo_carregado
+
+        pronto = modelo_carregado()
+    except Exception:
+        pronto = False
+    return aviso_de_espera(texto, pronto)
 
 
 def _mostrar_minuta(ficha: dict) -> None:
-    consulta = st.session_state.get("rf20_consulta_classificacao")
+    _mostrar_orientacoes(ficha)
+    # Só as orientações buscadas para esta ficha; a área Consulta não entra na minuta.
+    consulta = st.session_state.get("rf20_orientacoes")
     minuta = minuta_do_atendimento(ficha, consulta)
     st.markdown("**Minuta**")
-    st.markdown(minuta["texto"])
+    st.session_state["rf20_minuta_base"] = minuta["texto"] if minuta["pronta"] else None
+    st.session_state["rf20_chave_minuta"] = None
+    if minuta["pronta"] and not orientacoes_resolvidas(consulta):
+        st.warning(AVISO_ORIENTACOES_PENDENTES)
+    if minuta["pronta"] and st.toggle("Editar o texto da minuta", key="rf20_editar_minuta"):
+        # A chave segue o texto montado: se a ficha ou as orientações mudarem, a edição recomeça dele.
+        chave = f"rf20_minuta_texto_{sha256(minuta['texto'].encode('utf-8')).hexdigest()[:12]}"
+        st.session_state["rf20_chave_minuta"] = chave
+        st.text_area("Texto da minuta", value=minuta["texto"], key=chave, height=420)
+        st.caption("O aviso de participação da IA precisa continuar no texto.")
+    else:
+        st.markdown(minuta["texto"])
     st.caption("Nenhuma resposta é enviada automaticamente.")
 
 
@@ -436,11 +820,22 @@ def _aviso_local(texto: str) -> dict:
     }
 
 
+def _mostrar_alertas(classificacao: dict) -> None:
+    alertas = classificacao.get("alertas") or []
+    if alertas:
+        st.error(
+            "**Alerta de segurança**\n\n" + "\n".join(f"- {alerta}" for alerta in alertas),
+            icon="🚨",
+        )
+
+
 def _mostrar_mensagem(classificacao: dict) -> None:
     texto = classificacao.get("texto") or ""
     if not texto:
         return
-    if classificacao["tipo"] in {"falha", "indice_desatualizado", "bloqueio"}:
+    if classificacao["tipo"] == "bloqueio":
+        st.error(texto, icon="🚫")
+    elif classificacao["tipo"] in {"falha", "indice_desatualizado"}:
         st.error(texto)
     elif classificacao["tipo"] in {"sem_evidencia", "conflito", "revisar"}:
         st.warning(texto)
@@ -448,7 +843,7 @@ def _mostrar_mensagem(classificacao: dict) -> None:
         st.info(texto)
 
 
-def _formulario_decisao() -> None:
+def _formulario_decisao(origem: str = "consulta") -> None:
     estado = st.session_state.get("rf20_estado")
     if st.session_state.get("rf20_bloqueado"):
         st.caption("A entrada foi bloqueada. Não há resposta para aprovar.")
@@ -466,19 +861,21 @@ def _formulario_decisao() -> None:
     st.text_area("Justificativa", key="rf20_justificativa", height=80)
     aprovar, rejeitar, revisar = st.columns(3)
     with aprovar:
-        st.button("Aprovar", key="rf20_aprovar", on_click=_decidir, args=("aprovar",))
+        st.button("Aprovar", key="rf20_aprovar", on_click=_decidir, args=("aprovar", origem))
     with rejeitar:
-        st.button("Rejeitar", key="rf20_rejeitar", on_click=_decidir, args=("rejeitar",))
+        st.button("Rejeitar", key="rf20_rejeitar", on_click=_decidir, args=("rejeitar", origem))
     with revisar:
-        st.button("Pedir revisão", key="rf20_revisar", on_click=_decidir, args=("revisar",))
+        st.button("Pedir revisão", key="rf20_revisar", on_click=_decidir, args=("revisar", origem))
     if estado == "revisar":
-        st.button("Retomar como pendente", key="rf20_retomar", on_click=_decidir, args=("retomar",))
+        st.button(
+            "Retomar como pendente", key="rf20_retomar", on_click=_decidir, args=("retomar", origem)
+        )
     erro = st.session_state.get("rf20_decisao_erro")
     if erro:
         st.error(erro)
 
 
-def _decidir(acao: str) -> None:
+def _decidir(acao: str, origem: str = "consulta") -> None:
     try:
         novo = transicionar(
             st.session_state.get("rf20_estado"),
@@ -487,22 +884,75 @@ def _decidir(acao: str) -> None:
             st.session_state.get("rf20_revisor") or "",
             st.session_state.get("rf20_cargo") or "",
         )
-        id_execucao = _id_atual()
+        # A decisão na Ficha é sobre a minuta da ficha, não sobre uma consulta solta.
+        if origem == "ficha" and st.session_state.get("rf20_id_ficha"):
+            id_execucao = st.session_state["rf20_id_ficha"]
+        else:
+            id_execucao = _id_atual()
         if not id_execucao:
             raise ValueError("A execução avaliada não foi identificada.")
+        arquivo = ""
+        if origem == "ficha" and novo == "aprovada":
+            arquivo = _salvar_minuta_da_ficha(id_execucao)
         registrar_decisao(
             id_execucao,
             novo,
             justificativa=st.session_state.get("rf20_justificativa") or "",
             revisor=st.session_state.get("rf20_revisor") or "",
             cargo_setor=st.session_state.get("rf20_cargo") or "",
+            arquivo_minuta=arquivo,
         )
     except ValueError as erro:
         st.session_state["rf20_decisao_erro"] = str(erro)
         return
+    if origem == "ficha" and novo in MENSAGENS_ENCERRAMENTO:
+        _limpar_ficha(novo, f" Minuta salva em {arquivo}." if arquivo else "")
+        return
     st.session_state["rf20_estado"] = novo
     st.session_state["rf20_travado"] = True
     st.session_state["rf20_decisao_erro"] = None
+
+
+def _salvar_minuta_da_ficha(id_execucao: str) -> str:
+    """Texto aprovado (o editado, se houver), assinado e salvo sem sobrescrever (RF24)."""
+    from src.fluxo import assinar_minuta
+
+    base = st.session_state.get("rf20_minuta_base")
+    chave = st.session_state.get("rf20_chave_minuta")
+    texto = conferir_minuta_para_aprovar(
+        st.session_state.get(chave) if chave else base,
+        gerada=base,
+        orientacoes_ok=orientacoes_resolvidas(st.session_state.get("rf20_orientacoes")),
+    )
+    assinada = assinar_minuta(
+        texto,
+        st.session_state.get("rf20_revisor") or "",
+        st.session_state.get("rf20_cargo") or "",
+    )
+    try:
+        arquivo = salvar_minuta_aprovada(id_execucao, assinada)
+    except FileExistsError as erro:
+        raise ValueError("A minuta desta ficha já foi salva.") from erro
+    registrar_evento("minuta_aprovada_ficha", {
+        "id_execucao": id_execucao,
+        "arquivo_minuta": arquivo,
+        "editada_pelo_servidor": texto != base,
+        "sha256_minuta": sha256(assinada.encode("utf-8")).hexdigest(),
+    })
+    return arquivo
+
+
+def _limpar_ficha(decisao: str, detalhe: str = "") -> None:
+    """Atendimento encerrado: a Ficha volta vazia, pronta para a próxima solicitação.
+
+    Roda no callback do botão, antes de a tela ser redesenhada, então pode limpar os campos.
+    """
+    _descartar_atendimento()
+    for chave in ("rf20_ficha_classificacao", "rf20_travado"):
+        st.session_state.pop(chave, None)
+    for campo in ("rf20_texto_ficha", "rf20_revisor", "rf20_cargo", "rf20_justificativa"):
+        st.session_state[campo] = ""
+    st.session_state["rf20_aviso_ficha"] = MENSAGENS_ENCERRAMENTO[decisao] + detalhe
 
 
 def _aplicar_estado(origem: str, classificacao: dict) -> None:
@@ -526,7 +976,7 @@ def _aplicar_estado(origem: str, classificacao: dict) -> None:
     id_execucao = _id_para(origem)
     justificativa = ""
     if combinado == "revisar":
-        motivos = classificacao.get("motivos") or []
+        motivos = (classificacao.get("alertas") or []) + (classificacao.get("motivos") or [])
         justificativa = classificacao.get("justificativa") or classificacao.get("texto") or ""
         if motivos:
             justificativa = "; ".join(motivos)

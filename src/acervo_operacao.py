@@ -14,6 +14,7 @@ from src.ingestion import (
     CAMINHO_CATALOGO,
     PASTA_ACERVO,
     carregar_catalogo,
+    carregar_exclusoes,
     gerar_chunks_documento,
     validar_documentos,
 )
@@ -127,11 +128,16 @@ def indexar_ids(doc_ids: list[str]) -> dict:
     )
 
     validacao = {item["doc_id"]: item["status"] for item in validar_documentos(catalogo)}
+    exclusoes = carregar_exclusoes()
     modelo = carregar_modelo_embeddings()
     colecao = obter_colecao()
     relatorio = []
     for doc_id in doc_ids:
         documento = por_id[doc_id]
+        if doc_id in exclusoes:
+            # Excluído (RF24) só volta pela restauração.
+            relatorio.append({"doc_id": doc_id, "status": "excluido", "chunks": 0})
+            continue
         status_arquivo = validacao[doc_id]
         if status_arquivo != "valido":
             relatorio.append({"doc_id": doc_id, "status": status_arquivo, "chunks": 0})
@@ -143,6 +149,86 @@ def indexar_ids(doc_ids: list[str]) -> dict:
         "total_chunks": colecao.count(),
         "versao_indice": calcular_versao_indice(colecao),
     }
+
+
+def situacao_do_indice() -> dict:
+    """Conferência catálogo × índice para a tela, sem carregar o modelo nem criar o índice."""
+    from src.vector_store import conferir_indice, obter_colecao_se_existir
+
+    exclusoes = carregar_exclusoes()
+    conferencia = conferir_indice(carregar_catalogo(), obter_colecao_se_existir(), exclusoes)
+    for documento in conferencia["documentos"]:
+        if documento["doc_id"] in exclusoes:
+            documento["exclusao"] = exclusoes[documento["doc_id"]]
+    return conferencia
+
+
+def mensagem_do_indice() -> str:
+    """Motivo do bloqueio e o que fazer, ou vazio quando o índice confere com o catálogo."""
+    from src.vector_store import mensagem_de_pendencias
+
+    return mensagem_de_pendencias(situacao_do_indice())
+
+
+def remover_do_indice(doc_id: str) -> dict:
+    """Tira do índice um documento que não deveria estar nele e registra na auditoria.
+
+    Só vale para o que a conferência aponta para remover (fora do catálogo ou já
+    excluído). Documento do acervo em uso não sai por aqui.
+    """
+    from src.audit import registrar_evento
+    from src.vector_store import (
+        calcular_versao_indice,
+        conferir_indice,
+        excluir_documento,
+        obter_colecao,
+    )
+
+    colecao = obter_colecao()
+    conferencia = conferir_indice(carregar_catalogo(), colecao, carregar_exclusoes())
+    motivos = {
+        item["doc_id"]: item["situacao"]
+        for item in conferencia["pendencias"]
+        if item["situacao"] in ("fora_do_catalogo", "excluido_no_indice")
+    }
+    if doc_id not in motivos:
+        raise ValueError(f"{doc_id} não está entre os documentos a remover do índice.")
+
+    resultado = excluir_documento(colecao, doc_id)
+    resultado["versao_indice_apos"] = calcular_versao_indice(colecao)
+    registrar_evento("remocao_do_indice", {
+        "doc_id": doc_id,
+        "chunks_removidos": resultado["chunks_removidos"],
+        "motivo": motivos[doc_id],
+        "versao_indice_apos": resultado["versao_indice_apos"],
+    })
+    return resultado
+
+
+def excluir_pela_tela(doc_id: str, motivo: str, responsavel: str) -> dict:
+    """Exclusão (RF24) pela tela Acervo: o mesmo registro e a mesma auditoria do terminal."""
+    responsavel = (responsavel or "").strip()
+    if not responsavel:
+        raise ValueError("Informe o(a) servidor(a) responsável pela exclusão.")
+
+    from src.indexar import excluir_e_registrar
+    from src.vector_store import obter_colecao
+
+    return excluir_e_registrar(obter_colecao(), doc_id, motivo, responsavel=responsavel)
+
+
+def restaurar_pela_tela(doc_id: str, responsavel: str) -> dict:
+    """Restauração pela tela Acervo: tira o registro e reindexa só o documento."""
+    responsavel = (responsavel or "").strip()
+    if not responsavel:
+        raise ValueError("Informe o(a) servidor(a) responsável pela restauração.")
+
+    from src.indexar import restaurar_e_registrar
+    from src.vector_store import carregar_modelo_embeddings, obter_colecao
+
+    return restaurar_e_registrar(
+        obter_colecao(), doc_id, carregar_modelo_embeddings(), responsavel=responsavel
+    )
 
 
 def proximo_doc_id(catalogo: dict) -> str:

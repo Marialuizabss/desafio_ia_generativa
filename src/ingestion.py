@@ -1,6 +1,7 @@
 import hashlib
 import json
 import re
+from datetime import datetime
 from pathlib import Path
 import pymupdf
 
@@ -8,6 +9,13 @@ import pymupdf
 RAIZ_PROJETO = Path(__file__).resolve().parent.parent
 PASTA_ACERVO = RAIZ_PROJETO / "dados" / "acervo"
 CAMINHO_CATALOGO = PASTA_ACERVO / "acervo.json"
+CAMINHO_EXCLUSOES = PASTA_ACERVO / "exclusoes.json"
+VERSAO_EXCLUSOES = "1.0"
+
+DESCRICAO_EXCLUSOES = (
+    "Documentos do acervo excluídos do índice de propósito (RF24). Enquanto constarem "
+    "aqui, a indexação os pula e a conferência não os cobra."
+)
 
 
 def carregar_catalogo():
@@ -18,6 +26,55 @@ def carregar_catalogo():
         raise ValueError("Catálogo sem lista válida de documentos.")
 
     return catalogo
+
+
+def carregar_exclusoes(caminho=None):
+    """Exclusões em vigor (RF24), por doc_id. Sem o arquivo, nenhuma."""
+
+    caminho = Path(caminho or CAMINHO_EXCLUSOES)
+
+    if not caminho.is_file():
+        return {}
+
+    try:
+        dados = json.loads(caminho.read_text(encoding="utf-8"))
+        return {item["doc_id"]: item for item in dados["exclusoes"]}
+    except (json.JSONDecodeError, KeyError, TypeError) as erro:
+        raise ValueError(
+            f"O registro de exclusões ({caminho.name}) está mal formado."
+        ) from erro
+
+
+def gravar_exclusoes(exclusoes, caminho=None):
+    """Grava sempre no mesmo formato: excluir e restaurar devolve o arquivo idêntico."""
+
+    dados = {
+        "versao": VERSAO_EXCLUSOES,
+        "descricao": DESCRICAO_EXCLUSOES,
+        "exclusoes": [exclusoes[doc_id] for doc_id in sorted(exclusoes)],
+    }
+    Path(caminho or CAMINHO_EXCLUSOES).write_text(
+        json.dumps(dados, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
+
+
+def registrar_exclusao(doc_id, motivo, responsavel, caminho=None):
+    exclusoes = carregar_exclusoes(caminho)
+    exclusoes[doc_id] = {
+        "doc_id": doc_id,
+        "data": datetime.now().astimezone().isoformat(timespec="seconds"),
+        "motivo": motivo,
+        "responsavel": responsavel,
+    }
+    gravar_exclusoes(exclusoes, caminho)
+    return exclusoes[doc_id]
+
+
+def remover_exclusao(doc_id, caminho=None):
+    exclusoes = carregar_exclusoes(caminho)
+    registro = exclusoes.pop(doc_id)
+    gravar_exclusoes(exclusoes, caminho)
+    return registro
 
 
 def calcular_sha256(caminho):

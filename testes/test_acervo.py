@@ -17,7 +17,8 @@ PASTA_ACERVO = BASE_DIR / "dados" / "acervo"
 CATALOGO = PASTA_ACERVO / "acervo.json"
 
 # Arquivos da pasta que não são documentos do acervo
-FORA_DO_ACERVO = {"acervo.json", ".gitkeep"}
+# Catálogo e registro de exclusões (RF24): ficam na pasta, mas não são documentos do acervo.
+FORA_DO_ACERVO = {"acervo.json", "exclusoes.json", ".gitkeep"}
 
 CAMPOS_DO_DOCUMENTO = (
     "doc_id", "titulo", "arquivo", "versao", "ordem", "origem", "data_documento", "tema",

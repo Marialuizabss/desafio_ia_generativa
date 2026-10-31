@@ -7,6 +7,7 @@ então a troca de modelo exige reindexação.
 """
 
 import hashlib
+import threading
 from pathlib import Path
 
 import chromadb
@@ -21,16 +22,84 @@ MODELO_EMBEDDINGS = (
 )
 DIMENSAO_EMBEDDINGS = 384
 
+# O Chroma guarda o sistema em cache antes de terminar de iniciá-lo. Duas aberturas
+# ao mesmo tempo (duas consultas na interface) pegavam o índice pela metade.
+_TRAVA_ABERTURA = threading.Lock()
+
 
 class IndiceDesatualizadoError(RuntimeError):
     """O índice foi criado com outro modelo ou dimensão de embeddings."""
 
 
-def carregar_modelo_embeddings():
+class IndiceIncompletoError(IndiceDesatualizadoError):
+    """O índice não confere com o catálogo. A mensagem diz o que falta e o que fazer."""
+
+
+# Situações da conferência que impedem a consulta: resposta sem um retificador, ou com
+# texto antigo, parece fundamentada e está errada.
+PENDENCIAS_DE_INDEXAR = ("nao_indexado", "desatualizado")
+PENDENCIAS_DE_REMOVER = ("fora_do_catalogo", "excluido_no_indice")
+
+DESCRICOES_SITUACAO = {
+    "indexado": "indexado",
+    "nao_indexado": "não indexado",
+    "desatualizado": "desatualizado (o documento mudou depois da indexação)",
+    "excluido": "excluído do índice",
+    "fora_do_catalogo": "está no índice, mas não no catálogo",
+    "excluido_no_indice": "foi excluído, mas continua no índice",
+}
+
+ACAO_INDEXAR = (
+    'vá à tela Acervo e clique em "Indexar selecionados" '
+    "(os documentos pendentes já vêm marcados)"
+)
+
+
+_MODELO = None
+_TRAVA_MODELO = threading.Lock()
+
+
+class _ModeloCompartilhado:
+    """O mesmo modelo para todas as consultas do processo.
+
+    `encode` é serializado: o tokenizador não aceita duas threads ao mesmo tempo (duas
+    consultas simultâneas na interface). O resto (tokenizer, max_seq_length) é repassado.
+    """
+
+    def __init__(self, modelo):
+        self._modelo = modelo
+        self._trava = threading.Lock()
+
+    def encode(self, *args, **kwargs):
+        with self._trava:
+            return self._modelo.encode(*args, **kwargs)
+
+    def __getattr__(self, nome):
+        return getattr(self._modelo, nome)
+
+
+def _criar_modelo():
     # Importação tardia: os testes e a exclusão não precisam do modelo.
     from sentence_transformers import SentenceTransformer
 
     return SentenceTransformer(MODELO_EMBEDDINGS)
+
+
+def modelo_carregado():
+    """O modelo já está na memória: a próxima consulta não espera a carga."""
+
+    return _MODELO is not None
+
+
+def carregar_modelo_embeddings():
+    """Carrega o modelo uma vez por processo; as consultas seguintes o reaproveitam."""
+
+    global _MODELO
+
+    with _TRAVA_MODELO:
+        if _MODELO is None:
+            _MODELO = _ModeloCompartilhado(_criar_modelo())
+        return _MODELO
 
 
 def obter_colecao(
@@ -39,8 +108,23 @@ def obter_colecao(
     modelo_embeddings=MODELO_EMBEDDINGS,
     dimensao=DIMENSAO_EMBEDDINGS,
 ):
-    """Abre (ou cria) a coleção e confere modelo e dimensão de embeddings."""
+    """Abre (ou cria) a coleção e confere modelo e dimensão de embeddings.
 
+    Uma abertura por vez: quem chega depois espera e reaproveita o índice já aberto.
+    """
+
+    with _TRAVA_ABERTURA:
+        return _abrir_colecao(pasta, nome, modelo_embeddings, dimensao)
+
+
+def obter_colecao_se_existir(pasta=None):
+    """Abre o índice só se a pasta existir: conferir não deixa uma pasta vazia para trás."""
+
+    pasta = Path(pasta or PASTA_INDICE)
+    return obter_colecao(pasta=pasta) if pasta.is_dir() else None
+
+
+def _abrir_colecao(pasta, nome, modelo_embeddings, dimensao):
     cliente = chromadb.PersistentClient(
         path=str(pasta or PASTA_INDICE)
     )
@@ -220,6 +304,94 @@ def listar_documentos_indexados(colecao):
         item["chunks"] += 1
 
     return [resumo[chave] for chave in sorted(resumo)]
+
+
+def conferir_indice(catalogo, colecao, excluidos=()):
+    """Compara o catálogo com o índice, documento por documento (doc_id e hash).
+
+    `colecao` None é índice inexistente. `excluidos` são os documentos tirados do
+    índice de propósito (RF24): fora do índice, não são pendência.
+    """
+
+    no_indice = {
+        item["doc_id"]: item
+        for item in (listar_documentos_indexados(colecao) if colecao is not None else [])
+    }
+    excluidos = set(excluidos)
+    documentos = []
+
+    for documento in catalogo["documentos"]:
+        doc_id = documento["doc_id"]
+        item = no_indice.pop(doc_id, None)
+
+        if doc_id in excluidos:
+            situacao = "excluido" if item is None else "excluido_no_indice"
+        elif item is None:
+            situacao = "nao_indexado"
+        elif item["sha256"] != documento["sha256"]:
+            situacao = "desatualizado"
+        else:
+            situacao = "indexado"
+
+        documentos.append({
+            "doc_id": doc_id,
+            "situacao": situacao,
+            "chunks": item["chunks"] if item else 0,
+        })
+
+    for doc_id, item in sorted(no_indice.items()):
+        documentos.append({
+            "doc_id": doc_id,
+            "situacao": "fora_do_catalogo",
+            "chunks": item["chunks"],
+        })
+
+    pendencias = [
+        documento for documento in documentos
+        if documento["situacao"] in PENDENCIAS_DE_INDEXAR + PENDENCIAS_DE_REMOVER
+    ]
+
+    return {
+        "documentos": documentos,
+        "pendencias": pendencias,
+        "completo": not pendencias,
+        "vazio": not any(documento["chunks"] for documento in documentos),
+        "total_chunks": sum(documento["chunks"] for documento in documentos),
+    }
+
+
+def mensagem_de_pendencias(conferencia):
+    """O motivo do bloqueio e o que fazer na interface. Vazio quando não há pendência."""
+
+    if conferencia["completo"]:
+        return ""
+
+    if conferencia["vazio"]:
+        return (
+            "O índice está vazio: nenhum documento do acervo foi indexado. "
+            f"Para consultar, {ACAO_INDEXAR}."
+        )
+
+    pendencias = conferencia["pendencias"]
+    descricoes = "; ".join(
+        f"{p['doc_id']} {DESCRICOES_SITUACAO[p['situacao']]}" for p in pendencias
+    )
+    a_remover = [p["doc_id"] for p in pendencias if p["situacao"] in PENDENCIAS_DE_REMOVER]
+    remover = f'"Remover do índice" ao lado de {" e ".join(a_remover)}'
+
+    if not a_remover:
+        return f"O índice está incompleto: {descricoes}. Para consultar, {ACAO_INDEXAR}."
+
+    if len(a_remover) == len(pendencias):
+        return (
+            f"O índice tem documento que não deveria estar nele: {descricoes}. "
+            f"Para consultar, vá à tela Acervo e clique em {remover}."
+        )
+
+    return (
+        f"O índice está incompleto: {descricoes}. "
+        f"Para consultar, {ACAO_INDEXAR} e em {remover}."
+    )
 
 
 def calcular_versao_indice(colecao):

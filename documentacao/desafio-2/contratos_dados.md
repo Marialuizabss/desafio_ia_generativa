@@ -2,7 +2,7 @@
 
 Formato de cada arquivo de dados e de gabarito do Desafio 2: o que contém, onde fica, quem
 produz e quem usa. O código de cada integrante deve seguir este documento; mudanças de formato
-são combinadas na equipe e registradas no histórico (seção 11).
+são combinadas na equipe e registradas no histórico (seção 12).
 
 | Integrante | Papel | Usa principalmente |
 |---|---|---|
@@ -38,6 +38,8 @@ são combinadas na equipe e registradas no histórico (seção 11).
 |---|---|---|---|---|
 | `dados/acervo/*.pdf`, `*.txt` | Documentos institucionais | Professor (PDF) e equipe (TXT) | Maria | RF17 |
 | `dados/acervo/acervo.json` | Catálogo e regras de prevalência | Ana | Maria | RF17, RF19 |
+| `dados/acervo/exclusoes.json` | Exclusões do índice em vigor (seção 3) | `--excluir` e tela Acervo | Indexação, conferência e RAG | RF24, T14 |
+| `resultados/minutas/rf20/ficha_<id>.md` | Minuta aprovada na Ficha, assinada (seção 10) | Tela Ficha | Revisão e auditoria | RF20, RF24, T11 |
 | `dados/originais/perguntas_rag.json` | 8 perguntas, sem resposta | Ana | Maria | RF18, RF19 |
 | `dados/gabaritos/gabarito_rag.json` | Esperado das 8 perguntas | Ana | Maria, RF23 | RF18, RF19 |
 | `dados/originais/adv03_tentativa_segredo.txt` | Ataque para obter segredo | Ana | Felipe | RF16 |
@@ -119,6 +121,24 @@ demonstração de exclusão do índice (RF24, T14).
 
 **Conferência automática:** `python -m unittest testes.test_acervo` (arquivos, hash, páginas,
 catálogo e regras).
+
+**Registro de exclusões:** `dados/acervo/exclusoes.json` (versão 1.0). Guarda os documentos
+tirados do índice de propósito (RF24). O catálogo não muda: o documento continua catalogado, mas a
+indexação o pula e a conferência catálogo × índice não o cobra até ele ser restaurado.
+
+| Campo de cada exclusão | Significado |
+|---|---|
+| `doc_id` | Documento do catálogo excluído |
+| `data` | Data e hora da exclusão, ISO com fuso |
+| `motivo` | Obrigatório (por exemplo, "retenção encerrada") |
+| `responsavel` | Quem excluiu, declarado na tela; `terminal` quando vem do comando sem `--responsavel` |
+
+- **Quem grava:** `python -m src.indexar --excluir ACV-09 --motivo "..."` e a tela Acervo
+  ("Excluir do índice"); a restauração (`--restaurar` ou o botão "Restaurar") tira o registro.
+- **Formato fixo:** gravado sempre do mesmo jeito; excluir e restaurar devolve o arquivo idêntico.
+- **Histórico:** o arquivo mostra só as exclusões em vigor. Exclusões e restaurações ficam no log
+  (`exclusao_documento` e `restauracao_documento` em `resultados/logs/execucoes.jsonl`).
+- **Limite:** a aplicação não tem login; o responsável é declarado, não autenticado.
 
 ## 4. Perguntas de avaliação do RAG
 
@@ -544,10 +564,23 @@ fatos sem suporte e saídas rejeitadas pelo RF14.
 | `revisar` | Encaminhada para correção ou análise | Justificativa (escrita pelo servidor ou o motivo automático) |
 
 - **Vai para `revisar` automaticamente** quando: a validação ou uma regra de negócio falha; o RAG
-  responde `sem_evidencia` ou `conflito`; um guardrail decide `revisar`; a categoria é ambígua.
+  responde `sem_evidencia` ou `conflito`; um guardrail decide `revisar`; a categoria é ambígua; a
+  categoria não é matrícula (não há busca de orientações no acervo para ela).
 - **Transições:** `pendente` → `aprovada`, `rejeitada` ou `revisar`; `revisar` → `pendente`
   depois da correção. `aprovada` e `rejeitada` são finais: um novo atendimento é uma nova execução.
 - Nenhuma resposta é enviada automaticamente; a minuta identifica a participação da IA.
+- **Correção na Ficha (RF20):** o servidor corrige os 11 campos e a categoria; resumo e entidades
+  ficam como a análise gerou. Data impossível ou incoerente bloqueia a correção. Campo que não
+  aparece no texto original é aceito como "informado pelo servidor". Corrigir não aprova: o estado
+  recomeça da ficha corrigida. O log grava `revisao_campos_ficha` só com os nomes dos campos.
+- **Aprovação na Ficha (RF24):** exige a minuta montada e o aviso de participação da IA no texto.
+  Se as orientações não vieram todas fundamentadas (não buscadas, sem evidência, em conflito ou
+  outra categoria), a seção Orientações traz um recado para o servidor: a aprovação só é aceita
+  depois que ele reescreve essa seção, para o recado não chegar ao cidadão.
+  A minuta aprovada (editada ou não) é assinada com o nome e o cargo e salva em
+  `resultados/minutas/rf20/ficha_<id_execucao>.md`, sem sobrescrever. O log grava
+  `minuta_aprovada_ficha` (caminho, `editada_pelo_servidor` e hash) e a decisão com o caminho.
+  A rejeição não salva minuta.
 
 **Tradução dos estados do Desafio 1** (registros antigos em `resultados/logs/execucoes.jsonl`
 não são reescritos; a tradução vale na leitura):
@@ -559,7 +592,34 @@ não são reescritos; a tradução vale na leitura):
 | `rejeitado` | `rejeitada` |
 | `nova_geracao` | `revisar` |
 
-## 11. Histórico
+## 11. Retenção (RF24)
+
+Política da equipe para o sistema em uso real. Os dados deste projeto são fictícios e os prazos
+simulam a operação de uma secretaria: não são exigência legal. Seguem os princípios da LGPD de
+necessidade (art. 6º, III) e de término do tratamento (arts. 15 e 16): dado pessoal fica só
+enquanto serve à finalidade do atendimento.
+
+| Item | Onde | Prazo | No fim do prazo | Como |
+|---|---|---|---|---|
+| Documentos do acervo | `dados/acervo/` | Enquanto o edital estiver vigente | Sai do acervo ativo: exclusão do índice com motivo "retenção encerrada" | Tela Acervo ("Excluir do índice") ou `python -m src.indexar --excluir DOC_ID --motivo "retenção encerrada"`; fica em `exclusoes.json` |
+| Vetores do índice | `dados/indice_vetorial/` | Seguem o documento | Saem com a exclusão do documento; o índice é recriado (`--recriar`) quando o modelo de embeddings muda | Automático na exclusão; o índice não vai para o git |
+| Entradas (texto, áudio e imagem da ficha) | `dados/originais/` | 30 dias após a decisão final | Apagar | Manual, pelo responsável pelo sistema |
+| Extrações das solicitações | `dados/processados/` | 30 dias após a decisão final | Apagar | Manual |
+| Minuta aprovada, com o áudio e a imagem dela | `resultados/minutas/aprovadas/`, `resultados/minutas/rf20/`, `resultados/audios/`, `resultados/imagens/` | 1 ano após a decisão | Arquivar fora do sistema ou apagar | Manual |
+| Minuta rejeitada | — | Não é guardada | — | A rejeição grava só a decisão e a justificativa no log |
+| Log de auditoria | `resultados/logs/execucoes.jsonl` | 2 anos | Apagar as linhas vencidas | Manual; o log não guarda o texto da solicitação, só o hash |
+| Derivados de documento excluído | `resultados/metricas/`, `resultados/rag/` e `dados/resultados/` | Revisão no momento da exclusão | Corrigir ou apagar o que cita o documento | A exclusão lista os arquivos (`derivados_a_revisar`, também na tela) |
+| Resultados de avaliação | `resultados/avaliacao/`, `resultados/metricas/`, `resultados/rag/` | Enquanto o projeto existir | — | Evidência do trabalho, com dados fictícios |
+| Registro de exclusões | `dados/acervo/exclusoes.json` | Enquanto a exclusão vigorar | Sai na restauração | O histórico fica no log (`exclusao_documento` e `restauracao_documento`) |
+
+- **Automático:** a exclusão de documento apaga os vetores, registra data, motivo e responsável,
+  lista os derivados e não deixa a reindexação trazer o documento de volta. A minuta rejeitada não
+  é salva.
+- **Manual:** apagar entradas, extrações, minutas e linhas do log vencidas. A política define o
+  prazo; o projeto não tem rotina automática de expurgo.
+- **Neste repositório**, com dados fictícios, os arquivos ficam como evidência da entrega.
+
+## 12. Histórico
 
 | Versão | Data | Mudança |
 |---|---|---|
@@ -572,3 +632,6 @@ não são reescritos; a tradução vale na leitura):
 | 1.6 | 2026-10-28 | Seção 9.1: RF15 em `src/nlp.py` e `src/avaliacao_rf15.py`, prompt v2 em arquivo, comparação com o gabarito e conferência humana |
 | 1.7 | 2026-10-29 | Prompt v2.1 em uso (seção "Resumo" ampliada após as omissões da execução com o v2); `arquivo_prompt` registrado em cada execução |
 | 1.8 | 2026-10-30 | Saída do classificador do RF22: situação, polaridade proposta, justificativa, confiança e instrução no texto; o código aplica a tabela de rotulagem |
+| 1.9 | 2026-10-31 | Registro de exclusões `dados/acervo/exclusoes.json` (RF24): motivo obrigatório, responsável, exclusão e restauração pelo terminal e pela tela |
+| 1.10 | 2026-10-31 | Seção 10: correção dos campos pelo servidor ("informado pelo servidor"), categoria fora de matrícula vai para `revisar`, minuta aprovada salva e assinada em `resultados/minutas/rf20/` e seção Orientações reescrita quando traz recado para o servidor |
+| 1.11 | 2026-10-31 | Seção 11: política de retenção (RF24), com prazo, destino e forma de cada dado; histórico passa a ser a seção 12 |

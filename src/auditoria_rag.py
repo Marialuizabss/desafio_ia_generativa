@@ -28,12 +28,14 @@ VERSAO_ESQUEMA_RESPOSTA = "rag-1.1"
 _PROTOCOLO = re.compile(r"\b\d{4}-\d{4,8}\b")
 
 
-def versao_indice_atual() -> str:
-    """Versão do conteúdo do índice vetorial em uso (hash curto)."""
+def versao_indice_atual() -> str | None:
+    """Versão do conteúdo do índice vetorial em uso (hash curto). None sem índice."""
 
-    from src.vector_store import calcular_versao_indice, obter_colecao
+    from src.vector_store import calcular_versao_indice, obter_colecao_se_existir
 
-    return calcular_versao_indice(obter_colecao())
+    # Registrar a consulta não pode criar um índice vazio.
+    colecao = obter_colecao_se_existir()
+    return calcular_versao_indice(colecao) if colecao is not None else None
 
 
 def versao_do_prompt(*textos: str) -> str:

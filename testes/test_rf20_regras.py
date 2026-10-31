@@ -184,7 +184,9 @@ class TestFicha(unittest.TestCase):
 
         saida = classificar_ficha(Validacao(), {"decisao": "revisar", "motivos": ["instrucao_na_entrada"]})
         self.assertEqual(saida["estado"], "revisar")
-        self.assertIn("instrução ao sistema", saida["motivos"][0])
+        # O alerta da regra vai para a caixa de alertas de segurança, não para os motivos.
+        self.assertIn("instrução ao sistema", saida["alertas"][0])
+        self.assertEqual(saida["motivos"], [])
 
 
 class TestDecisao(unittest.TestCase):

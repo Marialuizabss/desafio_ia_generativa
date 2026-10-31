@@ -47,9 +47,11 @@ delimitado e tratado como dado, não como instrução; e cada execução, revis�
 | Imagem | Pillow | 12.3.0 | Montagem da peça com brasão e textos |
 | Áudio | mutagen | 1.48.1 | Duração do áudio, sem chamar a API |
 | Validação | Pydantic | 2.14.1 | Contrato da extração e validação estrita (RF14) |
+| Índice vetorial | ChromaDB | 1.5.9 | Índice persistente do acervo (RF17) |
+| Embeddings | sentence-transformers e PyTorch (só CPU) | 6.2.0 / 2.15.0 | Vetores dos trechos do acervo, sem chamar a API (RF17 a RF19) |
 | Configuração | python-dotenv, JSON | 1.2.4 | Chave no `.env`; caminhos, modelos e parâmetros no `config.json` |
 | Registro | JSON Lines | — | `resultados/logs/execucoes.jsonl`, uma linha por evento |
-| Testes | unittest e `streamlit.testing` (AppTest) | — | Testes de regras, fluxo e cliques na interface, com a API simulada |
+| Testes | pytest, unittest e `streamlit.testing` (AppTest) | 9.2.0 | Testes de regras, fluxo e cliques na interface, com a API simulada; rodam pelo pytest |
 | Versionamento | Git e GitHub | — | Branches por integrante e entrega por `git archive` |
 | Documentação | Markdown | — | README e `documentacao/` |
 
@@ -93,6 +95,12 @@ No Windows, se a ativação for bloqueada, rode antes
 O `python -m src.versoes` deve mostrar ✓ para o Python 3.13 e para cada biblioteca do
 `requirements.txt` (versões na seção 2).
 
+**PyTorch só para CPU.** O `requirements.txt` aponta o índice do PyTorch para CPU
+(`--extra-index-url`), que instala cerca de 200 MB em vez dos mais de 3 GB da versão com CUDA; o
+`src.versoes` mostra o torch como `2.15.0` mesmo instalado como `2.15.0+cpu`. Se a instalação
+parar com "Não há espaço disponível no dispositivo", a pasta temporária do sistema encheu: rode
+`mkdir -p ~/pip-tmp && TMPDIR=~/pip-tmp pip install -r requirements.txt` e depois apague `~/pip-tmp`.
+
 ## 5. Configuração
 
 | Arquivo | O que define | Versionado? |
@@ -130,7 +138,7 @@ As saídas ficam em `resultados/minutas/aprovadas/` (minuta e PDF), `resultados/
 
 | O quê | Comando | Chama a API? |
 |---|---|---|
-| Todos os testes (287) | `python -m unittest discover -s testes -t .` | Não |
+| Todos os testes (556) | `python -m pytest testes -q` | Não |
 | Versões do Python e das bibliotecas | `python -m src.versoes` | Não |
 | Varredura de credenciais e dados pessoais (RF12) | `python -m src.varredura_rf12` | Não |
 | Avaliação dos 7 casos (RF13) | `python -m src.avaliacao_rf13 --todos` | Sim, ~US$ 0,03 |
@@ -138,7 +146,9 @@ As saídas ficam em `resultados/minutas/aprovadas/` (minuta e PDF), `resultados/
 | Experimentos de prompt (RF02 e RF03) | `python -m src.experimento_rf02` · `python -m src.experimento_rf03` | Sim |
 
 Os testes usam respostas simuladas e pastas temporárias: não gastam créditos nem alteram os
-resultados do projeto.
+resultados do projeto. **Rode sempre pelo pytest:** o `testes/conftest.py` desvia o log de
+auditoria e o índice nos testes do RAG (RF16, RF19, RF21 e vigência), e esse isolamento não vale
+com `python -m unittest`.
 
 ## 8. Modelos e custos
 
@@ -187,7 +197,7 @@ desafio_ia_generativa/
 │   ├── configuracao.py, versoes.py
 │   └── experimento_*, avaliacao_rf13.py, avaliacao_rf15.py, varredura_rf12.py   experimentos e verificações
 ├── resultados/                 minutas, áudios, imagens, avaliações, métricas e logs
-├── testes/                     testes automatizados (unittest)
+├── testes/                     testes automatizados (pytest)
 └── documentacao/
     ├── desafio-1/              índice, relatório técnico, registro de uso de IA e um documento por requisito
     └── desafio-2/              documentação do Desafio 2
@@ -238,6 +248,7 @@ desafio_ia_generativa/
 - Conteúdo do cidadão delimitado e tratado como dado; alertas de injection destacados na revisão.
 - Nenhum envio automático; a minuta só é salva depois da aprovação do servidor.
 - Entrega gerada com `git archive --format=zip -o entrega.zip HEAD`, que não inclui o `.env`.
+- Retenção (RF24): prazo, destino e forma de cada dado na seção 11 de [`documentacao/desafio-2/contratos_dados.md`](documentacao/desafio-2/contratos_dados.md).
 
 Detalhes em [`documentacao/desafio-1/rf12_lgpd_privacidade.md`](documentacao/desafio-1/rf12_lgpd_privacidade.md).
 
@@ -270,7 +281,7 @@ esquema Pydantic e regras de negócio); inválida ou incoerente, a minuta é blo
 
 | O quê | Comando | Chama a API? |
 |---|---|---|
-| Testes | `python -m unittest testes.test_rf14 testes.test_rf15` | Não |
+| Testes | `python -m pytest testes/test_rf14.py testes/test_rf15.py -q` | Não |
 | JSON sintático × esquema (T01) | `python -m src.experimento_rf14` | Não |
 | Avaliação simulada | `python -m src.avaliacao_rf15 --simulado` | Não |
 | Avaliação real dos 7 casos | `python -m src.avaliacao_rf15 --todos` | Sim, ~US$ 0,007 |
@@ -291,7 +302,8 @@ de 128 tokens por trecho). O modelo é baixado na primeira execução e depois r
 pip install -r requirements.txt
 python -m src.indexar                      # indexa o acervo (pode repetir: não duplica)
 python -m src.indexar --status             # documentos, chunks e versão do índice
-python -m src.indexar --excluir ACV-09 --motivo "retenção encerrada"
+python -m src.indexar --excluir ACV-09 --motivo "retenção encerrada"   # motivo obrigatório
+python -m src.indexar --restaurar ACV-09   # tira da lista de excluídos e reindexa
 python -m src.avaliacao_rf18               # compara 3 configurações de chunking (RF18)
 python -m src.avaliacao_rag --repeticoes 3 # oito perguntas do RAG, três rodadas (usa a API)
 python -m pytest testes -q                 # testes (não usam a API nem baixam o modelo)
@@ -313,6 +325,18 @@ recuperados, tempos e custos, sem chave de API e com identificadores mascarados)
 configuração de geração não reconstrói o índice. Detalhes, resultados e limitações:
 `documentacao/desafio-2/01_relatorio_tecnico.md`, seções 4 e 5.
 
+Antes de cada consulta, o índice é conferido com o catálogo (`doc_id` e hash de cada documento).
+Índice vazio, documento não indexado, desatualizado ou fora do catálogo bloqueiam a consulta sem
+chamar o modelo, com o motivo e o que fazer. A tela Acervo mostra a situação de cada documento, já
+marca os pendentes em "Indexar selecionados" e oferece "Remover do índice" para o que está fora do
+catálogo. `python -m src.indexar --status` traz a mesma conferência.
+
+A exclusão de documento (RF24, T14) dura: fica registrada em `dados/acervo/exclusoes.json`, com
+data, motivo e responsável, e a indexação pula o documento até ele ser restaurado. A tela Acervo
+também exclui (com responsável, motivo e confirmação) e restaura, e lista os resultados derivados
+que citam o documento excluído. A aplicação não tem login: o responsável é declarado, não
+autenticado.
+
 ### Sentimentos e painel (RF22)
 
 O classificador pede ao modelo a situação e a polaridade, e o código aplica as regras de mensagem
@@ -322,7 +346,7 @@ vazio mostra "sem dados".
 
 | O quê | Comando | Chama a API? |
 |---|---|---|
-| Testes | `python -m unittest testes.test_rf22` | Não |
+| Testes | `python -m pytest testes/test_rf22.py -q` | Não |
 | Avaliação simulada das 12 | `python -m src.avaliacao_rf22 --simulado` | Não |
 | Avaliação real | `python -m src.avaliacao_rf22 --todos` | Sim, configuração `principal` |
 
@@ -337,20 +361,20 @@ O teto é por atendimento: análise e cada classificação de sentimento, 2 cham
 
 | O quê | Comando | Chama a API? |
 |---|---|---|
-| Testes | `python -m unittest testes.test_rf16` | Não |
+| Testes | `python -m pytest testes/test_rf16.py -q` | Não |
 
 Detalhes na seção 6 de `documentacao/desafio-2/01_relatorio_tecnico.md`.
 
 ### Interface (RF20)
 
-`python -m src.main` abre a interface. A barra lateral tem Acervo, Ficha, Consulta, Fontes e Painel; o atendimento do Desafio 1 continua na área padrão. No acervo dá para indexar os documentos selecionados e incluir um TXT ou PDF fictício. A ficha mostra ausência como "não localizado" e a minuta, com a participação da IA no rodapé. Sem consulta ao acervo, a minuta não preenche documento, prazo nem local. A consulta usa o RAG: sem evidência ou conflito vai para revisão, sem resposta inventada, e a resposta fundamentada entra na minuta com as fontes. Falha do serviço e índice desatualizado aparecem em português e não geram resposta. O painel conta polaridade, fração e denominador, desenha o gráfico e, com filtro vazio, mostra "sem dados". A decisão do servidor é `pendente`, `aprovada`, `rejeitada` ou `revisar`; `aprovada` e `rejeitada` encerram o atendimento e o registro não é reescrito.
+`python -m src.main` abre a interface. A barra lateral tem Acervo, Ficha, Consulta, Fontes e Painel; o atendimento do Desafio 1 continua na área padrão. No acervo dá para indexar os documentos selecionados e incluir um TXT ou PDF fictício. A ficha mostra ausência como "não localizado" e a minuta, com a participação da IA no rodapé. Em pedido de matrícula, "Buscar orientações no acervo" faz três consultas (documentos, local e período) só para aquela ficha e mostra a pergunta, o status e as fontes de cada uma; as respostas fundamentadas entram na minuta com as fontes, e sem evidência ou conflito vai para revisão, sem resposta inventada. Sem essa busca, a minuta não preenche documento, prazo nem local; nas outras categorias a busca não se aplica e a ficha vai para revisão. Na revisão, o servidor corrige os campos da ficha (data impossível ou incoerente bloqueia; o que não está no texto original fica como "informado pelo servidor") e pode editar o texto da minuta, sem tirar o aviso de participação da IA. Se as orientações não vieram todas fundamentadas, a seção Orientações traz um recado para o servidor e só aprova depois de reescrita. Ao aprovar, a minuta é assinada e salva em `resultados/minutas/rf20/`, sem sobrescrever. Analisar outra solicitação começa um atendimento novo, e aprovar ou rejeitar na Ficha encerra o atendimento: aparece um aviso de sucesso e a Ficha volta vazia. A área Consulta é livre e não entra na minuta. Alerta de segurança aparece numa caixa vermelha (🚨), com uma linha para o que a regra detectou e outra para o que o modelo apontou; na Consulta, a caixa avisa quando um trecho do acervo com instrução ao assistente foi retirado do contexto. Entrada bloqueada aparece em vermelho com 🚫. Falha do serviço e índice desatualizado aparecem em português e não geram resposta. O painel conta polaridade, fração e denominador, desenha o gráfico e, com filtro vazio, mostra "sem dados". A decisão do servidor é `pendente`, `aprovada`, `rejeitada` ou `revisar`; `aprovada` e `rejeitada` encerram o atendimento e o registro não é reescrito.
 
 | O quê | Comando | Chama a API? |
 |---|---|---|
-| Testes | `python -m unittest testes.test_rf20_regras testes.test_rf20_telas` | Não |
+| Testes | `python -m pytest testes/test_rf20_regras.py testes/test_rf20_telas.py -q` | Não |
 | Interface | `python -m src.main` | Só ao analisar ou consultar |
 
-Código: `src/consulta_acervo.py`, `src/acervo_operacao.py`, `src/painel.py` e `src/telas_rf20.py`. A matriz T01–T15 está em `documentacao/desafio-2/matriz_rf23.md`. Detalhes nas seções 7 a 13 de `documentacao/desafio-2/01_relatorio_tecnico.md`.
+Código: `src/consulta_acervo.py`, `src/acervo_operacao.py`, `src/painel.py` e `src/telas_rf20.py`. A matriz T01–T15 está em `documentacao/desafio-2/03_matriz_testes.md`. Detalhes nas seções 7 a 13 de `documentacao/desafio-2/01_relatorio_tecnico.md`.
 
 ---
 
