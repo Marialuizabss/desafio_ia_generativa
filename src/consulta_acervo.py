@@ -92,6 +92,15 @@ MENSAGENS_BLOQUEIO = {
     "instrucao_na_entrada": "A entrada contém uma instrução ao sistema e segue para revisão.",
 }
 
+# Prefixo com que a validação (RF14) lista os alertas da solicitação junto dos motivos.
+PREFIXO_ALERTA = "alerta de segurança: "
+ALERTAS_DA_REGRA = {
+    "instrucao_na_entrada": (
+        "a entrada contém uma instrução ao sistema. As ordens não são seguidas e o caso vai "
+        "para revisão."
+    ),
+}
+
 AVISOS_ACERVO = {
     "arquivo_ausente": "Arquivo ausente no acervo.",
     "hash_divergente": "O hash do arquivo não confere com o catálogo.",
@@ -222,6 +231,35 @@ def pendentes_de_remover(conferencia: dict | None) -> list[dict]:
 
 
 def classificar_consulta(resultado: dict | None = None, erro: BaseException | None = None) -> dict:
+    """Classificação da consulta com os alertas de segurança do RAG, já traduzidos."""
+    saida = _classificar_consulta(resultado, erro)
+    saida["alertas"], saida["docs_com_instrucao"] = alertas_da_consulta(resultado)
+    return saida
+
+
+def alertas_da_consulta(resultado: dict | None) -> tuple[list[str], list[str]]:
+    """(alertas para a tela, documentos com instrução retirada do contexto)."""
+    alertas, documentos = [], []
+    registrados = resultado.get("alertas") if isinstance(resultado, dict) else None
+    for alerta in registrados or []:
+        if alerta.get("tipo") == "instrucao_em_documento":
+            doc_id = alerta.get("doc_id") or "acervo"
+            texto = (
+                f"Um trecho do {doc_id} tinha instrução dirigida ao assistente e foi retirado "
+                "do contexto. A resposta não usa esse trecho."
+            )
+            if doc_id not in documentos:
+                documentos.append(doc_id)
+        elif alerta.get("tipo") == "instrucao_na_entrada":
+            texto = f"Regra: {ALERTAS_DA_REGRA['instrucao_na_entrada']}"
+        else:
+            continue
+        if texto not in alertas:
+            alertas.append(texto)
+    return alertas, documentos
+
+
+def _classificar_consulta(resultado: dict | None = None, erro: BaseException | None = None) -> dict:
     """Traduz o retorno do RAG, ou a falha, na mensagem e no estado da tela.
 
     Índice desatualizado e falha não trazem resposta. Sem evidência e conflito
@@ -317,11 +355,13 @@ def classificar_ficha(validacao, guardrail=None) -> dict:
     resposta para o servidor aprovar.
     """
     if _decisao(guardrail) == "bloquear":
+        # A mensagem já traduz o motivo; o código cru não vai para a tela.
         return {
             "tipo": "bloqueio",
             "texto": mensagem_de_bloqueio(_motivos(guardrail)),
             "estado": None,
-            "motivos": list(_motivos(guardrail)),
+            "motivos": [],
+            "alertas": [],
             "minuta_bloqueada": True,
             "linhas": None,
         }
@@ -332,16 +372,18 @@ def classificar_ficha(validacao, guardrail=None) -> dict:
             "texto": f"{MENSAGEM_FALHA} A análise não devolveu ficha.",
             "estado": "revisar",
             "motivos": [],
+            "alertas": [],
             "minuta_bloqueada": True,
             "linhas": None,
         }
 
-    motivos = [str(motivo) for motivo in getattr(validacao, "motivos", [])]
-    if _decisao(guardrail) == "revisar":
-        aviso = mensagem_de_bloqueio(_motivos(guardrail))
-        if aviso != MENSAGEM_BLOQUEIO and aviso not in motivos:
-            motivos.insert(0, aviso)
     solicitacao = getattr(validacao, "solicitacao", None)
+    # Alertas de segurança ficam numa lista própria; os motivos ficam com o resto.
+    alertas = alertas_de_seguranca(guardrail, solicitacao)
+    motivos = [
+        str(motivo) for motivo in getattr(validacao, "motivos", [])
+        if not str(motivo).startswith(PREFIXO_ALERTA)
+    ]
     linhas = linhas_da_ficha(solicitacao) if solicitacao is not None else None
     bloqueada = bool(getattr(validacao, "minuta_bloqueada", False))
 
@@ -351,15 +393,17 @@ def classificar_ficha(validacao, guardrail=None) -> dict:
             "texto": MENSAGEM_MINUTA_BLOQUEADA,
             "estado": "revisar",
             "motivos": motivos,
+            "alertas": alertas,
             "minuta_bloqueada": True,
             "linhas": linhas,
         }
-    if getattr(validacao, "decisao", None) == "revisar":
+    if getattr(validacao, "decisao", None) == "revisar" or alertas:
         return {
             "tipo": "revisar",
             "texto": "A ficha pede revisão.",
             "estado": "revisar",
             "motivos": motivos,
+            "alertas": alertas,
             "minuta_bloqueada": False,
             "linhas": linhas,
         }
@@ -368,9 +412,30 @@ def classificar_ficha(validacao, guardrail=None) -> dict:
         "texto": "",
         "estado": "pendente",
         "motivos": motivos,
+        "alertas": alertas,
         "minuta_bloqueada": False,
         "linhas": linhas,
     }
+
+
+def alertas_de_seguranca(guardrail, solicitacao) -> list[str]:
+    """O que a regra (guardrail) e o modelo detectaram, sem repetir e sem código cru.
+
+    A regra pode aparecer duas vezes na origem (decisão do guardrail e código copiado para
+    os alertas da solicitação); aqui vira uma linha só, traduzida.
+    """
+    codigos = list(_motivos(guardrail)) if _decisao(guardrail) == "revisar" else []
+    do_modelo = []
+    for alerta in getattr(solicitacao, "alertas_seguranca", None) or []:
+        (codigos if alerta in MENSAGENS_BLOQUEIO else do_modelo).append(alerta)
+
+    alertas = []
+    for texto in [f"Regra: {ALERTAS_DA_REGRA.get(c) or mensagem_de_bloqueio([c])}" for c in codigos] + [
+        f"Modelo: {alerta}" for alerta in do_modelo
+    ]:
+        if texto not in alertas:
+            alertas.append(texto)
+    return alertas
 
 
 def linhas_da_ficha(solicitacao) -> dict:
@@ -525,7 +590,11 @@ def resumo_das_orientacoes(partes: list[dict]) -> list[str]:
             for fonte in consulta.get("fontes") or [] if isinstance(fonte, dict)
         ]
         linha = f"**{parte['assunto'].capitalize()}:** \"{parte['pergunta']}\" → {status}"
-        linhas.append(linha + (f" ({', '.join(fontes)})" if fontes else ""))
+        linha += f" ({', '.join(fontes)})" if fontes else ""
+        documentos = consulta.get("docs_com_instrucao") or []
+        if documentos:
+            linha += f" · 🚨 trecho com instrução retirado ({', '.join(documentos)})"
+        linhas.append(linha)
     return linhas
 
 

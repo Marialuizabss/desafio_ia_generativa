@@ -530,6 +530,7 @@ def _executar_consulta() -> None:
 
 def _mostrar_ficha(classificacao: dict) -> None:
     _mostrar_mensagem(classificacao)
+    _mostrar_alertas(classificacao)
     corrigida = st.session_state.pop("rf20_aviso_correcao", None)
     if corrigida:
         st.success(corrigida)
@@ -633,13 +634,12 @@ def _mostrar_consulta(classificacao: dict) -> None:
     tipo = ROTULOS_TIPO.get(classificacao["tipo"], classificacao["tipo"])
     st.markdown(f"**Status:** {tipo}")
     _mostrar_mensagem(classificacao)
+    _mostrar_alertas(classificacao)
     if classificacao.get("resposta"):
         st.markdown(classificacao["resposta"])
     if classificacao.get("justificativa"):
         st.markdown(f"**Justificativa:** {classificacao['justificativa']}")
-    ficha = st.session_state.get("rf20_ficha_classificacao")
-    if ficha:
-        _mostrar_minuta(ficha)
+    # A consulta é livre e não entra na minuta: a minuta fica só na Ficha.
 
 
 def _mostrar_orientacoes(ficha: dict) -> None:
@@ -820,11 +820,22 @@ def _aviso_local(texto: str) -> dict:
     }
 
 
+def _mostrar_alertas(classificacao: dict) -> None:
+    alertas = classificacao.get("alertas") or []
+    if alertas:
+        st.error(
+            "**Alerta de segurança**\n\n" + "\n".join(f"- {alerta}" for alerta in alertas),
+            icon="🚨",
+        )
+
+
 def _mostrar_mensagem(classificacao: dict) -> None:
     texto = classificacao.get("texto") or ""
     if not texto:
         return
-    if classificacao["tipo"] in {"falha", "indice_desatualizado", "bloqueio"}:
+    if classificacao["tipo"] == "bloqueio":
+        st.error(texto, icon="🚫")
+    elif classificacao["tipo"] in {"falha", "indice_desatualizado"}:
         st.error(texto)
     elif classificacao["tipo"] in {"sem_evidencia", "conflito", "revisar"}:
         st.warning(texto)
@@ -965,7 +976,7 @@ def _aplicar_estado(origem: str, classificacao: dict) -> None:
     id_execucao = _id_para(origem)
     justificativa = ""
     if combinado == "revisar":
-        motivos = classificacao.get("motivos") or []
+        motivos = (classificacao.get("alertas") or []) + (classificacao.get("motivos") or [])
         justificativa = classificacao.get("justificativa") or classificacao.get("texto") or ""
         if motivos:
             justificativa = "; ".join(motivos)
