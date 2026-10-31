@@ -283,16 +283,19 @@ Status: `fundamentada`, `sem_evidencia` e `conflito`.
 | 114047 (3 rodadas) | Alerta só leva à revisão se a resposta cita o documento alertado | 8/8, 8/8, 8/8 | 3/5 nas três | 2/2 | 1/1 nas três |
 | 114938 (3 rodadas, `gpt-5.6-luna`) | Mesma lógica com um modelo mais forte | 8/8, 8/8, 8/8 | 3/5 nas três | 2/2 | 1/1 nas três |
 
-Na última execução com o `gpt-4o-mini`, P03, P04 e P05 passaram nas três rodadas, e P01 e P02
-reprovaram nas três (resposta correta, mas incompleta). Detalhe por pergunta:
+Na execução final (31/10, `gpt-4o-mini`, código revisado), P03 a P08 passaram nas três rodadas; P01 passou em 1 de 3 e P02 em 0 de 3, por omissão de condições (resposta correta, mas incompleta). A tabela mostra as notas de cada execução; a terceira coluna reavalia, com o gabarito 1.2, as mesmas respostas da segunda. Detalhe por pergunta:
 
-| Pergunta | gpt-4o-mini (3 rodadas) | gpt-5.6-luna (3 rodadas, gabarito 1.2) |
-|---|---|---|
-| P01 | 0/3: omite "cópia simples e original" | 3/3 |
-| P02 | 0/3: omite "onde se inscreveu" | 2/3 |
-| P03, P04, P05 | 3/3 | 3/3 |
-| P06, P07 (sem resposta) | 3/3 abstenção | 3/3 abstenção |
-| P08 (contraditória) | 3/3 conflito | 3/3 conflito |
+| Pergunta | gpt-4o-mini, 30/10, gabarito 1.1 | gpt-5.6-luna, 30/10, gabarito 1.1 | gpt-5.6-luna, mesmas respostas, gabarito 1.2 | gpt-4o-mini, 31/10, código revisado, gabarito 1.2 | Leitura humana (luna) |
+|---|---|---|---|---|---|
+| P01 | 0/3 | 0/3 | 3/3 | 1/3 | completa nas 3 |
+| P02 | 0/3 | 0/3 | 2/3 | 0/3 | completa nas 3 |
+| P03, P04, P05 | 3/3 | 3/3 | 3/3 | 3/3 | |
+| P06, P07 (sem resposta) | 3/3 abstenção | 3/3 abstenção | 3/3 abstenção | 3/3 abstenção | |
+| P08 (contraditória) | 3/3 conflito | 3/3 conflito | 3/3 conflito | 3/3 conflito | |
+
+A execução final (`resultados/rag/execucao_20261031_145402`) usa o código revisado (subseção "Revisão final do RAG") e o gabarito 1.2. As notas por pergunta são só um indicador; a decisão sobre completude é a leitura humana (`documentacao/desafio-2/conferencia_humana_rf23.md`). Os arquivos `consolidado.md` das execuções anteriores guardam as notas do gabarito da época; a reavaliação das mesmas respostas com o gabarito 1.2 está em `resultados/rag/reavaliacao_gabarito_1_2.txt`.
+
+**Declaração sobre o ajuste do gabarito.** O gabarito 1.2 foi alterado depois de ver as respostas da API, não antes. A alteração acrescenta variantes de redação aos elementos esperados de P01 e P02 (registro no `historico` do arquivo e no commit `b2092cb`). Por isso as notas de antes e de depois aparecem lado a lado, e o resultado de referência é a leitura humana.
 
 **Gabarito 1.2.** Com o `gpt-5.6-luna`, P01 e P02 reprovavam pela conferência de palavras exatas
 ("escolaridade" × "histórico escolar"; "onde se inscreveu" × "onde você se inscreveu"). O gabarito foi
@@ -458,6 +461,18 @@ custo; o registro informa isso em `metricas_indisponiveis`. A recuperação roda
   interface com o mesmo identificador.
 - O modelo de embeddings é recarregado a cada consulta (custo de tempo, não de correção).
 
+### Revisão final do RAG (31/10/2026)
+
+Uma conferência do desafio contra o enunciado apontou três pendências do RAG: nenhuma minuta fundamentada gravada, o texto sobre o ajuste do gabarito e a falta de uma execução com o código final. O que foi feito:
+
+1. **Minuta fundamentada do CASO-08.** `python -m src.minuta_fundamentada --caso CASO-08` faz uma consulta ao acervo por assunto (documentos, local e período), monta o bloco de orientações com as fontes e salva a minuta em `resultados/minutas/rag/`, como pendente de revisão humana. As três consultas são as mesmas para qualquer solicitação de matrícula (regra por categoria de pedido, não por caso). Uma pergunta única que junta os três assuntos deixava o trecho do período na posição 35 da busca, fora do top-15; a consulta própria o coloca na posição 10. A ficha vem da extração validada do gabarito do caso, não de uma extração nova.
+2. **A primeira geração expôs um falso conflito.** A primeira minuta (`execucao_20261031_143206`) saiu com o período em conflito, comparando a linha da 1ª chamada (Retificação nº 03) com linhas da 4ª e da 5ª chamadas (Retificação nº 05). A pasta foi mantida como evidência. Duas correções gerais, com testes: (a) trechos que citam ordinais sem nenhum em comum (1ª × 4ª chamada) não contam como o mesmo fato; (b) um conflito declarado pelo próprio modelo passa a conferir a vigência: se cita linha substituída por retificação posterior, o modelo recebe a correção e responde de novo, como já acontecia com respostas fundamentadas.
+3. **Execução com o código revisado.** Três rodadas com o `gpt-4o-mini` (`execucao_20261031_145402`): status correto 8/8 nas três; P03 a P08 aprovadas em 3/3; P01 em 1/3 e P02 em 0/3 por omissão de condições. Depois da correção (a) e antes da (b) (`execucao_20261031_144056`), a mesma configuração teve P05 com falso conflito em uma rodada e P08 aprovada em 1/3 (citava um par de documentos em que uma linha estava substituída).
+
+Duas limitações da minuta: a lista de documentos gerada com o `gpt-4o-mini` (`execucao_20261031_145956`) vai só até a alínea f do item 10.5, porque o trecho citado termina ali; e uma geração com a configuração `forte` (`execucao_20261031_150210`) terminou em `sem_evidencia` na consulta de documentos, e a minuta ficou em `revisar`. Repetida três vezes, a consulta deu `sem_evidencia` nas três, com a mesma justificativa: o trecho recuperado do item 10.5 termina na alínea f ("últimos 3") e não há base para afirmar a lista completa. Isso indica que o trecho seguinte do item 10.5 não estava entre os 15 recuperados para essa pergunta; trazer o trecho vizinho quando a lista é cortada é a melhoria natural, e não foi feita. O sistema prefere se abster a montar uma lista sem base, e a revisão humana completa o que faltar.
+
+Limites: são três rodadas e o modelo varia a cada chamada; as correções reduzem erros de vigência, mas não os eliminam. A minuta depende de a busca trazer o trecho certo para cada assunto.
+
 ## 6. Guardrails, moderação e limites (RF16)
 
 *Responsável: Felipe.*
@@ -598,7 +613,7 @@ A matriz completa, com entrada, esperado, obtido, evidência e situação, está
 | Acurácia da polaridade | 10/12 | `resultados/metricas/rf22/execucao_20261030_181951/` |
 | Regressão T15 | CASO-04 (texto) e CASO-05 (áudio já transcrito) chegaram à minuta e a `revisar`; 0 envios | `resultados/metricas/t15/execucao_20261030_182022/` |
 
-P01 e P02 falham no indicador automático porque ele procura palavras que a resposta parafraseia ("presencialmente" contra "pessoalmente" na P02). A conferência humana considerou as duas completas. O indicador não foi afrouxado para esconder isso.
+P01 e P02 falham no indicador automático porque ele procura palavras que a resposta parafraseia ("presencialmente" contra "pessoalmente" na P02). A conferência humana considerou as duas completas. O gabarito foi ajustado depois (versão 1.2, seção 5), e a decisão final é a conferência humana, não o indicador.
 
 ## 10. Privacidade, retenção e revisão humana (RF24)
 
@@ -624,7 +639,7 @@ A configuração simulada não tem tokens nem custo. Embeddings rodam na máquin
 
 ## 12. Limitações
 
-- O indicador automático do RAG marca falso negativo quando a resposta parafraseia a fonte (P01 e P02). A leitura humana corrige o julgamento e o gabarito não foi afrouxado.
+- O indicador automático do RAG marca falso negativo quando a resposta parafraseia a fonte (P01 e P02). A leitura humana corrige o julgamento. O gabarito foi ajustado para a versão 1.2 depois de ver as respostas da API (variantes de redação em P01 e P02, seção 5); as notas de antes e de depois do ajuste aparecem lado a lado.
 - O modelo de embeddings trunca em 128 tokens. Chunks maiores que isso são representados pelo começo.
 - A quarentena de instrução no acervo reconhece as formulações previstas. Outra redação pode passar; o trecho continua dado, não ordem.
 - A situação do sentimento é proposta pelo modelo. AV09 e AV10 mostram o limite: falta de contexto e ironia possível no lugar de neutra e ironia comprovada.

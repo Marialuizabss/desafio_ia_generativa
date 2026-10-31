@@ -1,0 +1,329 @@
+{
+  "rf": "RF19/RF23",
+  "data_hora": "2026-10-31T14:55:01-04:00",
+  "top_k": 15,
+  "configuracao": "principal",
+  "resumo": {
+    "status_correto": {
+      "numerador": 8,
+      "denominador": 8
+    },
+    "respondiveis_aprovadas": {
+      "numerador": 3,
+      "denominador": 5
+    },
+    "abstencao_correta_sem_resposta": {
+      "numerador": 2,
+      "denominador": 2
+    },
+    "conflito_tratado": {
+      "numerador": 1,
+      "denominador": 1
+    },
+    "tokens_total": 76273,
+    "custo_estimado_usd": 0.012543,
+    "observacao_metricas": null
+  },
+  "avaliacoes": [
+    {
+      "id": "P01",
+      "tipo": "respondivel",
+      "pergunta": "Quais documentos preciso apresentar para efetivar a matrícula?",
+      "status_esperado": "fundamentada",
+      "status_obtido": "fundamentada",
+      "decisao_obtida": "responder",
+      "alertas": 1,
+      "verificacoes": {
+        "status_correto": true,
+        "decisao_correta": true,
+        "elementos_na_resposta": false,
+        "sem_valor_proibido": true,
+        "citacoes_rastreaveis": true,
+        "cita_pagina_de_referencia": true
+      },
+      "aprovado": false,
+      "resposta": "Para efetivar a matrícula, o candidato deve apresentar presencialmente os seguintes documentos: 1) Comprovante de Escolaridade; 2) Documento Oficial de Identificação; 3) CPF; 4) Certidão de Nascimento ou Certidão de Casamento; 5) 01 foto 3x4 atual; 6) Comprovante de Residência atual.",
+      "justificativa": "As informações sobre os documentos necessários para a matrícula estão claramente especificadas no edital original, e as retificações não alteraram esse escopo.",
+      "fontes": [
+        {
+          "chunk_id": "ACV-01-p10-s1-c3",
+          "doc_id": "ACV-01",
+          "versao": "Edital original",
+          "pagina": 10,
+          "secao": null,
+          "trecho_citado": "10.5. Para a efetivação da MATRÍCULA, serão necessárias a entrega de 01 cópia simples + a apresentação do documento original conforme relação a seguir: a) Comprovante de Escolaridade - Certificado de conclusão e Histórico Escolar do Ensino Médio (1º ao 3º ano), ou declaração de matrícula no ensino médio. b) Documento Oficial de Identificação; c) CPF; d) Certidão de Nascimento ou Certidão de Casamento; e) 01 (uma) foto 3x4 atual; f) Comprovante de Residência atual (últimos 3"
+        }
+      ],
+      "auditoria": {
+        "configuracao": "principal",
+        "modelo": "gpt-4o-mini",
+        "simulado": false,
+        "tempo_resposta_segundos": 0.97,
+        "tokens_entrada": 10046,
+        "tokens_saida": 376,
+        "tokens_total": 10422,
+        "custo_estimado_usd": 0.001732
+      }
+    },
+    {
+      "id": "P02",
+      "tipo": "respondivel",
+      "pergunta": "Posso efetivar a matrícula a distância ou preciso ir pessoalmente?",
+      "status_esperado": "fundamentada",
+      "status_obtido": "fundamentada",
+      "decisao_obtida": "responder",
+      "alertas": 1,
+      "verificacoes": {
+        "status_correto": true,
+        "decisao_correta": true,
+        "elementos_na_resposta": false,
+        "sem_valor_proibido": true,
+        "citacoes_rastreaveis": true,
+        "cita_pagina_de_referencia": true
+      },
+      "aprovado": false,
+      "resposta": "A matrícula deve ser efetivada presencialmente.",
+      "justificativa": "O edital especifica que a efetivação da matrícula requer a apresentação presencial de toda a documentação no local onde o candidato se inscreveu.",
+      "fontes": [
+        {
+          "chunk_id": "ACV-01-p10-s1-c3",
+          "doc_id": "ACV-01",
+          "versao": "Edital original",
+          "pagina": 10,
+          "secao": null,
+          "trecho_citado": "Para efetivação da matrícula, OBRIGATORIAMENTE, o candidato deverá apresentar presencialmente no local onde se inscreveu conforme endereços disponíveis no Anexo I, toda a documentação listada no item 10.5."
+        }
+      ],
+      "auditoria": {
+        "configuracao": "principal",
+        "modelo": "gpt-4o-mini",
+        "simulado": false,
+        "tempo_resposta_segundos": 6.795,
+        "tokens_entrada": 9146,
+        "tokens_saida": 455,
+        "tokens_total": 9601,
+        "custo_estimado_usd": 0.001645
+      }
+    },
+    {
+      "id": "P03",
+      "tipo": "respondivel",
+      "pergunta": "O que acontece se eu não fizer a matrícula no prazo?",
+      "status_esperado": "fundamentada",
+      "status_obtido": "fundamentada",
+      "decisao_obtida": "responder",
+      "alertas": 1,
+      "verificacoes": {
+        "status_correto": true,
+        "decisao_correta": true,
+        "elementos_na_resposta": true,
+        "sem_valor_proibido": true,
+        "citacoes_rastreaveis": true,
+        "cita_pagina_de_referencia": true
+      },
+      "aprovado": true,
+      "resposta": "Se você não fizer a matrícula no prazo, perderá o direito à vaga.",
+      "justificativa": "O edital estabelece que a não realização da matrícula nos prazos determinados resulta na perda do direito à vaga.",
+      "fontes": [
+        {
+          "chunk_id": "ACV-01-p11-s1-c5",
+          "doc_id": "ACV-01",
+          "versao": "Edital original",
+          "pagina": 11,
+          "secao": null,
+          "trecho_citado": "o candidato que não realizar sua matrícula nos prazos determinados, perderá o direito à vaga."
+        }
+      ],
+      "auditoria": {
+        "configuracao": "principal",
+        "modelo": "gpt-4o-mini",
+        "simulado": false,
+        "tempo_resposta_segundos": 2.149,
+        "tokens_entrada": 9750,
+        "tokens_saida": 345,
+        "tokens_total": 10095,
+        "custo_estimado_usd": 0.00167
+      }
+    },
+    {
+      "id": "P04",
+      "tipo": "respondivel",
+      "pergunta": "Quando começam as aulas de Agropecuária em Mimoso?",
+      "status_esperado": "fundamentada",
+      "status_obtido": "fundamentada",
+      "decisao_obtida": "responder",
+      "alertas": 0,
+      "verificacoes": {
+        "status_correto": true,
+        "decisao_correta": true,
+        "elementos_na_resposta": true,
+        "sem_valor_proibido": true,
+        "citacoes_rastreaveis": true,
+        "cita_pagina_de_referencia": true
+      },
+      "aprovado": true,
+      "resposta": "As aulas de Agropecuária em Mimoso começam no dia 05 de outubro de 2026.",
+      "justificativa": "A informação sobre a data de início das aulas foi confirmada na retificação do edital, que especifica a alteração para o curso de Agropecuária em Mimoso.",
+      "fontes": [
+        {
+          "chunk_id": "ACV-07-p1-s1-c2",
+          "doc_id": "ACV-07",
+          "versao": "Retificação nº 06",
+          "pagina": 1,
+          "secao": null,
+          "trecho_citado": "Fica alterada para o dia 05 de outubro de 2026 a data de início das aulas dos seguintes cursos: ... Agropecuária ... Mimoso"
+        }
+      ],
+      "auditoria": {
+        "configuracao": "principal",
+        "modelo": "gpt-4o-mini",
+        "simulado": false,
+        "tempo_resposta_segundos": 1.197,
+        "tokens_entrada": 12077,
+        "tokens_saida": 246,
+        "tokens_total": 12323,
+        "custo_estimado_usd": 0.001959
+      }
+    },
+    {
+      "id": "P05",
+      "tipo": "respondivel",
+      "pergunta": "Qual é o período de efetivação das matrículas da 4ª chamada?",
+      "status_esperado": "fundamentada",
+      "status_obtido": "fundamentada",
+      "decisao_obtida": "responder",
+      "alertas": 0,
+      "verificacoes": {
+        "status_correto": true,
+        "decisao_correta": true,
+        "elementos_na_resposta": true,
+        "sem_valor_proibido": true,
+        "citacoes_rastreaveis": true,
+        "cita_pagina_de_referencia": true
+      },
+      "aprovado": true,
+      "resposta": "O período de efetivação das matrículas da 4ª chamada é de 03/07/2026 a 08/07/2026.",
+      "justificativa": "A informação sobre o período de efetivação das matrículas da 4ª chamada está claramente especificada no documento ACV-06, que é a versão mais recente e vigente.",
+      "fontes": [
+        {
+          "chunk_id": "ACV-06-p2-s1-c1",
+          "doc_id": "ACV-06",
+          "versao": "Retificação nº 05",
+          "pagina": 2,
+          "secao": null,
+          "trecho_citado": "20 Efetivação das matrículas da 4ª chamada das vagas remanescentes 03/07/2026 a 08/07/2026"
+        }
+      ],
+      "auditoria": {
+        "configuracao": "principal",
+        "modelo": "gpt-4o-mini",
+        "simulado": false,
+        "tempo_resposta_segundos": 1.981,
+        "tokens_entrada": 12420,
+        "tokens_saida": 393,
+        "tokens_total": 12813,
+        "custo_estimado_usd": 0.002099
+      }
+    },
+    {
+      "id": "P06",
+      "tipo": "sem_resposta",
+      "pergunta": "A ETEC oferece auxílio transporte ou bolsa para os alunos?",
+      "status_esperado": "sem_evidencia",
+      "status_obtido": "sem_evidencia",
+      "decisao_obtida": "revisar",
+      "alertas": 0,
+      "verificacoes": {
+        "status_correto": true,
+        "decisao_correta": true
+      },
+      "aprovado": true,
+      "resposta": "Não há evidências suficientes para responder com segurança.",
+      "justificativa": "Nenhum dos documentos analisados menciona a oferta de auxílio transporte ou bolsa para os alunos.",
+      "fontes": [],
+      "auditoria": {
+        "configuracao": "principal",
+        "modelo": "gpt-4o-mini",
+        "simulado": false,
+        "tempo_resposta_segundos": 1.792,
+        "tokens_entrada": 4706,
+        "tokens_saida": 108,
+        "tokens_total": 4814,
+        "custo_estimado_usd": 0.000771
+      }
+    },
+    {
+      "id": "P07",
+      "tipo": "sem_resposta",
+      "pergunta": "Qual é o horário de atendimento da secretaria da ETEC?",
+      "status_esperado": "sem_evidencia",
+      "status_obtido": "sem_evidencia",
+      "decisao_obtida": "revisar",
+      "alertas": 0,
+      "verificacoes": {
+        "status_correto": true,
+        "decisao_correta": true
+      },
+      "aprovado": true,
+      "resposta": "Não há evidências suficientes para responder com segurança.",
+      "justificativa": "Nenhum dos documentos disponíveis contém informações sobre o horário de atendimento da secretaria da ETEC.",
+      "fontes": [],
+      "auditoria": {
+        "configuracao": "principal",
+        "modelo": "gpt-4o-mini",
+        "simulado": false,
+        "tempo_resposta_segundos": 2.026,
+        "tokens_entrada": 5261,
+        "tokens_saida": 107,
+        "tokens_total": 5368,
+        "custo_estimado_usd": 0.000853
+      }
+    },
+    {
+      "id": "P08",
+      "tipo": "contraditoria",
+      "pergunta": "Quando é divulgada a lista das matrículas efetivadas na 4ª chamada?",
+      "status_esperado": "conflito",
+      "status_obtido": "conflito",
+      "decisao_obtida": "revisar",
+      "alertas": 1,
+      "verificacoes": {
+        "status_correto": true,
+        "decisao_correta": true,
+        "divergencia_apresentada": true,
+        "cita_os_dois_documentos": true
+      },
+      "aprovado": true,
+      "resposta": "Há informações documentais divergentes. É necessária revisão humana.",
+      "justificativa": "Os documentos ACV-01 e ACV-06 trazem valores diferentes para o mesmo fato e nenhuma retificação resolve a divergência. Os documentos ACV-01 e ACV-06 divergem quanto à data de divulgação da lista das matrículas efetivadas na 4ª chamada, sendo 11/06/2026 e 09/07/2026, respectivamente.",
+      "fontes": [
+        {
+          "chunk_id": "ACV-01-p13-s1-c1",
+          "doc_id": "ACV-01",
+          "versao": "Edital original",
+          "pagina": 13,
+          "secao": null,
+          "trecho_citado": "a lista das matrículas efetivadas na 4ª chamada de vagas remanescentes serão divulgadas no mural das Escolas Técnicas no dia 11/06/2026."
+        },
+        {
+          "chunk_id": "ACV-06-p2-s1-c1",
+          "doc_id": "ACV-06",
+          "versao": "Retificação nº 05",
+          "pagina": 2,
+          "secao": null,
+          "trecho_citado": "Nº Descrição/Ação Período/Data 19 Convocação antecipada dos classificados para vagas remanescentes – 4ª chamada conforme item 11.3.1 03/07/2026 20 Efetivação das matrículas da 4ª chamada das vagas remanescentes 03/07/2026 a 08/07/2026 21 Divulgação/organização das matrículas efetivadas da 4ª chamada pelas Escolas Técnicas Estaduais 09/07/2026 22 Convocação para vagas remanescentes - 5ª chamada conforme item 11.1.3 03/07/2026 a 18/08/2026 23 Início das aulas 21/07/2026 2."
+        }
+      ],
+      "auditoria": {
+        "configuracao": "principal",
+        "modelo": "gpt-4o-mini",
+        "simulado": false,
+        "tempo_resposta_segundos": 2.807,
+        "tokens_entrada": 10420,
+        "tokens_saida": 417,
+        "tokens_total": 10837,
+        "custo_estimado_usd": 0.001814
+      }
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "caso": "CASO-08",
+  "configuracao": "forte",
+  "minuta_pronta": true,
+  "estado": "revisar",
+  "tipo_orientacoes": "sem_evidencia",
+  "consultas": [
+    {
+      "assunto": "documentos",
+      "pergunta": "Quais documentos devo apresentar para efetivar a matrícula da 1ª chamada?",
+      "id_consulta": "58c7b216-5aa1-483c-98be-fa6db0d5d3f2",
+      "tipo": "sem_evidencia",
+      "fontes": []
+    },
+    {
+      "assunto": "local",
+      "pergunta": "Onde devo comparecer para efetivar a matrícula da 1ª chamada?",
+      "id_consulta": "a60de7ba-c888-40df-b319-15dd8d4a361f",
+      "tipo": "fundamentada",
+      "fontes": [
+        {
+          "chunk_id": "ACV-01-p10-s1-c3",
+          "doc_id": "ACV-01",
+          "titulo": "EDITAL Nº 06/2026 - SECITECI/MT - PROCESSO SELETIVO DE ALUNOS PARA CURSOS TÉCNICOS NAS ETECS 2026/2",
+          "versao": "Edital original",
+          "pagina": 10,
+          "secao": null,
+          "trecho": "publicação dessas \ninformações no site da SECITECI/MT (https://www.secitec.mt.gov.br/editais). \n10.4. Para efetivação da matrícula, OBRIGATORIAMENTE, o candidato deverá apresentar \npresencialmente no local onde se inscreveu conforme endereços disponíveis no Anexo I, toda \na documentação listada no item 10.5. \n10.5.  Para a efetivação da MATRÍCULA, serão necessárias a entrega de 01 cópia simples + a \napresentação do documento original conforme relação a seguir: \na) Comprovante de Escolaridade - Certificado de conclusão e Histórico Escolar do Ensino \nMédio (1º ao 3º ano), ou declaração de matrícula no ensino médio. \nb) Documento Oficial de Identificação; \nc) CPF; \nd) Certidão de Nascimento ou Certidão de Casamento; \ne) 01 (uma) foto 3x4 atual; \nf) Comprovante de Residência atual (últimos 3",
+          "distancia": 0.5972126722335815,
+          "trecho_citado": "10.4. Para efetivação da matrícula, OBRIGATORIAMENTE, o candidato deverá apresentar presencialmente no local onde se inscreveu conforme endereços disponíveis no Anexo I, toda a documentação listada no item 10.5.",
+          "chunk_id_corrigido_de": null
+        }
+      ]
+    },
+    {
+      "assunto": "período",
+      "pergunta": "Qual o período de matrícula da 1ª chamada?",
+      "id_consulta": "8dffd662-efc7-485e-8e74-55a3941444a6",
+      "tipo": "fundamentada",
+      "fontes": [
+        {
+          "chunk_id": "ACV-04-p1-s1-c3",
+          "doc_id": "ACV-04",
+          "titulo": "EDITAL RETIFICADOR Nº 03 DO EDITAL N. º 006/2026/SECITECI-MT",
+          "versao": "Retificação nº 03",
+          "pagina": 1,
+          "secao": null,
+          "trecho": "Recursos contra o Resultado Preliminar do Processo \nSeletivo \n01 e 02/06/2026 \n11. Divulgação da análise dos recursos contra o Resultado \nPreliminar \n09/06/2026 \n12. Divulgação oficial dos classificados \n11/06/2026 \n13. Convocação dos aprovados - 1ª Chamada \n11/06/2026 \n14. Período de Matrícula - 1ª Chamada \n15 a 19/06/2026 \n15. Convocação dos classificados - 2ª Chamada \n22/06/2026 \n16. Período de Matrícula - 2ª Chamada \n23 e 24/06/2026 \n17. Convocação dos classificados - 3ª Chamada \n25/06/2026 \n18. Período de Matrícula - 3ª Chamada \n26 e 27/06/2026",
+          "distancia": 0.5591508746147156,
+          "trecho_citado": "13. Convocação dos aprovados - 1ª Chamada \n11/06/2026 \n14. Período de Matrícula - 1ª Chamada \n15 a 19/06/2026",
+          "chunk_id_corrigido_de": null
+        }
+      ]
+    }
+  ]
+}
