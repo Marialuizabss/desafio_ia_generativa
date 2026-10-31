@@ -1,0 +1,15 @@
+﻿
+resultados\rag\execucao_20261030_113120
+  rodada_1 (gpt-4o-mini): P01: False -> False | P02: False -> False | P03: True -> True | P04: True -> True | P05: True -> True
+  rodada_2 (gpt-4o-mini): P01: False -> False | P02: False -> False | P03: True -> True | P04: True -> True | P05: True -> True
+  rodada_3 (gpt-4o-mini): P01: False -> False | P02: False -> False | P03: True -> True | P04: True -> True | P05: True -> True
+
+resultados\rag\execucao_20261030_114047
+  rodada_1 (gpt-4o-mini): P01: False -> False | P02: False -> False | P03: True -> True | P04: True -> True | P05: True -> True
+  rodada_2 (gpt-4o-mini): P01: False -> False | P02: False -> False | P03: True -> True | P04: True -> True | P05: True -> True
+  rodada_3 (gpt-4o-mini): P01: False -> False | P02: False -> False | P03: True -> True | P04: True -> True | P05: True -> True
+
+resultados\rag\execucao_20261030_114938
+  rodada_1 (gpt-5.6-luna): P01: False -> True | P02: False -> True | P03: True -> True | P04: True -> True | P05: True -> True
+  rodada_2 (gpt-5.6-luna): P01: False -> True | P02: False -> False | P03: True -> True | P04: True -> True | P05: True -> True
+  rodada_3 (gpt-5.6-luna): P01: False -> True | P02: False -> True | P03: True -> True | P04: True -> True | P05: True -> True

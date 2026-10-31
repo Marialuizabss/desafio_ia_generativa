@@ -609,17 +609,31 @@ def _palavras_de_conteudo(texto):
     return {p for p in re.findall(r"[a-z]{4,}", _sem_acentos(texto))}
 
 
-def _mesmo_assunto(fontes, minimo=0.3):
-    """Os trechos citados tratam do mesmo fato? (palavras de conteúdo em comum)
+def _ordinais(texto):
+    """Ordinais do trecho (1ª, 4ª, 5ª...): dizem de qual linha ou item da lista ele fala."""
+    return set(re.findall(r"\b(\d+)\s*[ªº°]", texto or ""))
 
-    Um valor diferente só é contradição se for sobre o mesmo assunto. Mede o
-    coeficiente de sobreposição: palavras em comum / palavras do menor trecho.
+
+def _mesmo_assunto(fontes, minimo=0.3):
+    """Os trechos citados tratam do mesmo fato?
+
+    Um valor diferente só é contradição se for sobre o mesmo fato. Cada par de trechos precisa
+    de palavras de conteúdo em comum (coeficiente de sobreposição: palavras em comum / palavras
+    do menor trecho) e, se os dois citam ordinais (1ª, 4ª chamada...), de ao menos um ordinal em
+    comum. Ordinais sem nada em comum indicam linhas diferentes da mesma tabela, não uma
+    divergência entre documentos.
     """
 
     conjuntos = [_palavras_de_conteudo(f.get("trecho_citado")) for f in fontes]
+    ordinais = [_ordinais(f.get("trecho_citado")) for f in fontes]
 
     for i, a in enumerate(conjuntos):
-        for b in conjuntos[i + 1:]:
+        for j in range(i + 1, len(conjuntos)):
+            b = conjuntos[j]
+
+            if ordinais[i] and ordinais[j] and not (ordinais[i] & ordinais[j]):
+                continue
+
             menor = min(len(a), len(b))
 
             if menor and len(a & b) / menor >= minimo:
@@ -773,6 +787,23 @@ def _gerar_resposta(pergunta, evidencias, dados_cidadao, nome_configuracao="prin
                         pergunta,
                         motivo="Conflito não comprovado por dois documentos distintos.",
                         fontes=fontes,
+                        auditoria=auditoria,
+                    )
+
+                achadas = _citacoes_substituidas(fontes, vigencia)
+
+                if achadas and tentativa == 1:
+                    correcao = _descrever_substituicao(achadas)
+                    auditoria_anterior = auditoria
+                    continue
+
+                if achadas:
+                    return _abstencao(
+                        pergunta, status=STATUS_CONFLITO, fontes=fontes,
+                        motivo=(
+                            "O conflito se apoia em texto substituído por retificação mais "
+                            "recente. " + _descrever_substituicao(achadas)
+                        ),
                         auditoria=auditoria,
                     )
 

@@ -9,6 +9,7 @@ deve refletir o que de fato aconteceu.*
   projeto, usado para revisar código, propor implementações, escrever testes e rascunhar textos.
 - O código sugerido foi colado e executado por mim; as execuções com a API (OpenAI) foram feitas na
   minha máquina.
+- Modelo: Claude (Anthropic). Na sessão de 30 e 31/10 foi o Claude Sonnet 5.5; confirmar no histórico o modelo das sessões anteriores.
 
 ## Solicitações relevantes
 
@@ -23,6 +24,8 @@ deve refletir o que de fato aconteceu.*
    (vigência, quarentena de instruções em documentos e segunda leitura de contradição).
 4. **Seleção de geração e auditoria** (RF21): configuração escolhida por nome, provedor simulado
    identificado como tal, tratamento da falha do serviço e registro de cada consulta.
+5. **Minuta fundamentada do CASO-08** (31/10): uma consulta ao acervo por assunto (documentos, local e período), com fontes, e geração da minuta pendente de revisão humana.
+6. **Falsos conflitos no RAG** (31/10): a primeira minuta saiu com o período em conflito; a análise mostrou que o verificador comparava linhas de chamadas diferentes e que o conflito declarado pelo modelo não conferia a vigência. Duas correções gerais, com testes.
 
 ## Sugestões aceitas, modificadas e rejeitadas
 
@@ -45,6 +48,8 @@ deve refletir o que de fato aconteceu.*
   reenviado corrigido.
 - Em um momento, a IA tratou as regras específicas por pergunta como se fossem de outra origem;
   foi corrigida, porque esse código da minha parte do RF19 foi escrito por mim.
+- Uma hipótese da IA sobre a causa dos conflitos (diferença entre os símbolos `º` e `ª`) estava errada; foi descartada ao ler o código da vigência, que já normaliza os dois, e a causa real era outra.
+- Um script colado no PowerShell gravou o arquivo da conferência humana com `?` no lugar dos acentos (o Python recebeu o script sem UTF-8); percebido na conferência do arquivo e corrigido com `$OutputEncoding` e `python -X utf8`.
 
 ## Como o código e o conteúdo foram validados
 
