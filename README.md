@@ -47,9 +47,11 @@ delimitado e tratado como dado, não como instrução; e cada execução, revis�
 | Imagem | Pillow | 12.3.0 | Montagem da peça com brasão e textos |
 | Áudio | mutagen | 1.48.1 | Duração do áudio, sem chamar a API |
 | Validação | Pydantic | 2.14.1 | Contrato da extração e validação estrita (RF14) |
+| Índice vetorial | ChromaDB | 1.5.9 | Índice persistente do acervo (RF17) |
+| Embeddings | sentence-transformers e PyTorch (só CPU) | 6.2.0 / 2.15.0 | Vetores dos trechos do acervo, sem chamar a API (RF17 a RF19) |
 | Configuração | python-dotenv, JSON | 1.2.4 | Chave no `.env`; caminhos, modelos e parâmetros no `config.json` |
 | Registro | JSON Lines | — | `resultados/logs/execucoes.jsonl`, uma linha por evento |
-| Testes | unittest e `streamlit.testing` (AppTest) | — | Testes de regras, fluxo e cliques na interface, com a API simulada |
+| Testes | pytest, unittest e `streamlit.testing` (AppTest) | 9.2.0 | Testes de regras, fluxo e cliques na interface, com a API simulada; rodam pelo pytest |
 | Versionamento | Git e GitHub | — | Branches por integrante e entrega por `git archive` |
 | Documentação | Markdown | — | README e `documentacao/` |
 
@@ -93,6 +95,12 @@ No Windows, se a ativação for bloqueada, rode antes
 O `python -m src.versoes` deve mostrar ✓ para o Python 3.13 e para cada biblioteca do
 `requirements.txt` (versões na seção 2).
 
+**PyTorch só para CPU.** O `requirements.txt` aponta o índice do PyTorch para CPU
+(`--extra-index-url`), que instala cerca de 200 MB em vez dos mais de 3 GB da versão com CUDA; o
+`src.versoes` mostra o torch como `2.15.0` mesmo instalado como `2.15.0+cpu`. Se a instalação
+parar com "Não há espaço disponível no dispositivo", a pasta temporária do sistema encheu: rode
+`mkdir -p ~/pip-tmp && TMPDIR=~/pip-tmp pip install -r requirements.txt` e depois apague `~/pip-tmp`.
+
 ## 5. Configuração
 
 | Arquivo | O que define | Versionado? |
@@ -130,7 +138,7 @@ As saídas ficam em `resultados/minutas/aprovadas/` (minuta e PDF), `resultados/
 
 | O quê | Comando | Chama a API? |
 |---|---|---|
-| Todos os testes (287) | `python -m unittest discover -s testes -t .` | Não |
+| Todos os testes (459) | `python -m pytest testes -q` | Não |
 | Versões do Python e das bibliotecas | `python -m src.versoes` | Não |
 | Varredura de credenciais e dados pessoais (RF12) | `python -m src.varredura_rf12` | Não |
 | Avaliação dos 7 casos (RF13) | `python -m src.avaliacao_rf13 --todos` | Sim, ~US$ 0,03 |
@@ -138,7 +146,9 @@ As saídas ficam em `resultados/minutas/aprovadas/` (minuta e PDF), `resultados/
 | Experimentos de prompt (RF02 e RF03) | `python -m src.experimento_rf02` · `python -m src.experimento_rf03` | Sim |
 
 Os testes usam respostas simuladas e pastas temporárias: não gastam créditos nem alteram os
-resultados do projeto.
+resultados do projeto. **Rode sempre pelo pytest:** o `testes/conftest.py` desvia o log de
+auditoria e o índice nos testes do RAG (RF16, RF19, RF21 e vigência), e esse isolamento não vale
+com `python -m unittest`.
 
 ## 8. Modelos e custos
 
@@ -187,7 +197,7 @@ desafio_ia_generativa/
 │   ├── configuracao.py, versoes.py
 │   └── experimento_*, avaliacao_rf13.py, avaliacao_rf15.py, varredura_rf12.py   experimentos e verificações
 ├── resultados/                 minutas, áudios, imagens, avaliações, métricas e logs
-├── testes/                     testes automatizados (unittest)
+├── testes/                     testes automatizados (pytest)
 └── documentacao/
     ├── desafio-1/              índice, relatório técnico, registro de uso de IA e um documento por requisito
     └── desafio-2/              documentação do Desafio 2
@@ -270,7 +280,7 @@ esquema Pydantic e regras de negócio); inválida ou incoerente, a minuta é blo
 
 | O quê | Comando | Chama a API? |
 |---|---|---|
-| Testes | `python -m unittest testes.test_rf14 testes.test_rf15` | Não |
+| Testes | `python -m pytest testes/test_rf14.py testes/test_rf15.py -q` | Não |
 | JSON sintático × esquema (T01) | `python -m src.experimento_rf14` | Não |
 | Avaliação simulada | `python -m src.avaliacao_rf15 --simulado` | Não |
 | Avaliação real dos 7 casos | `python -m src.avaliacao_rf15 --todos` | Sim, ~US$ 0,007 |
@@ -322,7 +332,7 @@ vazio mostra "sem dados".
 
 | O quê | Comando | Chama a API? |
 |---|---|---|
-| Testes | `python -m unittest testes.test_rf22` | Não |
+| Testes | `python -m pytest testes/test_rf22.py -q` | Não |
 | Avaliação simulada das 12 | `python -m src.avaliacao_rf22 --simulado` | Não |
 | Avaliação real | `python -m src.avaliacao_rf22 --todos` | Sim, configuração `principal` |
 
@@ -337,7 +347,7 @@ O teto é por atendimento: análise e cada classificação de sentimento, 2 cham
 
 | O quê | Comando | Chama a API? |
 |---|---|---|
-| Testes | `python -m unittest testes.test_rf16` | Não |
+| Testes | `python -m pytest testes/test_rf16.py -q` | Não |
 
 Detalhes na seção 6 de `documentacao/desafio-2/01_relatorio_tecnico.md`.
 
@@ -347,7 +357,7 @@ Detalhes na seção 6 de `documentacao/desafio-2/01_relatorio_tecnico.md`.
 
 | O quê | Comando | Chama a API? |
 |---|---|---|
-| Testes | `python -m unittest testes.test_rf20_regras testes.test_rf20_telas` | Não |
+| Testes | `python -m pytest testes/test_rf20_regras.py testes/test_rf20_telas.py -q` | Não |
 | Interface | `python -m src.main` | Só ao analisar ou consultar |
 
 Código: `src/consulta_acervo.py`, `src/acervo_operacao.py`, `src/painel.py` e `src/telas_rf20.py`. A matriz T01–T15 está em `documentacao/desafio-2/matriz_rf23.md`. Detalhes nas seções 7 a 13 de `documentacao/desafio-2/01_relatorio_tecnico.md`.
