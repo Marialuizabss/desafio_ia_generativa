@@ -1,0 +1,81 @@
+{
+  "caso": "CASO-08",
+  "configuracao": "principal",
+  "minuta_pronta": true,
+  "estado": "revisar",
+  "tipo_orientacoes": "conflito",
+  "consultas": [
+    {
+      "assunto": "documentos",
+      "pergunta": "Quais documentos devo apresentar para efetivar a matrícula da 1ª chamada?",
+      "id_consulta": "28f0c2d7-09b2-4c77-9fc9-952b35138831",
+      "tipo": "fundamentada",
+      "fontes": [
+        {
+          "chunk_id": "ACV-01-p10-s1-c3",
+          "doc_id": "ACV-01",
+          "titulo": "EDITAL Nº 06/2026 - SECITECI/MT - PROCESSO SELETIVO DE ALUNOS PARA CURSOS TÉCNICOS NAS ETECS 2026/2",
+          "versao": "Edital original",
+          "pagina": 10,
+          "secao": null,
+          "trecho": "publicação dessas \ninformações no site da SECITECI/MT (https://www.secitec.mt.gov.br/editais). \n10.4. Para efetivação da matrícula, OBRIGATORIAMENTE, o candidato deverá apresentar \npresencialmente no local onde se inscreveu conforme endereços disponíveis no Anexo I, toda \na documentação listada no item 10.5. \n10.5.  Para a efetivação da MATRÍCULA, serão necessárias a entrega de 01 cópia simples + a \napresentação do documento original conforme relação a seguir: \na) Comprovante de Escolaridade - Certificado de conclusão e Histórico Escolar do Ensino \nMédio (1º ao 3º ano), ou declaração de matrícula no ensino médio. \nb) Documento Oficial de Identificação; \nc) CPF; \nd) Certidão de Nascimento ou Certidão de Casamento; \ne) 01 (uma) foto 3x4 atual; \nf) Comprovante de Residência atual (últimos 3",
+          "distancia": 0.40801894664764404,
+          "trecho_citado": "10.5. Para a efetivação da MATRÍCULA, serão necessárias a entrega de 01 cópia simples + a apresentação do documento original conforme relação a seguir: a) Comprovante de Escolaridade - Certificado de conclusão e Histórico Escolar do Ensino Médio (1º ao 3º ano), ou declaração de matrícula no ensino médio. b) Documento Oficial de Identificação; c) CPF; d) Certidão de Nascimento ou Certidão de Casamento; e) 01 (uma) foto 3x4 atual; f) Comprovante de Residência atual (últimos 3",
+          "chunk_id_corrigido_de": null
+        }
+      ]
+    },
+    {
+      "assunto": "local",
+      "pergunta": "Onde devo comparecer para efetivar a matrícula da 1ª chamada?",
+      "id_consulta": "20ab8da9-2d71-4975-be99-cec23981bc4c",
+      "tipo": "fundamentada",
+      "fontes": [
+        {
+          "chunk_id": "ACV-01-p10-s1-c3",
+          "doc_id": "ACV-01",
+          "titulo": "EDITAL Nº 06/2026 - SECITECI/MT - PROCESSO SELETIVO DE ALUNOS PARA CURSOS TÉCNICOS NAS ETECS 2026/2",
+          "versao": "Edital original",
+          "pagina": 10,
+          "secao": null,
+          "trecho": "publicação dessas \ninformações no site da SECITECI/MT (https://www.secitec.mt.gov.br/editais). \n10.4. Para efetivação da matrícula, OBRIGATORIAMENTE, o candidato deverá apresentar \npresencialmente no local onde se inscreveu conforme endereços disponíveis no Anexo I, toda \na documentação listada no item 10.5. \n10.5.  Para a efetivação da MATRÍCULA, serão necessárias a entrega de 01 cópia simples + a \napresentação do documento original conforme relação a seguir: \na) Comprovante de Escolaridade - Certificado de conclusão e Histórico Escolar do Ensino \nMédio (1º ao 3º ano), ou declaração de matrícula no ensino médio. \nb) Documento Oficial de Identificação; \nc) CPF; \nd) Certidão de Nascimento ou Certidão de Casamento; \ne) 01 (uma) foto 3x4 atual; \nf) Comprovante de Residência atual (últimos 3",
+          "distancia": 0.5972126722335815,
+          "trecho_citado": "10.4. Para efetivação da matrícula, OBRIGATORIAMENTE, o candidato deverá apresentar presencialmente no local onde se inscreveu conforme endereços disponíveis no Anexo I, toda a documentação listada no item 10.5.",
+          "chunk_id_corrigido_de": null
+        }
+      ]
+    },
+    {
+      "assunto": "período",
+      "pergunta": "Qual o período de matrícula da 1ª chamada?",
+      "id_consulta": "9ccbbc52-2afe-4283-86ab-5a7e09c76cf1",
+      "tipo": "conflito",
+      "fontes": [
+        {
+          "chunk_id": "ACV-04-p1-s1-c3",
+          "doc_id": "ACV-04",
+          "titulo": "EDITAL RETIFICADOR Nº 03 DO EDITAL N. º 006/2026/SECITECI-MT",
+          "versao": "Retificação nº 03",
+          "pagina": 1,
+          "secao": null,
+          "trecho": "Recursos contra o Resultado Preliminar do Processo \nSeletivo \n01 e 02/06/2026 \n11. Divulgação da análise dos recursos contra o Resultado \nPreliminar \n09/06/2026 \n12. Divulgação oficial dos classificados \n11/06/2026 \n13. Convocação dos aprovados - 1ª Chamada \n11/06/2026 \n14. Período de Matrícula - 1ª Chamada \n15 a 19/06/2026 \n15. Convocação dos classificados - 2ª Chamada \n22/06/2026 \n16. Período de Matrícula - 2ª Chamada \n23 e 24/06/2026 \n17. Convocação dos classificados - 3ª Chamada \n25/06/2026 \n18. Período de Matrícula - 3ª Chamada \n26 e 27/06/2026",
+          "distancia": 0.5591508746147156,
+          "trecho_citado": "14. Período de Matrícula - 1ª Chamada 15 a 19/06/2026",
+          "chunk_id_corrigido_de": "ACV-10-p1-s1-c1"
+        },
+        {
+          "chunk_id": "ACV-06-p2-s1-c1",
+          "doc_id": "ACV-06",
+          "titulo": "EDITAL RETIFICADOR Nº 05/2026/SECITECI/MT DO EDITAL Nº 006/2026/SECITECI/MT",
+          "versao": "Retificação nº 05",
+          "pagina": 2,
+          "secao": null,
+          "trecho": "Nº \nDescrição/Ação \nPeríodo/Data \n19 Convocação antecipada dos classificados para vagas \nremanescentes – 4ª chamada conforme item 11.3.1 \n03/07/2026 \n20 Efetivação das matrículas da 4ª chamada das vagas \nremanescentes \n03/07/2026 a \n08/07/2026 \n21 Divulgação/organização das matrículas efetivadas da 4ª \nchamada pelas Escolas Técnicas Estaduais \n09/07/2026 \n22 Convocação para vagas remanescentes - 5ª chamada \nconforme item 11.1.3  \n03/07/2026 \na \n18/08/2026  \n23 Início das aulas \n21/07/2026 \n2. DA RETIFICAÇÃO DO ITEM 11.3.2  \nAcrescenta-se ao item 11.3.2 do Edital nº 006/2026/SECITECI/MT:  \n11.3.2. As vagas remanescentes da 5ª chamada poderão ser preenchidas por interessados, \npor ordem de chegada e entrega da documentação exigida na Escola Técnica Estadual \nresponsável pela turma, independe",
+          "distancia": 0.4636935591697693,
+          "trecho_citado": "Nº Descrição/Ação Período/Data 19 Convocação antecipada dos classificados para vagas remanescentes – 4ª chamada conforme item 11.3.1 03/07/2026 20 Efetivação das matrículas da 4ª chamada das vagas remanescentes 03/07/2026 a 08/07/2026 21 Divulgação/organização das matrículas efetivadas da 4ª chamada pelas Escolas Técnicas Estaduais 09/07/2026 22 Convocação para vagas remanescentes - 5ª chamada conforme item 11.1.3 03/07/2026 a 18/08/2026 23 Início das aulas 21/07/2026 2.",
+          "chunk_id_corrigido_de": null
+        }
+      ]
+    }
+  ]
+}
