@@ -1,8 +1,5 @@
 # Registro de uso de IA: Estudante 2 (Maria Luiza)
 
-*Rascunho para a seção 13 do relatório. Conferir e ajustar antes de entregar: cada afirmação abaixo
-deve refletir o que de fato aconteceu.*
-
 ## Ferramentas
 
 - Assistente de IA generativa (Claude, da Anthropic), em conversa de chat com envio de arquivos do
