@@ -25,6 +25,30 @@ MENSAGEM_ORIENTACAO_PENDENTE = (
     "As orientações institucionais ainda não foram consultadas no acervo. "
     "Nenhum documento, prazo ou local foi preenchido."
 )
+MENSAGEM_ORIENTACOES_SO_MATRICULA = (
+    "A busca automática de orientações cobre pedidos de matrícula. Para outras categorias, "
+    "a minuta segue sem orientações do acervo e vai para revisão."
+)
+MENSAGEM_CONSULTA_FORA_DA_MINUTA = (
+    'Esta consulta não entra na minuta. Para a minuta, use "Buscar orientações no acervo" '
+    "na Ficha."
+)
+MOTIVO_SEM_ORIENTACOES = (
+    "Sem orientações do acervo para esta categoria: o servidor completa a minuta."
+)
+AVISO_PRIMEIRA_CONSULTA = "A primeira consulta leva alguns segundos."
+MENSAGENS_ENCERRAMENTO = {
+    "aprovada": "Ficha aprovada e registrada.",
+    "rejeitada": "Ficha rejeitada e registrada.",
+}
+ROTULOS_STATUS_ORIENTACAO = {
+    "fundamentada": "fundamentada",
+    "sem_evidencia": "sem evidência",
+    "conflito": "conflito",
+    "indice_desatualizado": "índice desatualizado",
+    "bloqueio": "bloqueada",
+    "falha": "falha",
+}
 MARCA_ORIENTACOES = "**Orientações**"
 MARCA_CIENCIA = "**Ciência das regras de matrícula**"
 MENSAGEM_FALHA = "Não foi possível concluir a operação."
@@ -345,6 +369,48 @@ def linhas_da_ficha(solicitacao) -> dict:
         ],
         "entidades": entidades,
     }
+
+
+def pode_buscar_orientacoes(ficha: dict | None) -> bool:
+    """Ficha com campos, minuta não bloqueada e pedido de matrícula.
+
+    As consultas de orientação (documentos, local e período) são de matrícula.
+    """
+    if not ficha or not ficha.get("linhas") or ficha.get("minuta_bloqueada"):
+        return False
+    categoria = str(ficha["linhas"].get("categoria") or "").casefold()
+    return categoria.replace("í", "i") == "matricula"
+
+
+def exigir_revisao_sem_orientacoes(ficha: dict) -> dict:
+    """Ficha que não é de matrícula fica sem orientações do acervo e vai para revisão."""
+    if not ficha.get("linhas") or ficha.get("minuta_bloqueada") or pode_buscar_orientacoes(ficha):
+        return ficha
+    motivos = list(ficha.get("motivos") or [])
+    if MOTIVO_SEM_ORIENTACOES not in motivos:
+        motivos.append(MOTIVO_SEM_ORIENTACOES)
+    return {**ficha, "estado": "revisar", "motivos": motivos}
+
+
+def aviso_de_espera(texto: str, modelo_pronto: bool) -> str:
+    """A demora da carga do modelo só é anunciada enquanto ele ainda não carregou."""
+    return texto if modelo_pronto else f"{texto} {AVISO_PRIMEIRA_CONSULTA}"
+
+
+def resumo_das_orientacoes(partes: list[dict]) -> list[str]:
+    """Uma linha por assunto: a pergunta feita, o status e as fontes, para quem revisa."""
+    linhas = []
+    for parte in partes:
+        consulta = parte.get("consulta") or {}
+        status = ROTULOS_STATUS_ORIENTACAO.get(consulta.get("tipo"), str(consulta.get("tipo")))
+        fontes = [
+            f"{fonte.get('doc_id')} p. {fonte['pagina']}" if fonte.get("pagina")
+            else str(fonte.get("doc_id"))
+            for fonte in consulta.get("fontes") or [] if isinstance(fonte, dict)
+        ]
+        linha = f"**{parte['assunto'].capitalize()}:** \"{parte['pergunta']}\" → {status}"
+        linhas.append(linha + (f" ({', '.join(fontes)})" if fontes else ""))
+    return linhas
 
 
 def minuta_do_atendimento(ficha: dict | None, consulta: dict | None) -> dict:

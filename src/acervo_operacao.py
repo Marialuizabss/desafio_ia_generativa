@@ -163,6 +163,13 @@ def situacao_do_indice() -> dict:
     return conferencia
 
 
+def mensagem_do_indice() -> str:
+    """Motivo do bloqueio e o que fazer, ou vazio quando o índice confere com o catálogo."""
+    from src.vector_store import mensagem_de_pendencias
+
+    return mensagem_de_pendencias(situacao_do_indice())
+
+
 def remover_do_indice(doc_id: str) -> dict:
     """Tira do índice um documento que não deveria estar nele e registra na auditoria.
 

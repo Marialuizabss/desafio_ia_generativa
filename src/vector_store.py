@@ -55,11 +55,51 @@ ACAO_INDEXAR = (
 )
 
 
-def carregar_modelo_embeddings():
+_MODELO = None
+_TRAVA_MODELO = threading.Lock()
+
+
+class _ModeloCompartilhado:
+    """O mesmo modelo para todas as consultas do processo.
+
+    `encode` é serializado: o tokenizador não aceita duas threads ao mesmo tempo (duas
+    consultas simultâneas na interface). O resto (tokenizer, max_seq_length) é repassado.
+    """
+
+    def __init__(self, modelo):
+        self._modelo = modelo
+        self._trava = threading.Lock()
+
+    def encode(self, *args, **kwargs):
+        with self._trava:
+            return self._modelo.encode(*args, **kwargs)
+
+    def __getattr__(self, nome):
+        return getattr(self._modelo, nome)
+
+
+def _criar_modelo():
     # Importação tardia: os testes e a exclusão não precisam do modelo.
     from sentence_transformers import SentenceTransformer
 
     return SentenceTransformer(MODELO_EMBEDDINGS)
+
+
+def modelo_carregado():
+    """O modelo já está na memória: a próxima consulta não espera a carga."""
+
+    return _MODELO is not None
+
+
+def carregar_modelo_embeddings():
+    """Carrega o modelo uma vez por processo; as consultas seguintes o reaproveitam."""
+
+    global _MODELO
+
+    with _TRAVA_MODELO:
+        if _MODELO is None:
+            _MODELO = _ModeloCompartilhado(_criar_modelo())
+        return _MODELO
 
 
 def obter_colecao(

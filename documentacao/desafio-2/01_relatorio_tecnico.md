@@ -459,7 +459,7 @@ custo; o registro informa isso em `metricas_indisponiveis`. A recuperação roda
 - O limite de tokens por execução (`max_tokens_saida`) existe, mas está desligado por padrão.
 - A auditoria registra a consulta e o resultado, não a decisão humana, que é gravada à parte pela
   interface com o mesmo identificador.
-- O modelo de embeddings é recarregado a cada consulta (custo de tempo, não de correção).
+- O modelo de embeddings é carregado uma vez por processo: a primeira consulta leva alguns segundos e as seguintes o reaproveitam.
 
 ### Revisão final do RAG (31/10/2026)
 

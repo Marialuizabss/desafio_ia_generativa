@@ -8,32 +8,46 @@ from hashlib import sha256
 import streamlit as st
 
 try:
-    from audit import registrar_decisao, registrar_execucao, traduzir_decisao
+    from audit import registrar_decisao, registrar_evento, registrar_execucao, traduzir_decisao
     from consulta_acervo import (
+        MENSAGEM_CONSULTA_FORA_DA_MINUTA,
+        MENSAGENS_ENCERRAMENTO,
+        MENSAGEM_ORIENTACOES_SO_MATRICULA,
         MENSAGEM_SEM_FONTES,
         classificar_consulta,
+        aviso_de_espera,
         classificar_ficha,
         combinar_estado,
+        exigir_revisao_sem_orientacoes,
         minuta_do_atendimento,
         opcoes_de_exclusao,
         pendentes_de_indexar,
         pendentes_de_remover,
+        pode_buscar_orientacoes,
         preparar_acervo,
+        resumo_das_orientacoes,
         resumo_do_indice,
         transicionar,
     )
 except ImportError:
-    from src.audit import registrar_decisao, registrar_execucao, traduzir_decisao
+    from src.audit import registrar_decisao, registrar_evento, registrar_execucao, traduzir_decisao
     from src.consulta_acervo import (
+        MENSAGEM_CONSULTA_FORA_DA_MINUTA,
+        MENSAGENS_ENCERRAMENTO,
+        MENSAGEM_ORIENTACOES_SO_MATRICULA,
         MENSAGEM_SEM_FONTES,
         classificar_consulta,
+        aviso_de_espera,
         classificar_ficha,
         combinar_estado,
+        exigir_revisao_sem_orientacoes,
         minuta_do_atendimento,
         opcoes_de_exclusao,
         pendentes_de_indexar,
         pendentes_de_remover,
+        pode_buscar_orientacoes,
         preparar_acervo,
+        resumo_das_orientacoes,
         resumo_do_indice,
         transicionar,
     )
@@ -46,6 +60,20 @@ AREAS = (
     ("consulta", "Consulta"),
     ("fontes", "Fontes"),
     ("painel", "Painel"),
+)
+
+# O que uma solicitação nova descarta: orientações, consulta, identificadores e estado.
+ATENDIMENTO_ANTERIOR = (
+    "rf20_orientacoes",
+    "rf20_partes_orientacoes",
+    "rf20_consulta_classificacao",
+    "rf20_consulta_resultado",
+    "rf20_id_consulta",
+    "rf20_id_ficha",
+    "rf20_estado",
+    "rf20_auto",
+    "rf20_bloqueado",
+    "rf20_decisao_erro",
 )
 
 ROTULOS_ESTADO = {
@@ -344,6 +372,9 @@ def _tela_ficha() -> None:
         """,
         unsafe_allow_html=True,
     )
+    encerramento = st.session_state.pop("rf20_aviso_ficha", None)
+    if encerramento:
+        st.toast(encerramento, icon="✅")
     st.text_area("Texto da solicitação", key="rf20_texto_ficha", height=160)
     if st.button("Analisar solicitação", key="rf20_analisar"):
         with st.spinner("Analisando a solicitação..."):
@@ -351,7 +382,7 @@ def _tela_ficha() -> None:
     classificacao = st.session_state.get("rf20_ficha_classificacao")
     if classificacao:
         _mostrar_ficha(classificacao)
-    _formulario_decisao()
+    _formulario_decisao("ficha")
 
 
 def _tela_consulta() -> None:
@@ -365,15 +396,15 @@ def _tela_consulta() -> None:
         """,
         unsafe_allow_html=True,
     )
+    st.caption(MENSAGEM_CONSULTA_FORA_DA_MINUTA)
     st.text_area("Pergunta", key="rf20_pergunta", height=120)
     if st.button("Consultar o acervo", key="rf20_consultar"):
-        # Cada consulta recarrega o modelo de embeddings; sem aviso, parecia travada.
-        with st.spinner("Consultando o acervo... Cada consulta leva alguns segundos."):
+        with st.spinner(_texto_de_espera("Consultando o acervo...")):
             _executar_consulta()
     classificacao = st.session_state.get("rf20_consulta_classificacao")
     if classificacao:
         _mostrar_consulta(classificacao)
-    _formulario_decisao()
+    _formulario_decisao("consulta")
 
 
 def _tela_fontes() -> None:
@@ -416,6 +447,9 @@ def _executar_ficha() -> None:
             "Informe o texto da solicitação."
         )
         return
+    # Solicitação nova, atendimento novo: nada do atendimento anterior entra nesta minuta.
+    for chave in ATENDIMENTO_ANTERIOR:
+        st.session_state.pop(chave, None)
     try:
         try:
             from nlp import analisar_solicitacao
@@ -426,6 +460,7 @@ def _executar_ficha() -> None:
     except Exception as erro:
         classificacao = classificar_ficha(None)
         classificacao["texto"] = f"{classificacao['texto']} {erro}".strip()
+    classificacao = exigir_revisao_sem_orientacoes(classificacao)
     st.session_state["rf20_ficha_classificacao"] = classificacao
     st.session_state["rf20_travado"] = False
     _aplicar_estado("ficha", classificacao)
@@ -488,8 +523,66 @@ def _mostrar_consulta(classificacao: dict) -> None:
         _mostrar_minuta(ficha)
 
 
+def _mostrar_orientacoes(ficha: dict) -> None:
+    if not ficha.get("linhas") or ficha.get("minuta_bloqueada"):
+        return
+    st.markdown("**Orientações do acervo**")
+    if not pode_buscar_orientacoes(ficha):
+        st.info(MENSAGEM_ORIENTACOES_SO_MATRICULA)
+        return
+    if st.button("Buscar orientações no acervo", key="rf20_buscar_orientacoes"):
+        _buscar_orientacoes(ficha)
+    for linha in resumo_das_orientacoes(st.session_state.get("rf20_partes_orientacoes") or []):
+        st.markdown(f"- {linha}")
+
+
+def _buscar_orientacoes(ficha: dict) -> None:
+    """Três consultas ao acervo (documentos, local e período), só para esta ficha."""
+    try:
+        from acervo_operacao import mensagem_do_indice
+    except ImportError:
+        from src.acervo_operacao import mensagem_do_indice
+    try:
+        bloqueio = mensagem_do_indice()
+    except Exception:
+        bloqueio = ""
+    if bloqueio:
+        st.error(bloqueio)
+        return
+    try:
+        from minuta_fundamentada import consultar_orientacoes
+    except ImportError:
+        from src.minuta_fundamentada import consultar_orientacoes
+    with st.spinner(_texto_de_espera("Consultando o acervo: documentos, local e período...")):
+        orientacoes, partes = consultar_orientacoes(ficha["linhas"])
+    st.session_state["rf20_orientacoes"] = orientacoes
+    st.session_state["rf20_partes_orientacoes"] = partes
+    registrar_evento("orientacoes_da_ficha", {
+        "id_execucao": _id_para("ficha"),
+        "tipo": orientacoes.get("tipo"),
+        "consultas": [
+            {"assunto": p["assunto"], "id_consulta": p["id_consulta"], "tipo": p["consulta"].get("tipo")}
+            for p in partes
+        ],
+    })
+    _aplicar_estado("ficha", orientacoes)
+
+
+def _texto_de_espera(texto: str) -> str:
+    # O modelo fica em src.vector_store, o mesmo módulo que o RAG usa.
+    try:
+        from src.vector_store import modelo_carregado
+
+        pronto = modelo_carregado()
+    except Exception:
+        pronto = False
+    return aviso_de_espera(texto, pronto)
+
+
 def _mostrar_minuta(ficha: dict) -> None:
-    consulta = st.session_state.get("rf20_consulta_classificacao")
+    _mostrar_orientacoes(ficha)
+    # Só as orientações buscadas para esta ficha; a área Consulta não entra na minuta.
+    consulta = st.session_state.get("rf20_orientacoes")
     minuta = minuta_do_atendimento(ficha, consulta)
     st.markdown("**Minuta**")
     st.markdown(minuta["texto"])
@@ -609,7 +702,7 @@ def _mostrar_mensagem(classificacao: dict) -> None:
         st.info(texto)
 
 
-def _formulario_decisao() -> None:
+def _formulario_decisao(origem: str = "consulta") -> None:
     estado = st.session_state.get("rf20_estado")
     if st.session_state.get("rf20_bloqueado"):
         st.caption("A entrada foi bloqueada. Não há resposta para aprovar.")
@@ -627,19 +720,21 @@ def _formulario_decisao() -> None:
     st.text_area("Justificativa", key="rf20_justificativa", height=80)
     aprovar, rejeitar, revisar = st.columns(3)
     with aprovar:
-        st.button("Aprovar", key="rf20_aprovar", on_click=_decidir, args=("aprovar",))
+        st.button("Aprovar", key="rf20_aprovar", on_click=_decidir, args=("aprovar", origem))
     with rejeitar:
-        st.button("Rejeitar", key="rf20_rejeitar", on_click=_decidir, args=("rejeitar",))
+        st.button("Rejeitar", key="rf20_rejeitar", on_click=_decidir, args=("rejeitar", origem))
     with revisar:
-        st.button("Pedir revisão", key="rf20_revisar", on_click=_decidir, args=("revisar",))
+        st.button("Pedir revisão", key="rf20_revisar", on_click=_decidir, args=("revisar", origem))
     if estado == "revisar":
-        st.button("Retomar como pendente", key="rf20_retomar", on_click=_decidir, args=("retomar",))
+        st.button(
+            "Retomar como pendente", key="rf20_retomar", on_click=_decidir, args=("retomar", origem)
+        )
     erro = st.session_state.get("rf20_decisao_erro")
     if erro:
         st.error(erro)
 
 
-def _decidir(acao: str) -> None:
+def _decidir(acao: str, origem: str = "consulta") -> None:
     try:
         novo = transicionar(
             st.session_state.get("rf20_estado"),
@@ -648,7 +743,11 @@ def _decidir(acao: str) -> None:
             st.session_state.get("rf20_revisor") or "",
             st.session_state.get("rf20_cargo") or "",
         )
-        id_execucao = _id_atual()
+        # A decisão na Ficha é sobre a minuta da ficha, não sobre uma consulta solta.
+        if origem == "ficha" and st.session_state.get("rf20_id_ficha"):
+            id_execucao = st.session_state["rf20_id_ficha"]
+        else:
+            id_execucao = _id_atual()
         if not id_execucao:
             raise ValueError("A execução avaliada não foi identificada.")
         registrar_decisao(
@@ -661,9 +760,24 @@ def _decidir(acao: str) -> None:
     except ValueError as erro:
         st.session_state["rf20_decisao_erro"] = str(erro)
         return
+    if origem == "ficha" and novo in MENSAGENS_ENCERRAMENTO:
+        _limpar_ficha(novo)
+        return
     st.session_state["rf20_estado"] = novo
     st.session_state["rf20_travado"] = True
     st.session_state["rf20_decisao_erro"] = None
+
+
+def _limpar_ficha(decisao: str) -> None:
+    """Atendimento encerrado: a Ficha volta vazia, pronta para a próxima solicitação.
+
+    Roda no callback do botão, antes de a tela ser redesenhada, então pode limpar os campos.
+    """
+    for chave in ATENDIMENTO_ANTERIOR + ("rf20_ficha_classificacao", "rf20_travado"):
+        st.session_state.pop(chave, None)
+    for campo in ("rf20_texto_ficha", "rf20_revisor", "rf20_cargo", "rf20_justificativa"):
+        st.session_state[campo] = ""
+    st.session_state["rf20_aviso_ficha"] = MENSAGENS_ENCERRAMENTO[decisao]
 
 
 def _aplicar_estado(origem: str, classificacao: dict) -> None:
