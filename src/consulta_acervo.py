@@ -54,6 +54,10 @@ EXPLICACAO_DISTANCIA = (
 MOTIVO_SEM_ORIENTACOES = (
     "Sem orientações do acervo para esta categoria: o servidor completa a minuta."
 )
+MOTIVO_CONFERIR_LEITURA = (
+    "O texto veio da transcrição do áudio ou da leitura da ficha: confira nome, protocolo e "
+    "datas com o original."
+)
 AVISO_PRIMEIRA_CONSULTA = "A primeira consulta leva alguns segundos."
 AVISO_DE_IA = "Minuta elaborada com apoio de IA"
 MENSAGEM_AVISO_DE_IA_REMOVIDO = "O aviso de participação da IA não pode ser removido (RF24)."
@@ -501,6 +505,16 @@ def exigir_revisao_sem_orientacoes(ficha: dict) -> dict:
     motivos = list(ficha.get("motivos") or [])
     if MOTIVO_SEM_ORIENTACOES not in motivos:
         motivos.append(MOTIVO_SEM_ORIENTACOES)
+    return {**ficha, "estado": "revisar", "motivos": motivos}
+
+
+def exigir_conferencia_da_leitura(ficha: dict, modalidade: str | None) -> dict:
+    """Ficha vinda de áudio ou imagem vai para revisão: a conferência do Desafio 1 continua."""
+    if modalidade not in ("audio", "imagem") or not ficha.get("linhas"):
+        return ficha
+    motivos = list(ficha.get("motivos") or [])
+    if MOTIVO_CONFERIR_LEITURA not in motivos:
+        motivos.append(MOTIVO_CONFERIR_LEITURA)
     return {**ficha, "estado": "revisar", "motivos": motivos}
 
 

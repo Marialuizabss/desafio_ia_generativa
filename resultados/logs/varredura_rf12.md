@@ -1,8 +1,8 @@
 # RF12 — Varredura de credenciais e dados pessoais
 
-- Data: 01/11/2026 09:21
-- Commit: `7ab3111`
-- Arquivos verificados: 469 (23 binários, verificados só quanto ao nome)
+- Data: 01/11/2026 11:40
+- Commit: `48b6b54`
+- Arquivos verificados: 473 (23 binários, verificados só quanto ao nome)
 - Resultado: **aprovado**
 
 ## Credenciais
