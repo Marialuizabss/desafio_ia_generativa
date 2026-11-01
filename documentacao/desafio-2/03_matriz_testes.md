@@ -108,4 +108,4 @@ sem pendências; as 3 chaves falsas dos testes aparecem à parte, como dado fict
 
 ## Como rodar
 
-`python -m pytest testes -q`: 581 testes, sem chamar a API nem baixar o modelo.
+`python -m pytest testes -q`: 582 testes, sem chamar a API nem baixar o modelo.

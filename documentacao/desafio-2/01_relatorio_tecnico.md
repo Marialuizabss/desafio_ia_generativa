@@ -19,7 +19,7 @@ enviado automaticamente.
 
 Dos 15 testes do enunciado, 10 estão atendidos e 5 atendidos com ressalva; nenhum ficou parcial.
 Categoria 7/7, Acerto@10 5/5, respostas sustentadas 15/15, abstenção 6/6, conflito 3/3 e sentimentos
-10/12. A suíte automática tem 581 testes, sem chamar a API.
+10/12. A suíte automática tem 582 testes, sem chamar a API.
 
 ## 2. Arquitetura
 
@@ -206,7 +206,9 @@ o tempo registrados; erro inesperado do provedor não repassa a mensagem origina
 Cada consulta grava `consulta_rag` com identificador (o mesmo da decisão humana), horários e
 latências, versões do esquema, do prompt e do índice, pergunta mascarada, top-k, trechos recuperados
 com distância, trechos citados, alertas, status, decisão, erro, modelo, tokens e custo. Não guarda a
-chave nem o texto dos trechos: o `chunk_id` e a versão do índice bastam para conferir a passagem.
+chave nem o texto dos trechos: o `chunk_id` e a versão do índice bastam para conferir a passagem. Na
+Ficha, a execução grava o hash do texto, a modalidade (texto, áudio ou imagem) e o arquivo de origem
+(a cópia em `dados/originais/`); a decisão humana usa o mesmo identificador.
 
 ## 4. Métricas
 

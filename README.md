@@ -166,7 +166,7 @@ Desafio 1 e põe o texto na caixa, para o servidor conferir antes de analisar. A
 
 | O quê | Comando | Chama a API? |
 |---|---|---|
-| Todos os testes (581) | `python -m pytest testes -q` | Não |
+| Todos os testes (582) | `python -m pytest testes -q` | Não |
 | Varredura de credenciais e dados pessoais (RF12) | `python -m src.varredura_rf12` | Não |
 | JSON sintático × esquema (T01) | `python -m src.experimento_rf14` | Não |
 | Ficha: 7 solicitações (RF15) | `python -m src.avaliacao_rf15 --todos` (ou `--simulado`) | Sim, cerca de US$ 0,007 (simulado: não) |
