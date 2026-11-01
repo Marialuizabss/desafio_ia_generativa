@@ -513,12 +513,12 @@ A repetição de rede continua uma: `adaptador_llm.max_retries` é 1 e `gerar_js
 
 *Responsável: Felipe.*
 
-A barra lateral da interface abre Acervo, Ficha, Consulta e Fontes. O atendimento em quatro etapas do Desafio 1 permanece como área padrão.
+A barra lateral da interface abre Ficha, Acervo, Consulta, Fontes, Painel e Atendimento anterior. A Ficha é a área padrão e o fluxo oficial: modera a entrada, valida a ficha, consulta o acervo e registra a decisão. O atendimento em quatro etapas do Desafio 1 continua como "Atendimento anterior", com aviso de que ele não valida a ficha, não consulta o acervo e não modera o texto, e um botão que abre a Ficha. A Ficha recebe só texto digitado; áudio e imagem ainda entram pelo Atendimento anterior.
 
 - **Acervo:** catálogo (`doc_id`, título, versão, formato e hash), com aviso de arquivo ausente ou hash divergente. O operador seleciona documentos e indexa, ou inclui um TXT ou PDF fictício. A inclusão grava o arquivo, calcula o hash e sobe a versão do catálogo. A indexação não chama o modelo de geração e repetir não duplica trechos.
 - **Ficha:** `analisar_solicitacao`, com ausência exibida como "não localizado". A minuta sai na mesma tela: fatos da ficha, rodapé de participação da IA e, sem consulta fundamentada, a frase de que documento, prazo e local não foram preenchidos. Ficha rejeitada ou incoerente bloqueia a minuta e vai para `revisar`. Se o guardrail bloqueia a entrada, a tela mostra o motivo e não abre aprovação.
 - **Consulta:** `responder_rf19`. Sem evidência ou conflito mostra a mensagem do RAG e vai para `revisar`, sem resposta inventada. Resposta fundamentada fica `pendente` e entra na minuta com documento, versão, página ou seção e `chunk_id`. `decisao: bloquear` não vira revisão: a resposta não aparece e o formulário de aprovação fica fechado.
-- **Arquivo:** o envio do atendimento confere extensão e tamanho com `validar_material` antes de guardar a cópia.
+- **Arquivo:** a inclusão de documento no Acervo e o envio do Atendimento anterior conferem extensão e tamanho com `validar_material` antes de guardar a cópia.
 - **Fontes:** trechos da última consulta (documento, versão, página ou seção, `chunk_id` e citação). Sem consulta, a tela avisa que não há fontes.
 - **Falha e índice desatualizado:** mensagem em português e nenhuma resposta. O índice desatualizado pede reindexação.
 - **Painel:** totais, fração, denominador e gráfico de barras a partir da última classificação real. Filtro sem correspondência mostra "sem dados" e não divide. Duplicata (mesmo `id`) conta uma vez. A confiança aparece como estimativa não calibrada e não entra no percentual.
