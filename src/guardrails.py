@@ -39,6 +39,7 @@ REVISAR = "revisar"
 
 ORIGEM_ANALISE = "analise"
 ORIGEM_RAG = "rag"
+ORIGEM_ACERVO = "acervo"
 
 MOTIVO_VAZIO = "entrada_vazia"
 MOTIVO_TIPO = "tipo_nao_aceito"
@@ -217,15 +218,20 @@ def sanear_saida(texto: str) -> tuple[str, DecisaoGuardrail | None]:
     return texto, None
 
 
-def registrar_bloqueio(decisao: DecisaoGuardrail, origem: str, texto: str) -> dict:
-    """Grava o bloqueio: códigos, origem e hash do texto. Sem o trecho e sem segredo."""
+def registrar_bloqueio(decisao: DecisaoGuardrail, origem: str, texto: str | bytes) -> dict:
+    """Grava o bloqueio: códigos, origem e hash do conteúdo. Sem o trecho, sem nome de arquivo e sem segredo."""
 
-    bruto = texto if isinstance(texto, str) else ""
+    if isinstance(texto, (bytes, bytearray)):
+        bruto = bytes(texto)
+    elif isinstance(texto, str):
+        bruto = texto.encode("utf-8")
+    else:
+        bruto = b""
     return registrar_evento("bloqueio_guardrail", {
         "origem": origem,
         "decisao": BLOQUEAR,
         "motivos": list(decisao.motivos),
-        "sha256_texto": hashlib.sha256(bruto.encode("utf-8")).hexdigest(),
+        "sha256_texto": hashlib.sha256(bruto).hexdigest(),
     })
 
 

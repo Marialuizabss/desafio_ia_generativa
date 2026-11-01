@@ -1,5 +1,6 @@
 """RF20 — mensagens, estados e registro da decisão. Sem API e sem índice."""
 
+import hashlib
 import json
 import unittest
 from pathlib import Path
@@ -347,6 +348,28 @@ class TestInclusaoDeDocumento(unittest.TestCase):
                 )
             with self.assertRaises(ValueError):
                 incluir_documento(b"nao", "nota.docx", "Nota", "1", catalogo, base)
+
+    def test_arquivo_acima_do_limite_bloqueia_e_registra_o_motivo(self):
+        with TemporaryDirectory() as pasta:
+            base = Path(pasta)
+            log = base / "execucoes.jsonl"
+            catalogo = {"versao_catalogo": "1.2", "documentos": [], "historico": []}
+            grande = b"a" * (5 * 1024 * 1024 + 1)
+            with patch.object(audit, "ARQUIVO_REGISTRO", log):
+                with self.assertRaises(ValueError) as erro:
+                    incluir_documento(grande, "aviso_grande.txt", "Aviso", "1", catalogo, base)
+
+            self.assertIn("tamanho permitido", str(erro.exception))
+            self.assertEqual(catalogo["documentos"], [])
+            self.assertEqual(catalogo["versao_catalogo"], "1.2")
+            self.assertFalse(any(base.glob("*.txt")))
+            eventos = [json.loads(linha) for linha in log.read_text(encoding="utf-8").splitlines()]
+            self.assertEqual(len(eventos), 1)
+            self.assertEqual(eventos[0]["evento"], "bloqueio_guardrail")
+            self.assertEqual(eventos[0]["origem"], "acervo")
+            self.assertEqual(eventos[0]["motivos"], ["tamanho_excedido"])
+            self.assertEqual(eventos[0]["sha256_texto"], hashlib.sha256(grande).hexdigest())
+            self.assertNotIn("aviso_grande", log.read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":

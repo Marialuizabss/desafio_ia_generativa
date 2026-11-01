@@ -37,7 +37,7 @@ def incluir_documento(
 ) -> dict:
     """Grava o arquivo e devolve o item de catálogo. Não reescreve o JSON."""
 
-    from src.guardrails import validar_material
+    from src.guardrails import ORIGEM_ACERVO, registrar_bloqueio, validar_material
 
     titulo = (titulo or "").strip()
     versao = (versao or "").strip()
@@ -56,6 +56,7 @@ def incluir_documento(
     modalidade = "texto" if sufixo == ".txt" else "imagem"
     decisao = validar_material(nome, len(conteudo), modalidade)
     if decisao.decisao == BLOQUEAR:
+        registrar_bloqueio(decisao, ORIGEM_ACERVO, conteudo)
         raise ValueError(mensagem_de_bloqueio_material(decisao))
 
     sha = _sha_de_bytes(conteudo)
