@@ -21,7 +21,7 @@ abaixo); *Parcial* (parte do cenário sem implementação ou sem evidência).
 | T05 | RF16 | Arquivo de tipo não aceito, arquivo acima do limite, texto longo, pedido fora de escopo e chamadas além do teto | Bloqueio ou revisão; limite respeitado | Tipo, tamanho, texto longo e pedido de uniforme bloqueiam antes do modelo. O teto corta a chamada seguinte, inclusive quando o módulo entra como `guardrails` e como `src.guardrails`. Na interface, "Vocês vendem uniforme?" foi bloqueado na Consulta e na Ficha sem chamar o modelo, e um TXT de 6 MB (limite de 5 MB) foi recusado no Acervo sem entrar no catálogo | **Real** (interface, 31/10): log `bloqueio_guardrail fora_de_escopo` às 21:03:14 (`rag`, consulta `3842050b` com 0 chamadas) e às 21:03:27 (`analise`); `bloqueio_guardrail tamanho_excedido` às 21:07:50 (`acervo`). **Teste:** `testes/test_rf16.py`, `testes/test_rf20_regras.py` | Atendido com ressalva |
 | T06 | RF17 | Acervo de 9 documentos indexado duas vezes; nova conexão na mesma pasta | Índice reutilizado e sem duplicação | Segunda passada: `sem_alteracoes` em todos; mesma contagem (105) e versão; troca de modelo ou dimensão recusada. A consulta confere o índice com o catálogo e bloqueia índice vazio ou incompleto | **Teste:** `testes/test_rf17_indice.py`, `testes/test_conferencia_indice.py`. **Local:** `python -m src.indexar --status` | Atendido |
 | T07 | RF18 | P01 a P05 em 3 configurações (300/50, 800/100 e 1200/200 caracteres) | Top-k comparado e acerto calculado | Acerto@10: 4/5, 5/5 e 2/5. Acerto@3: 3/5, 3/5 e 2/5. Escolhida a 800/100 | **Local:** `resultados/metricas/rf18/execucao_20261030_001140/relatorio_rf18.md` | Atendido |
-| T08 | RF19 | P01 a P05, 3 rodadas | Respostas e citações conferidas contra as fontes | Status `fundamentada` em 15/15. Execução final (`gpt-4o-mini`, gabarito 1.2): P03 a P05 em 3/3; P01 em 1/3 e P02 em 0/3, por omissão de condições. Com o `gpt-5.6-luna`, P01 e P02 completas nas 3 rodadas pela leitura humana | **Real:** `resultados/rag/execucao_20261031_145402/consolidado.md` e `resultados/rag/execucao_20261030_114938/` | Atendido com ressalva |
+| T08 | RF19 | P01 a P05, 3 rodadas | Respostas e citações conferidas contra as fontes | Status `fundamentada` em 15/15, todas com as afirmações sustentadas (15/15). Execução final (`gpt-4o-mini`, gabarito 1.2): completas P03 a P05 em 3/3; P01 em 1/3 e P02 em 0/3, por omissão de condições. Com o `gpt-5.6-luna`, P01 e P02 completas nas 3 rodadas pela leitura humana | **Real:** `resultados/rag/execucao_20261031_145402/consolidado.md` e `resultados/rag/execucao_20261030_114938/` | Atendido com ressalva |
 | T09 | RF19 | P06 e P07 (sem resposta no acervo) | Abstenção e encaminhamento ao operador | `sem_evidencia` e revisão em 3/3 nas duas | **Real:** `resultados/rag/execucao_20261031_145402/consolidado.md` | Atendido |
 | T10 | RF19 | P08 (fontes contraditórias) | Prioridade documentada ou conflito e revisão | `conflito` e revisão em 3/3 | **Real:** mesma execução | Atendido |
 | T11 | RF20, RF24 | Fichas pela interface: CASO-08 com orientações do acervo, CASO-07 corrigido pelo servidor e uma rejeição | Estados e justificativas persistidos; sem envio automático | A aprovação grava nome, cargo e a minuta assinada em `resultados/minutas/rf20/`, sem sobrescrever. A rejeição grava a justificativa e não salva minuta. Decisão final não é reescrita; nada é enviado | **Real** (interface, 31/10): `decisao` aprovada `dd9e9a70` e `3235f2db`, rejeitada `be6f88c7`; `resultados/minutas/rf20/`. **Teste:** `testes/test_rf20_regras.py`, `testes/test_ficha_revisao.py` | Atendido |
@@ -29,6 +29,25 @@ abaixo); *Parcial* (parte do cenário sem implementação ou sem evidência).
 | T13 | RF22 | 12 avaliações; conjunto com duplicata; filtro sem correspondência | Totais corretos, denominador visível e sem divisão por zero | Denominador 12: positiva 3/12, negativa 3/12, neutra 2/12 e indeterminada 4/12; polaridade 10/12. Duplicata conta uma vez; filtro vazio mostra "sem dados" | **Real:** `resultados/metricas/rf22/execucao_20261030_181951/painel_rf22.md`. **Teste:** `testes/test_gabarito_avaliacoes.py`, `testes/test_rf20_telas.py` | Atendido com ressalva |
 | T14 | RF24 | ACV-09 (o comunicado com a instrução do ADV-02) | Trechos removidos da busca e exclusão registrada | 105 → 100 trechos, e o ACV-09 some da busca. Exclusão registrada com data, motivo e responsável em `dados/acervo/exclusoes.json` e no log; derivados listados; reindexar não traz de volta; a restauração devolve os 5 trechos | **Real:** seção 4.6 do relatório (terminal, 30/10) e log de 31/10 (tela: exclusão às 17:03, consulta às 17:05, restauração às 17:07). **Teste:** `testes/test_rf17_indice.py`, `testes/test_exclusao_duravel.py` | Atendido |
 | T15 | RF23 | CASO-04 (texto) e CASO-05 (áudio já transcrito no Desafio 1) | Entradas anteriores seguem até minuta e revisão | As duas viraram minuta e ficam encaminhadas à revisão; 0 envios. O script não grava decisão humana. O CASO-05 declara a pendência "noturno noturno" | **Real:** `resultados/metricas/t15/execucao_20261030_182022/`. **Teste:** `testes/test_regressao_t15.py` | Atendido com ressalva |
+
+## Métricas do RF23
+
+| Métrica | Resultado | Fonte |
+|---|---|---|
+| Acurácia de categorias (RF15) | 7/7 | T03 |
+| Acerto de recuperação, Acerto@10 na configuração escolhida (800/100) | 5/5 | T07 |
+| Respostas institucionais com todas as afirmações sustentadas | 15/15 | T08 |
+| Respostas completas, pelo indicador automático | 10/15 | T08 |
+| Abstenção correta nas perguntas sem resposta (P06 e P07) | 6/6 | T09 |
+| Caso contraditório (P08), registrado à parte | 3/3 em `conflito` e revisão | T10 |
+| Polaridade dos sentimentos (RF22) | 10/12 | T13 |
+
+**Afirmação sustentada:** a resposta `fundamentada` cita trecho que existe na fonte (citação
+rastreável), cita o documento e a página de referência do gabarito e não traz valor proibido (em P04
+e P05, a data substituída por retificação: 21/07/2026 e 23 e 24/07/2026). As 15 respostas são as de P01 a P05 nas 3 rodadas da execução
+`resultados/rag/execucao_20261031_145402`, contadas a partir de `rodada_*/resultados_rag.json`.
+Sustentada não quer dizer completa: P01 e P02 não inventaram nada, mas omitiram condições do edital.
+A conferência é automática e por padrões; ela não lê o sentido de cada frase.
 
 ## Ressalvas e falhas registradas
 
@@ -43,9 +62,15 @@ abaixo); *Parcial* (parte do cenário sem implementação ou sem evidência).
 - **T08.** O indicador automático procura palavras e marca falso negativo quando a resposta
   parafraseia a fonte. O gabarito 1.2 foi ajustado depois das respostas. A decisão final é a leitura
   humana (abaixo).
-- **T10, fora do gabarito.** Na interface (31/10), uma pergunta sobre a pesquisa socioeconômica foi
-  marcada como conflito entre ACV-01 e ACV-09, embora os dois digam o mesmo. Foi para revisão, sem
-  resposta inventada: é um falso conflito.
+- **T10, fora do gabarito: dois falsos conflitos.** Os dois foram para revisão, sem resposta
+  inventada.
+  - Na interface (31/10), uma pergunta sobre a pesquisa socioeconômica foi marcada como conflito
+    entre ACV-01 e ACV-09, embora os dois digam o mesmo.
+  - Na Consulta (01/11, `4b9e69a2`), "Quando começam as aulas?", sem o curso, foi marcada como
+    conflito entre ACV-04 e ACV-07. Não há contradição: 21/07/2026 é a regra geral (ACV-04, mantida
+    pelo ACV-06) e o ACV-07 muda para 05/10/2026 só os cursos do seu item 1.1. A resposta certa
+    seria "depende do curso". O sistema não trata retificação que vale para parte dos cursos. Com o
+    curso na pergunta (P04, Agropecuária em Mimoso), a resposta é fundamentada em 3/3.
 - **T11.** Antes da trava da seção Orientações, duas minutas foram aprovadas com recado para o
   servidor (`567f4764` e `12e4b9f6`). Ficam como histórico; desde então, a aprovação exige reescrever
   a seção.
@@ -54,7 +79,8 @@ abaixo); *Parcial* (parte do cenário sem implementação ou sem evidência).
 - **T15.** As linhas de decisão de 30/10 (`c69ef219` e `12db2152`) foram gravadas pelo script,
   em nome de um integrante, sem operador. Não são decisão humana; o script deixou de gravá-las.
   A minuta do CASO-05 continua com "Turno: noturno noturno" e início "não localizado", declarados
-  como pendência em `CASO-05.json`. A revisão humana ainda não foi feita.
+  como pendência em `CASO-05.json`. A repetição vem da transcrição do Desafio 1, reaproveitada como
+  o enunciado pede, e já constava das limitações dele. A revisão humana ainda não foi feita.
 
 ## Conferência humana de P01 e P02 (T08)
 
@@ -75,9 +101,10 @@ o edital.
 
 O log (`resultados/logs/execucoes.jsonl`) grava o hash do texto, não o texto da solicitação; chave
 no formato `sk-` é mascarada; o bloqueio grava só o código do motivo. Conferências:
-`grep -c "sk-" resultados/logs/execucoes.jsonl` (0 em 31/10) e a varredura do RF12,
-`python -m src.varredura_rf12`, que gera `resultados/logs/varredura_rf12.md`.
+`grep -c "sk-" resultados/logs/execucoes.jsonl` (0 em 01/11) e a varredura do RF12,
+`python -m src.varredura_rf12`, que gera `resultados/logs/varredura_rf12.md`: aprovada em 01/11,
+sem pendências; as 3 chaves falsas dos testes aparecem à parte, como dado fictício.
 
 ## Como rodar
 
-`python -m pytest testes -q`: 556 testes, sem chamar a API nem baixar o modelo.
+`python -m pytest testes -q`: 567 testes, sem chamar a API nem baixar o modelo.
