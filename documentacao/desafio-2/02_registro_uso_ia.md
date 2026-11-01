@@ -120,9 +120,6 @@ resultado e varredura do RF12 aprovada.
 
 ## 3. Felipe Ferreira Aguiar
 
-> **Pendente:** Felipe completa com o trabalho de 31/10 (regra de escopo, teto único com os dois
-> nomes do módulo, T15 sem decisão gravada e Ficha como fluxo oficial).
-
 Desafio 2, parte de guardrails, interface, sentimentos e painel. O registro cobre o que foi feito com o agente do Cursor nesta sessão de 30/10/2026. O modelo da conversa é o Grok 4.7.
 
 ### Ferramentas
