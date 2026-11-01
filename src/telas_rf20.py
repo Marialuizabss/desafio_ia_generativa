@@ -16,7 +16,13 @@ try:
         MENSAGENS_ENCERRAMENTO,
         MENSAGEM_ORIENTACOES_SO_MATRICULA,
         MENSAGEM_SEM_FONTES,
+        AJUDA_TOP_K,
+        EXPLICACAO_DISTANCIA,
+        TOP_K_MAXIMO,
+        TOP_K_MINIMO,
+        TOP_K_PADRAO,
         classificar_consulta,
+        proximidade_da_fonte,
         aviso_de_espera,
         campos_para_corrigir,
         classificar_ficha,
@@ -47,7 +53,13 @@ except ImportError:
         MENSAGENS_ENCERRAMENTO,
         MENSAGEM_ORIENTACOES_SO_MATRICULA,
         MENSAGEM_SEM_FONTES,
+        AJUDA_TOP_K,
+        EXPLICACAO_DISTANCIA,
+        TOP_K_MAXIMO,
+        TOP_K_MINIMO,
+        TOP_K_PADRAO,
         classificar_consulta,
+        proximidade_da_fonte,
         aviso_de_espera,
         campos_para_corrigir,
         classificar_ficha,
@@ -445,6 +457,15 @@ def _tela_consulta() -> None:
     )
     st.caption(MENSAGEM_CONSULTA_FORA_DA_MINUTA)
     st.text_area("Pergunta", key="rf20_pergunta", height=120)
+    st.number_input(
+        "Trechos buscados (top-k)",
+        min_value=TOP_K_MINIMO,
+        max_value=TOP_K_MAXIMO,
+        value=TOP_K_PADRAO,
+        step=1,
+        key="rf20_top_k",
+        help=AJUDA_TOP_K,
+    )
     if st.button("Consultar o acervo", key="rf20_consultar"):
         with st.spinner(_texto_de_espera("Consultando o acervo...")):
             _executar_consulta()
@@ -475,12 +496,17 @@ def _tela_fontes() -> None:
         if classificacao.get("texto"):
             _mostrar_mensagem(classificacao)
         return
+    if classificacao.get("top_k"):
+        st.caption(f"Busca com top-k {classificacao['top_k']}. Abaixo, os trechos citados na resposta.")
+    st.caption(EXPLICACAO_DISTANCIA)
     for fonte in fontes:
         local = _local_da_fonte(fonte)
+        proximidade = proximidade_da_fonte(fonte)
         st.markdown(
             f"**{fonte.get('doc_id', 'documento')}** · {fonte.get('titulo', '')}\n\n"
             f"Versão: {fonte.get('versao') or 'não informada'} · {local}\n\n"
             f"Trecho `{fonte.get('chunk_id', '')}`"
+            + (f" · {proximidade}" if proximidade else "")
         )
         trecho = fonte.get("trecho_citado") or fonte.get("trecho") or ""
         if trecho:
@@ -532,15 +558,17 @@ def _executar_consulta() -> None:
         st.session_state["rf20_consulta_classificacao"] = _aviso_local("Informe a pergunta.")
         return
     resultado = None
+    top_k = int(st.session_state.get("rf20_top_k") or TOP_K_PADRAO)
     try:
         try:
             from rf19_complemento import responder_rf19
         except ImportError:
             from src.rf19_complemento import responder_rf19
-        resultado = responder_rf19(pergunta)
+        resultado = responder_rf19(pergunta, top_k=top_k)
         classificacao = classificar_consulta(resultado=resultado)
     except Exception as erro:
         classificacao = classificar_consulta(erro=erro)
+    classificacao["top_k"] = top_k
     st.session_state["rf20_consulta_resultado"] = resultado
     st.session_state["rf20_consulta_classificacao"] = classificacao
     if isinstance(resultado, dict) and resultado.get("id_consulta"):

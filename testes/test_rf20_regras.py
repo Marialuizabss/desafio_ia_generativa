@@ -140,6 +140,21 @@ class TestConsulta(unittest.TestCase):
         self.assertEqual(saida["estado"], "pendente")
         self.assertEqual(saida["resposta"], "As aulas começam em 21/07/2026.")
 
+    def test_proximidade_mostra_distancia_e_similaridade(self):
+        from src.consulta_acervo import EXPLICACAO_DISTANCIA, proximidade_da_fonte
+
+        self.assertEqual(
+            proximidade_da_fonte({"distancia": 0.2314}),
+            "Distância 0,231 · similaridade 0,769",
+        )
+        self.assertEqual(proximidade_da_fonte({"distancia": 0}), "Distância 0,000 · similaridade 1,000")
+        # Sem distância, ou com valor que não é número, a tela não inventa um.
+        for fonte in ({}, {"distancia": None}, {"distancia": "0.2"}, {"distancia": True}):
+            with self.subTest(fonte=fonte):
+                self.assertEqual(proximidade_da_fonte(fonte), "")
+        self.assertIn("quanto menor, mais parecido", EXPLICACAO_DISTANCIA)
+        self.assertIn("não garante", EXPLICACAO_DISTANCIA)
+
 
 class TestFicha(unittest.TestCase):
     def test_ausencia_vira_nao_localizado(self):

@@ -148,6 +148,40 @@ class TestTelasRF20(unittest.TestCase):
         fontes = self._abrir_fontes_na(tela)
         self.assertIn("ACV-01-p2-c1", _texto(fontes))
         self.assertIn("Início das aulas 21/07/2026", _texto(fontes))
+        # Fonte sem distância não ganha valor inventado.
+        self.assertNotIn("similaridade 0", _texto(fontes))
+
+    def test_consulta_usa_o_top_k_escolhido_e_fontes_mostram_distancia(self):
+        resultado = {
+            "status": "fundamentada",
+            "resposta": "As aulas começam em 21/07/2026.",
+            "decisao": "responder",
+            "justificativa": "Consta no edital.",
+            "fontes": [{
+                "doc_id": "ACV-01",
+                "titulo": "Edital",
+                "versao": "Original",
+                "pagina": 2,
+                "secao": None,
+                "chunk_id": "ACV-01-p2-c1",
+                "trecho_citado": "Início das aulas 21/07/2026",
+                "distancia": 0.2314,
+            }],
+            "id_consulta": "consulta-top-k",
+        }
+        with patch("src.rf19_complemento.responder_rf19", return_value=resultado) as responder:
+            tela = self._abrir()
+            self.assertEqual(tela.number_input(key="rf20_top_k").value, 15)
+            tela.text_area(key="rf20_pergunta").set_value("Quando começam as aulas?").run()
+            tela.number_input(key="rf20_top_k").set_value(5).run()
+            tela.button(key="rf20_consultar").click().run()
+        self.assertFalse(tela.exception)
+        self.assertEqual(responder.call_args.kwargs["top_k"], 5)
+        texto = _texto(self._abrir_fontes_na(tela))
+        self.assertIn("Busca com top-k 5", texto)
+        self.assertIn("Distância 0,231 · similaridade 0,769", texto)
+        self.assertIn("quanto menor, mais parecido", texto)
+        self.assertIn("não garante", texto)
 
     def test_acervo_permite_indexar_e_incluir(self):
         # Índice completo simulado: nada vem pré-marcado e o índice real não é aberto.
