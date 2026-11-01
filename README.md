@@ -28,14 +28,25 @@ atendimento e registra cada etapa para auditoria.
  Ficha                                                              Revisão
  ─────────────────────────────────────────────────────────────────  ─────────────────────────
  solicitação  →  guardrails  →  compreensão  →  orientações  →  minuta  →  servidor corrige,
- (texto)         segredo,       JSON validado,   3 consultas     com fontes  edita e aprova
-                 escopo,        resumo,          ao acervo       e aviso de  ou rejeita
+ (texto, áudio   segredo,       JSON validado,   3 consultas     com fontes  edita e aprova
+ ou imagem)      escopo,        resumo,          ao acervo       e aviso de  ou rejeita
                  tamanho        categoria e      (RAG) com       IA          (nada é enviado)
                                 entidades        citações
 
  Acervo: indexar, incluir, excluir e restaurar documentos   Consulta e Fontes: pergunta livre,
  Painel: sentimentos das avaliações, com denominador        top-k e distância de cada trecho
 ```
+
+**Menu da interface** (barra lateral):
+
+| Área | O que faz |
+|---|---|
+| **Ficha** | Atendimento oficial: recebe a solicitação por texto, áudio ou ficha digitalizada, mostra resumo, categoria e entidades, busca as orientações no acervo, monta a minuta e registra a decisão do servidor |
+| **Acervo** | Mostra os documentos e a situação do índice; indexa, inclui, exclui e restaura documentos |
+| **Consulta** | Pergunta livre ao acervo, com a escolha do top-k; não entra na minuta |
+| **Fontes** | Trechos citados na última consulta, com a distância de cada um |
+| **Painel** | Sentimentos das 12 avaliações: totais, frações, denominador e gráfico |
+| **Atendimento anterior** | O fluxo do Desafio 1, com o PDF, o áudio e a peça visual da minuta aprovada |
 
 Por trás: dados pessoais saem do texto antes do provedor; o conteúdo do cidadão e o do acervo são
 tratados como dado, nunca como instrução; cada análise, consulta, bloqueio e decisão é gravada em
@@ -51,7 +62,7 @@ tratados como dado, nunca como instrução; cada análise, consulta, bloqueio e 
 | RF17 | Índice ChromaDB persistente, sem duplicação; top-k e distância na tela | Relatório §2.4 · `src/vector_store.py` |
 | RF18 | Três configurações de chunking comparadas; 800/100 escolhida | Relatório §2.5 |
 | RF19 | RAG com citações, vigência das retificações, abstenção e conflito | Relatório §2.6 · `src/rf19_complemento.py` |
-| RF20 | Interface Streamlit com Ficha, Acervo, Consulta, Fontes e Painel | Relatório §2.7 · seção 7 abaixo |
+| RF20 | Interface Streamlit com Ficha (texto, áudio ou imagem), Acervo, Consulta, Fontes e Painel | Relatório §2.7 · seções 1 e 7 abaixo |
 | RF21 | Quatro configurações de geração com o mesmo índice; auditoria de cada consulta | Relatório §3 · `src/provider_adapter.py` |
 | RF22 | 12 avaliações classificadas; painel com totais e denominador | Relatório §2.8 · `src/sentimentos.py`, `src/painel.py` |
 | RF23 | Matriz T01–T15, métricas com numerador e denominador, regressão do Desafio 1 | Matriz · Relatório §4 |
@@ -63,7 +74,7 @@ tratados como dado, nunca como instrução; cada análise, consulta, bloqueio e 
 |---|---|---|---|
 | Linguagem | Python | 3.13 | Todo o sistema |
 | Interface | Streamlit | 1.66.0 | Telas e revisão humana |
-| IA | OpenAI Python SDK | 3.33.0 | Análise da solicitação (`gpt-5.6-luna`); RAG e sentimentos (`gpt-4o-mini`, configurável) |
+| IA | OpenAI Python SDK | 3.33.0 | Análise da solicitação (`gpt-5.6-luna`); RAG e sentimentos (`gpt-4o-mini`, configurável); transcrição (`gpt-4o-transcribe`) e leitura da ficha (`gpt-4o`), do Desafio 1 |
 | Validação | Pydantic | 2.14.1 | Contrato estrito (RF14) |
 | Índice vetorial | ChromaDB | 1.5.9 | Índice persistente do acervo (RF17) |
 | Embeddings | sentence-transformers e PyTorch (só CPU) | 6.2.0 / 2.15.0 | `paraphrase-multilingual-MiniLM-L12-v2`, local, sem API |
@@ -71,7 +82,7 @@ tratados como dado, nunca como instrução; cada análise, consulta, bloqueio e 
 | Configuração | python-dotenv, JSON | 1.2.4 | Chave no `.env`; o resto no `config.json` |
 | Testes | pytest e `streamlit.testing` (AppTest) | 9.2.0 | 567 testes, com a API simulada |
 
-O áudio, a visão e a imagem do Desafio 1 continuam no projeto (seção 13).
+A voz e a peça visual da minuta, do Desafio 1, continuam no Atendimento anterior (seção 13).
 
 ## 4. Instalação
 
@@ -128,36 +139,34 @@ comandos.
 python -m src.main
 ```
 
-O navegador abre em `http://localhost:8501`. A barra lateral tem as áreas:
+O navegador abre em `http://localhost:8501`, na Ficha. As áreas estão no menu da seção 1.
 
-| Área | O que faz |
-|---|---|
-| **Ficha** (padrão) | Fluxo oficial: analisa o texto, mostra a ficha e os alertas, busca as orientações no acervo (pedidos de matrícula), monta a minuta e registra a decisão. Na revisão, o servidor corrige campos e edita a minuta |
-| **Acervo** | Situação de cada documento no índice; indexar, incluir TXT ou PDF fictício, remover do índice, excluir e restaurar |
-| **Consulta** | Pergunta livre ao acervo, com top-k (padrão 15). Não entra na minuta |
-| **Fontes** | Trechos citados na última consulta, com distância e similaridade (quanto menor a distância, mais parecido; não é garantia de verdade) |
-| **Painel** | Sentimentos das 12 avaliações: totais, fração, denominador e gráfico, com filtros |
-| **Atendimento anterior** | O fluxo do Desafio 1 (texto, áudio e ficha digitalizada), com aviso de que não passa pela validação, pelo acervo nem pela moderação |
+Na Ficha, a solicitação pode ser digitada ou enviada como arquivo: áudio (`.mp3`, `.wav`, `.m4a`,
+`.ogg`, `.webm`), ficha digitalizada (`.png`, `.jpg`, `.jpeg`, `.webp` ou `.pdf`) ou `.txt`. "Ler o arquivo"
+confere tipo e tamanho, guarda a cópia em `dados/originais/`, transcreve ou lê com os modelos do
+Desafio 1 e põe o texto na caixa, para o servidor conferir antes de analisar. A ficha que veio de
+áudio ou imagem vai para revisão, com o pedido de conferir nome, protocolo e datas com o original.
 
-**Roteiro de demonstração** (a Ficha recebe texto digitado; cole o conteúdo dos arquivos de
-`dados/originais/`):
+**Roteiro de demonstração** (os arquivos estão em `dados/originais/`):
 
 1. **Ficha** com `caso8_solicitacao_coerente_acervo.txt` → Analisar → Buscar orientações no acervo →
    conferir a minuta com as fontes → Aprovar com nome e cargo. A minuta assinada vai para
    `resultados/minutas/rf20/`.
-2. **Ficha** com `caso3_solicitacao_prompt_injection.txt` → alerta vermelho (🚨) e caso em revisão.
-3. **Ficha** ou **Consulta** com `adv03_tentativa_segredo.txt` ou "Vocês vendem uniforme?" → bloqueado
+2. **Ficha** com o arquivo `entrada_audio.mp3` → Ler o arquivo → conferir a transcrição → Analisar:
+   a ficha vai para revisão, com o pedido de conferência.
+3. **Ficha** com `caso3_solicitacao_prompt_injection.txt` → alerta vermelho (🚨) e caso em revisão.
+4. **Ficha** ou **Consulta** com `adv03_tentativa_segredo.txt` ou "Vocês vendem uniforme?" → bloqueado
    (🚫) sem chamar o modelo.
-4. **Consulta** "Quando começam as aulas de Agropecuária em Mimoso?" → resposta fundamentada; em
+5. **Consulta** "Quando começam as aulas de Agropecuária em Mimoso?" → resposta fundamentada; em
    **Fontes**, o trecho do ACV-07 com a distância.
-5. **Acervo**: excluir o ACV-09 com motivo → consultar a pesquisa socioeconômica → restaurar.
-6. **Painel**: filtrar por canal e ver "sem dados" num filtro vazio.
+6. **Acervo**: excluir o ACV-09 com motivo → consultar a pesquisa socioeconômica → restaurar.
+7. **Painel**: canal "whatsapp" mostra "sem dados"; o conjunto "Com duplicata" conta a repetida uma vez.
 
 ## 8. Testes e avaliações
 
 | O quê | Comando | Chama a API? |
 |---|---|---|
-| Todos os testes (567) | `python -m pytest testes -q` | Não |
+| Todos os testes (581) | `python -m pytest testes -q` | Não |
 | Varredura de credenciais e dados pessoais (RF12) | `python -m src.varredura_rf12` | Não |
 | JSON sintático × esquema (T01) | `python -m src.experimento_rf14` | Não |
 | Ficha: 7 solicitações (RF15) | `python -m src.avaliacao_rf15 --todos` (ou `--simulado`) | Sim, cerca de US$ 0,007 (simulado: não) |
@@ -186,6 +195,7 @@ desafio_ia_generativa/
 ├── prompts/desafio2/        extração v2 e v2.1, sentimento v1
 ├── src/
 │   ├── main.py, interface.py, telas_rf20.py         interface (RF20)
+│   ├── entrada_ficha.py                             áudio, imagem ou TXT na Ficha
 │   ├── consulta_acervo.py, acervo_operacao.py       regras das telas, inclusão e indexação
 │   ├── schemas.py, nlp.py                           contrato, validação e ficha (RF14, RF15)
 │   ├── guardrails.py, privacidade.py                moderação, limites e minimização (RF16)
@@ -210,8 +220,9 @@ desafio_ia_generativa/
 
 As principais; a lista completa está na seção 8 do relatório.
 
-- **A Ficha recebe só texto.** Áudio e imagem entram pelo Atendimento anterior, do Desafio 1, que não
-  passa pela validação do RF14, pelo acervo nem pela moderação.
+- **Áudio e imagem:** a transcrição e a leitura erram nomes, números e datas, por isso a ficha que
+  vem delas vai para revisão. O arquivo vai inteiro para o provedor; só o texto é minimizado. Essas
+  duas chamadas ficam fora do teto de chamadas por atendimento.
 - **Completude do RAG:** com o `gpt-4o-mini`, P01 e P02 omitem condições do edital (completas em 10/15
   respostas). Nada é inventado: as 15 respostas fundamentadas têm as afirmações sustentadas.
 - **Falsos conflitos:** pergunta sem o curso, quando uma retificação muda só alguns cursos, vira
@@ -263,7 +274,7 @@ No Desafio 1, a central recebia uma solicitação por texto, áudio ou ficha dig
 campos, montava a minuta no modelo institucional e, depois da aprovação do servidor, gerava o PDF, a
 versão em áudio e uma peça visual de orientação (RF01 a RF13). A avaliação dos 7 casos aprovou 86%,
 e 100% depois da correção pelo servidor. Esse fluxo continua disponível na área "Atendimento
-anterior".
+anterior", e a transcrição e a leitura dele agora também alimentam a Ficha.
 
 Requisitos, decisões, custos e limitações do Desafio 1:
 [`documentacao/desafio-1/00_indice.md`](documentacao/desafio-1/00_indice.md).

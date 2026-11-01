@@ -19,7 +19,7 @@ enviado automaticamente.
 
 Dos 15 testes do enunciado, 10 estão atendidos e 5 atendidos com ressalva; nenhum ficou parcial.
 Categoria 7/7, Acerto@10 5/5, respostas sustentadas 15/15, abstenção 6/6, conflito 3/3 e sentimentos
-10/12. A suíte automática tem 567 testes, sem chamar a API.
+10/12. A suíte automática tem 581 testes, sem chamar a API.
 
 ## 2. Arquitetura
 
@@ -27,7 +27,7 @@ Categoria 7/7, Acerto@10 5/5, respostas sustentadas 15/15, abstenção 6/6, conf
 
 | Etapa (seção 9 do enunciado) | O que faz | Código |
 |---|---|---|
-| Entrada e proteção | Minimiza dados pessoais, delimita o texto, aplica tipo, tamanho, moderação e teto de chamadas | `src/privacidade.py`, `src/guardrails.py` |
+| Entrada e proteção | Recebe texto, áudio ou imagem (o arquivo vira texto pela transcrição ou leitura do Desafio 1); minimiza dados pessoais, delimita o texto, aplica tipo, tamanho, moderação e teto de chamadas | `src/entrada_ficha.py`, `src/privacidade.py`, `src/guardrails.py` |
 | Compreensão | Uma chamada devolve o contrato (RF14) e a ficha (RF15); JSON, esquema e regras de negócio validam | `src/schemas.py`, `src/nlp.py` |
 | Indexação | Extrai, divide e grava o acervo num ChromaDB local; confere catálogo × índice | `src/ingestion.py`, `src/vector_store.py`, `src/indexar.py` |
 | Recuperação e geração | Busca top-k, retira instrução embutida, aplica vigência e gera resposta ou abstenção | `src/rf19_complemento.py`, `src/vigencia.py`, `src/provider_adapter.py` |
@@ -66,7 +66,8 @@ Regras em `src/guardrails.py`, sem chamada extra ao modelo, na análise da solic
 
 Segredo ganha da injeção, e a injeção ganha do escopo. O teto é por atendimento: análise e cada
 sentimento, 2 chamadas e 8 000 tokens; RAG, 3 chamadas e 60 000 tokens (geração, correção de vigência
-e segunda leitura). A repetição de rede é uma. O texto do acervo é dado, não ordem: o trecho com
+e segunda leitura). A repetição de rede é uma, também na transcrição e na leitura da ficha. O texto
+do acervo é dado, não ordem: o trecho com
 instrução ao assistente sai do contexto e vira alerta (ADV-02). Cada bloqueio grava o código do
 motivo, a origem e o hash do conteúdo, sem o trecho.
 
@@ -146,9 +147,13 @@ gerais; o status correto foi de 4/8 no código inicial a 8/8 nas três rodadas d
 
 A barra lateral abre Ficha, Acervo, Consulta, Fontes, Painel e Atendimento anterior.
 
-- **Ficha** (área padrão e fluxo oficial): modera, valida e mostra a ficha com "não localizado";
-  busca as orientações no acervo; monta a minuta com o aviso de participação da IA. Na revisão, o
-  servidor corrige campos (data impossível ou incoerente continua bloqueando; dado que não está no
+- **Ficha** (área padrão e fluxo oficial): recebe a solicitação digitada ou um arquivo de áudio,
+  imagem ou PDF da ficha ou TXT. O arquivo passa pelo guardrail de tipo e tamanho, ganha cópia em
+  `dados/originais/` e é transcrito ou lido com as funções do Desafio 1; o texto volta à caixa para o
+  servidor conferir, e a ficha que veio de áudio ou imagem vai para revisão com o pedido de conferir
+  nome, protocolo e datas. Daí em diante, o caminho é o mesmo: modera, valida e mostra a ficha com
+  "não localizado"; busca as orientações no acervo; monta a minuta com o aviso de participação da
+  IA. Na revisão, o servidor corrige campos (data impossível ou incoerente continua bloqueando; dado que não está no
   texto fica como "informado pelo servidor") e edita a minuta. Orientação sem evidência ou em conflito
   deixa um recado na minuta, e a aprovação só sai depois que o servidor reescreve a seção.
 - **Acervo:** catálogo e situação do índice, indexação dos selecionados, inclusão de TXT ou PDF
@@ -162,8 +167,9 @@ A barra lateral abre Ficha, Acervo, Consulta, Fontes, Painel e Atendimento anter
 - Alerta de segurança aparece em vermelho (🚨), entrada bloqueada com 🚫, e falha do serviço ou
   índice desatualizado em português, sem resposta.
 
-O "Atendimento anterior" é o fluxo do Desafio 1, com áudio e imagem. Ele avisa que não valida a
-ficha, não consulta o acervo e não modera o texto, e oferece abrir a Ficha.
+O "Atendimento anterior" é o fluxo do Desafio 1, com o PDF, o áudio e a peça visual da minuta
+aprovada, que o enunciado dispensa refazer. Ele avisa que não valida a ficha, não consulta o acervo
+e não modera o texto, e oferece abrir a Ficha.
 
 ### 2.8 Sentimentos e painel (RF22)
 
@@ -255,6 +261,7 @@ painel rodam na máquina, sem custo de API.
 | RAG, 8 perguntas, uma rodada, `gpt-4o-mini` | US$ 0,0118 a 0,0128 (71 mil a 77 mil tokens) | cerca de 5 s por consulta |
 | RAG, mesma carga, `gpt-5.6-luna` | US$ 0,0215 a 0,0224 (cerca de 80 mil tokens) | — |
 | RF22, 12 avaliações, `gpt-4o-mini` | US$ 0,0017 | — |
+| Transcrição ou leitura de um arquivo na Ficha (`gpt-4o-transcribe` ou `gpt-4o`) | não registrado pelo sistema | 4,3 s para 89 s de áudio, medido no Desafio 1 |
 | Uma consulta na interface (01/11) | US$ 0,0019 (11 mil tokens) | 16,3 s; a recuperação levou 8,8 s porque a primeira consulta carrega o modelo de embeddings (nas seguintes, cerca de 0,02 s) |
 
 O modelo forte custa cerca de 1,75 vez mais por rodada. A configuração simulada não tem tokens nem
@@ -314,6 +321,7 @@ as decisões finais não são reescritas.
 | Sem regra de escopo | Verificação contra o enunciado | Bloqueio de pedido fora do atendimento |
 | Script do T15 gravava decisão em nome de um integrante | Verificação contra o enunciado | O script não grava decisão; a correção ficou anotada, sem reescrever o log |
 | Varredura acusava as chaves falsas dos testes; um teste tinha CPF de dígito válido | Varredura do RF12 | Chaves de teste listadas à parte; CPF trocado por fictício |
+| Áudio e imagem não alimentavam o fluxo do Desafio 2 (seção 1 do enunciado) | Verificação contra o enunciado | A Ficha aceita o arquivo, transcreve ou lê e manda para conferência; a transcrição da Ficha vai para `dados/processados/ficha/`, sem sobrescrever a evidência do T15; transcrição e leitura passaram de duas repetições para uma |
 
 ## 8. Limitações e riscos residuais
 
@@ -342,8 +350,9 @@ as decisões finais não são reescritas.
 
 **Interface, sentimentos e regressão**
 
-- A Ficha recebe só texto. Áudio e imagem entram pelo Atendimento anterior (Desafio 1), sem validação
-  do RF14, sem acervo e sem moderação.
+- A transcrição e a leitura erram nomes, números e datas: a ficha que vem delas vai para revisão. O
+  arquivo vai inteiro para o provedor (só o texto é minimizado), e essas duas chamadas ficam fora do
+  teto por atendimento.
 - Documento incluído pela interface altera o catálogo; enquanto estiver nele, reindexar o traz de volta.
 - O gráfico do painel é HTML: o `st.bar_chart` desta instalação quebra no Python 3.14.
 - A situação do sentimento é proposta pelo modelo (AV09 e AV10); a confiança não é calibrada; são 12
