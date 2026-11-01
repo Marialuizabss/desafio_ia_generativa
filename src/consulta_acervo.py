@@ -38,6 +38,19 @@ MENSAGEM_CONSULTA_FORA_DA_MINUTA = (
     'Esta consulta não entra na minuta. Para a minuta, use "Buscar orientações no acervo" '
     "na Ficha."
 )
+# RF17: quantos trechos a busca traz. O padrão é o da avaliação do RAG.
+TOP_K_PADRAO = 15
+TOP_K_MINIMO = 1
+TOP_K_MAXIMO = 30
+AJUDA_TOP_K = (
+    "Quantos trechos do acervo a busca traz antes de o modelo responder. "
+    "Mais trechos dão mais contexto e também mais ruído."
+)
+EXPLICACAO_DISTANCIA = (
+    "Distância cosseno entre a pergunta e o trecho: quanto menor, mais parecido. "
+    "A similaridade é 1 − distância. Ela mede só a semelhança do texto e não garante "
+    "que a informação está certa ou vigente."
+)
 MOTIVO_SEM_ORIENTACOES = (
     "Sem orientações do acervo para esta categoria: o servidor completa a minuta."
 )
@@ -229,6 +242,15 @@ def pendentes_de_remover(conferencia: dict | None) -> list[dict]:
         for item in (conferencia or {}).get("pendencias", [])
         if item["situacao"] in SITUACOES_A_REMOVER
     ]
+
+
+def proximidade_da_fonte(fonte: dict) -> str:
+    """Distância e similaridade do trecho (RF17), ou vazio quando a fonte não as traz."""
+    distancia = fonte.get("distancia")
+    if isinstance(distancia, bool) or not isinstance(distancia, (int, float)):
+        return ""
+    texto = f"Distância {distancia:.3f} · similaridade {1 - distancia:.3f}"
+    return texto.replace(".", ",")
 
 
 def classificar_consulta(resultado: dict | None = None, erro: BaseException | None = None) -> dict:
