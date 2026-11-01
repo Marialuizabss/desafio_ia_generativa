@@ -277,7 +277,7 @@ def test_alerta_de_instrucao_em_documento_fica_no_registro_sem_o_texto(monkeypat
 def test_log_mascara_identificadores_e_nao_tem_credenciais(monkeypatch):
     monkeypatch.setenv("OPENAI_API_KEY", CHAVE_FALSA)
     _preparar_fixtures(monkeypatch, ["ACV-06-p2-s1-c1"], [RESPOSTA_FUNDAMENTADA])
-    pergunta = ("Meu CPF é 529.982.247-25, e-mail ana@exemplo.com, protocolo 2026-000201. "
+    pergunta = ("Meu CPF é 123.456.789-00, e-mail ana@exemplo.com, protocolo 2026-000201. "
                 "Qual o período da efetivação?")
 
     rf19.responder_rf19(pergunta)
@@ -285,7 +285,7 @@ def test_log_mascara_identificadores_e_nao_tem_credenciais(monkeypatch):
     registro = audit.ARQUIVO_REGISTRO.read_text(encoding="utf-8")
     evento = _consultas(audit.ARQUIVO_REGISTRO)[0]
 
-    for sensivel in ("529.982.247-25", "ana@exemplo.com", "2026-000201", CHAVE_FALSA):
+    for sensivel in ("123.456.789-00", "ana@exemplo.com", "2026-000201", CHAVE_FALSA):
         assert sensivel not in registro
 
     assert "[CPF REMOVIDO]" in evento["pergunta"]
