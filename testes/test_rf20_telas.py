@@ -188,6 +188,26 @@ class TestTelasRF20(unittest.TestCase):
         self.assertFalse(tela.exception)
         self.assertIn("sem dados", _texto(tela))
 
+    def test_ficha_e_o_fluxo_oficial_e_o_atendimento_avisa(self):
+        tela = AppTest.from_string(
+            "from src.interface import renderizar\nrenderizar()\n",
+            default_timeout=20,
+        )
+        tela.run()
+        self.assertFalse(tela.exception)
+        self.assertEqual(tela.sidebar.radio(key="rf20_area").value, "ficha")
+        self.assertIn("Fluxo oficial do atendimento", _texto(tela))
+
+        tela.sidebar.radio(key="rf20_area").set_value("atendimento").run()
+        self.assertFalse(tela.exception)
+        self.assertIn("Este caminho é o do Desafio 1", _texto(tela))
+        self.assertIn("Modelo e idioma", _texto(tela))
+
+        tela.button(key="abrir_ficha").click().run()
+        self.assertFalse(tela.exception)
+        self.assertEqual(tela.sidebar.radio(key="rf20_area").value, "ficha")
+        self.assertIn("Compreensão da solicitação", _texto(tela))
+
     def test_ficha_mostra_minuta_sem_inventar_acervo(self):
         from src.nlp import Analise
         from src.schemas import ResultadoValidacao

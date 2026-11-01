@@ -88,6 +88,7 @@ class TestDecisaoInterface(unittest.TestCase):
             default_timeout=15,
         )
         tela.run()
+        tela.sidebar.radio(key="rf20_area").set_value("atendimento").run()
         tela.button(key="prosseguir").click().run()
         tela.text_area(key="rascunho_texto").set_value("Pedido de matrícula.").run()
         tela.button(key="prosseguir").click().run()

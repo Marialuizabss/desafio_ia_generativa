@@ -829,7 +829,7 @@ def _renderizar_rf20() -> None:
         from src.telas_rf20 import renderizar_area
     with st.container(key="folha"):
         st.markdown('<p class="marca">Central de atendimento</p>', unsafe_allow_html=True)
-        renderizar_area(st.session_state.get("rf20_area") or "acervo")
+        renderizar_area(st.session_state.get("rf20_area") or "ficha")
     _mostrar_avisos()
 
 
@@ -845,12 +845,17 @@ def renderizar() -> None:
     if _area_rf20() != "atendimento":
         _renderizar_rf20()
         return
+    try:
+        from telas_rf20 import sinalizar_atendimento_anterior
+    except ImportError:
+        from src.telas_rf20 import sinalizar_atendimento_anterior
     _ajustar_etapa()
     animacao = st.session_state.animacao
     st.session_state.animacao = ""
 
     with st.container(key="folha"):
         st.markdown('<p class="marca">Central de atendimento</p>', unsafe_allow_html=True)
+        sinalizar_atendimento_anterior()
         _passos()
         with st.container(key=f"palco_{animacao}" if animacao else "palco"):
             _titulo_da_etapa()

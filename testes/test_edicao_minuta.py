@@ -211,6 +211,7 @@ class TestInterfaceEdicao(unittest.TestCase):
                     default_timeout=15,
                 )
                 tela.run()
+                tela.sidebar.radio(key="rf20_area").set_value("atendimento").run()
                 self.assertFalse(tela.exception)
                 self.assertIn("Modelo e idioma", _texto(tela))
                 tela.button(key="prosseguir").click().run()

@@ -71,13 +71,20 @@ except ImportError:
     )
 
 
+# A Ficha é o fluxo oficial. "atendimento" permanece o caminho do Desafio 1.
 AREAS = (
-    ("atendimento", "Atendimento"),
-    ("acervo", "Acervo"),
     ("ficha", "Ficha"),
+    ("acervo", "Acervo"),
     ("consulta", "Consulta"),
     ("fontes", "Fontes"),
     ("painel", "Painel"),
+    ("atendimento", "Atendimento anterior"),
+)
+
+AVISO_ATENDIMENTO_ANTERIOR = (
+    "Este caminho é o do Desafio 1. Ele confere extensão e tamanho do arquivo, "
+    "mas não valida a ficha, não consulta o acervo e não modera o texto. "
+    "O fluxo oficial é a Ficha."
 )
 
 # O que uma solicitação nova descarta: orientações, consulta, identificadores e estado.
@@ -119,8 +126,22 @@ ROTULOS_TIPO = {
 }
 
 
+def abrir_ficha() -> None:
+    """Leva a sessão para o fluxo oficial."""
+    st.session_state["rf20_area"] = "ficha"
+
+
+def sinalizar_atendimento_anterior() -> None:
+    """Explica que a área aberta não é o fluxo oficial e oferece a Ficha."""
+    st.markdown(
+        f'<p class="aviso">{AVISO_ATENDIMENTO_ANTERIOR}</p>',
+        unsafe_allow_html=True,
+    )
+    st.button("Abrir a Ficha", key="abrir_ficha", on_click=abrir_ficha)
+
+
 def seletor() -> str:
-    """Área da barra lateral. O padrão continua sendo o atendimento do Desafio 1."""
+    """Área da barra lateral. A primeira opção, a Ficha, é o fluxo oficial."""
     rotulos = dict(AREAS)
     return st.sidebar.radio(
         "Área",
@@ -393,7 +414,7 @@ def _tela_ficha() -> None:
         <header class="topo">
           <p class="selo">Ficha</p>
           <h1>Compreensão da solicitação</h1>
-          <p class="apoio">Ausência aparece como "não localizado". A análise só roda ao pedir.</p>
+          <p class="apoio">Fluxo oficial do atendimento. Ausência aparece como "não localizado". A análise só roda ao pedir.</p>
         </header>
         """,
         unsafe_allow_html=True,
