@@ -28,7 +28,7 @@ abaixo); *Parcial* (parte do cenário sem implementação ou sem evidência).
 | T12 | RF21 | A mesma pergunta nas configurações principal, alternativa e forte; serviço indisponível | Índice preservado; falha tratada e auditada | As três configurações usam a mesma versão do índice, sem reconstruir. Falha do provedor: abstenção com o motivo, sem resposta inventada, registrada no log. Falha interna (consultas simultâneas): mensagem em português | **Real:** troca de configuração, seção 3 do relatório. **Teste** (falha simulada): `testes/test_rf21_auditoria.py`, `testes/test_consulta_concorrente.py` | Atendido |
 | T13 | RF22 | 12 avaliações; conjunto com duplicata; filtro sem correspondência | Totais corretos, denominador visível e sem divisão por zero | Denominador 12: positiva 3/12, negativa 3/12, neutra 2/12 e indeterminada 4/12; polaridade 10/12. Duplicata conta uma vez; filtro vazio mostra "sem dados" | **Real:** `resultados/metricas/rf22/execucao_20261030_181951/painel_rf22.md`. **Teste:** `testes/test_gabarito_avaliacoes.py`, `testes/test_rf20_telas.py` | Atendido com ressalva |
 | T14 | RF24 | ACV-09 (o comunicado com a instrução do ADV-02) | Trechos removidos da busca e exclusão registrada | 105 → 100 trechos, e o ACV-09 some da busca. Exclusão registrada com data, motivo e responsável em `dados/acervo/exclusoes.json` e no log; derivados listados; reindexar não traz de volta; a restauração devolve os 5 trechos | **Real:** seção 6 do relatório (terminal, 30/10) e log de 31/10 (tela: exclusão às 17:03, consulta às 17:05, restauração às 17:07). **Teste:** `testes/test_rf17_indice.py`, `testes/test_exclusao_duravel.py` | Atendido |
-| T15 | RF23 | CASO-04 (texto) e CASO-05 (áudio já transcrito no Desafio 1) | Entradas anteriores seguem até minuta e revisão | As duas viraram minuta e ficam encaminhadas à revisão; 0 envios. O script não grava decisão humana. O CASO-05 declara a pendência "noturno noturno" | **Real:** `resultados/metricas/t15/execucao_20261030_182022/`. **Teste:** `testes/test_regressao_t15.py` | Atendido com ressalva |
+| T15 | RF23 | CASO-04 (texto), CASO-05 (áudio) e CASO-06 (ficha manuscrita), do Desafio 1 | Entradas anteriores seguem até minuta e revisão | Pela Ficha, os três arquivos originais chegaram à minuta e à decisão humana: o áudio foi aprovado depois da conferência, com o início "não localizado", como no gabarito; o texto e a ficha foram para revisão com justificativa. 0 envios. A regressão por script de 30/10 fica como histórico | **Real** (Ficha, 01/11): `c98007f4` (áudio, aprovada), `f0b11f61` (texto, revisar) e `fcfec5b0` (imagem, revisar), com modalidade e arquivo de origem no log; minuta aprovada em `resultados/minutas/rf20/`. Script: `resultados/metricas/t15/execucao_20261030_182022/`. **Teste:** `testes/test_regressao_t15.py`, `testes/test_entrada_ficha.py` | Atendido |
 
 ## Métricas do RF23
 
@@ -77,11 +77,13 @@ A conferência é automática e por padrões; ela não lê o sentido de cada fra
 - **T13.** A contagem das 12 avaliações vem da classificação real de 30/10. A duplicata e o filtro
   sem correspondência só têm evidência por teste automático.
 - **T15.** As linhas de decisão de 30/10 (`c69ef219` e `12db2152`) foram gravadas pelo script,
-  em nome de um integrante, sem operador. Não são decisão humana; o script deixou de gravá-las.
-  A minuta do CASO-05 continua com "Turno: noturno noturno" e início "não localizado", declarados
-  como pendência em `CASO-05.json`. A repetição vem da transcrição do Desafio 1, reaproveitada como
-  o enunciado pede, e já constava das limitações dele. A revisão humana ainda não foi feita; ela
-  pode ser feita pela Ficha, que agora recebe o áudio.
+  em nome de um integrante, sem operador. Não são decisão humana; o script deixou de gravá-las. A
+  revisão humana foi feita pela Ficha em 01/11 (acima), e a transcrição nova não repetiu "noturno".
+  Antes de a execução gravar a origem, um primeiro teste aprovou o áudio com uma data de início
+  digitada pela servidora, que não está no áudio (`d19ca1ee`); fica como histórico. A leitura da
+  ficha manuscrita varia: às 11:17 leu a data da solicitação como 17/01/2026, e a regra barrou
+  (`58bae337`); às 11:35 errou o início do curso, e a servidora pediu revisão (`fcfec5b0`). O pedido
+  de revisão do texto ficou gravado três vezes, por cliques repetidos: a tela não confirma o pedido.
 
 ## Conferência humana de P01 e P02 (T08)
 

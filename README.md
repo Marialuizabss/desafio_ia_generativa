@@ -232,7 +232,6 @@ As principais; a lista completa está na seção 8 do relatório.
 - **Embeddings truncados em 128 tokens**, PDF lido sem OCR e busca só semântica.
 - **Sentimentos:** a situação é proposta pelo modelo (AV09 e AV10 erradas) e a confiança não é
   calibrada.
-- **T15:** os dois casos do Desafio 1 chegaram à minuta, mas a revisão humana deles não foi feita.
 - **Avaliações pequenas** (7 solicitações, 8 perguntas, 12 avaliações, uma revisora) e **custos
   estimados** pela tabela de preços, não pela fatura.
 

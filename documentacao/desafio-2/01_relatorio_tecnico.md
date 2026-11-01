@@ -17,7 +17,7 @@ segredo, pedido fora do atendimento e arquivo fora do tipo ou do tamanho; instru
 usuário segue com alerta. O servidor corrige a ficha, edita e aprova ou rejeita a minuta. Nada é
 enviado automaticamente.
 
-Dos 15 testes do enunciado, 10 estão atendidos e 5 atendidos com ressalva; nenhum ficou parcial.
+Dos 15 testes do enunciado, 11 estão atendidos e 4 atendidos com ressalva; nenhum ficou parcial.
 Categoria 7/7, Acerto@10 5/5, respostas sustentadas 15/15, abstenção 6/6, conflito 3/3 e sentimentos
 10/12. A suíte automática tem 582 testes, sem chamar a API.
 
@@ -228,7 +228,7 @@ Numerador e denominador de cada métrica; o detalhe está na matriz.
 | Abstenção correta (P06 e P07) | 6/6 | T09 |
 | Caso contraditório (P08), em conflito e revisão | 3/3 | T10 |
 | Polaridade dos sentimentos | 10/12 | T13 |
-| Regressão: casos do Desafio 1 que chegaram à minuta | 2/2, 0 enviados | T15 |
+| Regressão: casos do Desafio 1 que chegaram à minuta e à decisão humana, pela Ficha | 3/3 (texto, áudio e imagem), 0 enviados | T15 |
 
 **Afirmação sustentada** é a resposta fundamentada que cita trecho existente na fonte, cita o
 documento e a página de referência e não traz valor proibido (a data substituída por retificação, em
@@ -321,7 +321,8 @@ as decisões finais não são reescritas.
 | Minutas aprovadas com recado para o servidor | Revisão das minutas salvas | Aprovação exige reescrever a seção Orientações |
 | Teto de chamadas inativo na Ficha (módulo carregado com dois nomes) | Verificação contra o enunciado | Um módulo só para os dois nomes, com teste |
 | Sem regra de escopo | Verificação contra o enunciado | Bloqueio de pedido fora do atendimento |
-| Script do T15 gravava decisão em nome de um integrante | Verificação contra o enunciado | O script não grava decisão; a correção ficou anotada, sem reescrever o log |
+| Script do T15 gravava decisão em nome de um integrante | Verificação contra o enunciado | O script não grava decisão; a correção ficou anotada, sem reescrever o log. A revisão humana foi feita pela Ficha |
+| Execução da Ficha não dizia se o texto veio de áudio ou imagem | Teste real pela interface | A execução grava a modalidade e o arquivo de origem |
 | Varredura acusava as chaves falsas dos testes; um teste tinha CPF de dígito válido | Varredura do RF12 | Chaves de teste listadas à parte; CPF trocado por fictício |
 | Áudio e imagem não alimentavam o fluxo do Desafio 2 (seção 1 do enunciado) | Verificação contra o enunciado | A Ficha aceita o arquivo, transcreve ou lê e manda para conferência; a transcrição da Ficha vai para `dados/processados/ficha/`, sem sobrescrever a evidência do T15; transcrição e leitura passaram de duas repetições para uma |
 
@@ -359,8 +360,9 @@ as decisões finais não são reescritas.
 - O gráfico do painel é HTML: o `st.bar_chart` desta instalação quebra no Python 3.14.
 - A situação do sentimento é proposta pelo modelo (AV09 e AV10); a confiança não é calibrada; são 12
   avaliações fictícias.
-- T15: a revisão humana dos dois casos não foi feita. A minuta do CASO-05 repete "noturno noturno",
-  erro da transcrição do Desafio 1 reaproveitada.
+- A leitura da ficha manuscrita varia entre execuções: numa errou a data da solicitação (a regra
+  barrou), noutra o início do curso, que só a conferência humana pegou.
+- A tela não confirma o "Pedir revisão"; cliques repetidos gravam o mesmo pedido mais de uma vez.
 
 **Provedor, custos e testes**
 
