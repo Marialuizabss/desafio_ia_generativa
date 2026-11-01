@@ -10,5 +10,10 @@
   ],
   "justificativa_revisao": "Regressão T15: a minuta foi montada com os fatos da solicitação. Documento, prazo e local não foram preenchidos porque esta passagem não consultou o acervo. O caso segue para revisão e nada é enviado.",
   "enviada": false,
-  "id_execucao": "12db2152-fb87-4a8f-a148-9edd75f3f3b5"
+  "id_execucao": "12db2152-fb87-4a8f-a148-9edd75f3f3b5",
+  "decisao_humana": null,
+  "pendencias": [
+    "Pendente: a transcrição reaproveitada do CASO-05 repete o turno ('noturno noturno'). A minuta reproduz essa duplicidade. O início do curso sai como 'não localizado'. A revisão humana ainda não foi feita."
+  ],
+  "correcao": "Anotado em 31/10/2026: a linha de decisão no log desta execução (revisor Felipe Ferreira Aguiar, cargo Regressão T15) foi gravada pelo script, sem operador. Não é decisão humana."
 }

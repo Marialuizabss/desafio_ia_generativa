@@ -2,19 +2,33 @@
 
 A decisão é por regras, sem chamada extra ao modelo. Segredo bloqueia antes
 da API. Instrução na fala do usuário segue para revisão e o atendimento
-continua. O texto do acervo não é ordem: os padrões daqui são os que o RAG
-usa para tirar o trecho do contexto.
+continua. Pedido fora do atendimento da secretaria (venda de uniforme, por
+exemplo) bloqueia antes da API. O texto do acervo não é ordem: os padrões
+daqui são os que o RAG usa para tirar o trecho do contexto.
 
 O teto vale só enquanto ``com_orcamento`` está aberto (análise da solicitação
-e geração do RAG). Fora dele, a chamada não é contada.
+e geração do RAG). Fora dele, a chamada não é contada. O contador é um só,
+mesmo quando o Streamlit carrega este arquivo pelos dois nomes
+``guardrails`` e ``src.guardrails``.
 """
 
 import hashlib
 import re
+import sys
 import unicodedata
 from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass
+
+# O Streamlit põe src/ no path. O arquivo entra então como `guardrails` na Ficha
+# e como `src.guardrails` na chamada ao modelo. Sem este vínculo, cada nome tem
+# o próprio ContextVar e o teto aberto num não vale no outro.
+_este = sys.modules[__name__]
+_outro_nome = {"guardrails": "src.guardrails", "src.guardrails": "guardrails"}.get(__name__)
+if _outro_nome is not None and sys.modules.get(_outro_nome) is None:
+    sys.modules[_outro_nome] = _este
+    if _outro_nome == "src.guardrails" and "src" in sys.modules:
+        sys.modules["src"].guardrails = _este
 
 from src.audit import registrar_evento
 from src.configuracao import CONFIG
@@ -32,6 +46,7 @@ MOTIVO_TAMANHO = "tamanho_excedido"
 MOTIVO_TEXTO_LONGO = "texto_longo"
 MOTIVO_SEGREDO = "pedido_segredo"
 MOTIVO_INJECAO = "instrucao_na_entrada"
+MOTIVO_ESCOPO = "fora_de_escopo"
 MOTIVO_SAIDA = "saida_com_segredo"
 MOTIVO_TETO_CHAMADAS = "teto_chamadas"
 MOTIVO_TETO_TOKENS = "teto_tokens"
@@ -59,6 +74,15 @@ _PADROES_SEGREDO = {
     "arquivo_env": re.compile(r"arquivo\s+\.env|(?<![\w.])\.env\b"),
     "chave_api": re.compile(r"openai_api_key|chave (da |de )?api"),
     "variaveis_ambiente": re.compile(r"variaveis de ambiente"),
+}
+
+# Fora do atendimento da secretaria (matrícula, documento escolar, frequência,
+# curso e reclamação do serviço). O exemplo do contrato é a venda de uniforme.
+_PADROES_FORA_DE_ESCOPO = {
+    "venda_de_uniforme": re.compile(
+        r"\b(vende[rsm]?|vendem|comercializ\w*|quanto custa|preco)\b.{0,40}\buniformes?\b"
+        r"|\buniformes?\b.{0,40}\b(a venda|preco|quanto custa)\b"
+    ),
 }
 
 _PADROES_INJECAO_USUARIO = {
@@ -129,8 +153,8 @@ def instrucoes_no_documento(texto: str) -> list[str]:
 def avaliar_entrada(texto, origem: str) -> DecisaoGuardrail:
     """Classifica o texto do usuário: permitir, bloquear ou revisar.
 
-    Segredo ganha da injeção. ``origem`` é ``analise`` ou ``rag`` e só
-    identifica o fluxo; a regra é a mesma nos dois.
+    Segredo ganha da injeção, e a injeção ganha do escopo. ``origem`` é
+    ``analise`` ou ``rag`` e só identifica o fluxo; a regra é a mesma nos dois.
     """
 
     if origem not in (ORIGEM_ANALISE, ORIGEM_RAG):
@@ -147,6 +171,8 @@ def avaliar_entrada(texto, origem: str) -> DecisaoGuardrail:
         return DecisaoGuardrail(BLOQUEAR, (MOTIVO_SEGREDO,), True)
     if any(padrao.search(normalizado) for padrao in _PADROES_INJECAO_USUARIO.values()):
         return DecisaoGuardrail(REVISAR, (MOTIVO_INJECAO,), True)
+    if any(padrao.search(normalizado) for padrao in _PADROES_FORA_DE_ESCOPO.values()):
+        return DecisaoGuardrail(BLOQUEAR, (MOTIVO_ESCOPO,), True)
     return DecisaoGuardrail(PERMITIR)
 
 

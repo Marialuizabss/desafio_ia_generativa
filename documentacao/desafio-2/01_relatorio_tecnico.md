@@ -491,18 +491,19 @@ A moderação é por regras, em `src/guardrails.py`, sem chamada extra ao modelo
 | Entrada | Decisão | O que acontece |
 |---|---|---|
 | Texto vazio, tipo errado ou acima do limite | `bloquear` | O modelo não é chamado |
+| Pedido fora do atendimento da secretaria (venda de uniforme) | `bloquear` | O modelo não é chamado; a busca do RAG também não |
 | Pedido de `.env`, chave de API ou variáveis de ambiente (ADV-03) | `bloquear` | O modelo não é chamado; a busca do RAG também não |
 | Injeção na solicitação ou na pergunta (ADV-01 e a variante do delimitador) | `revisar` | O atendimento continua, com alerta, e a decisão fica em revisão |
 | Texto comum | `permitir` | Segue o fluxo |
 | Resposta do modelo com valor no formato `sk-…` | `bloquear` | O texto da resposta não é devolvido |
 
-Segredo ganha da injeção. O arquivo é conferido por `validar_material` (extensão e tamanho já definidos em `config.json`); a interface do RF20 é quem passa a chamá-la.
+Segredo ganha da injeção, e a injeção ganha do escopo. O arquivo é conferido por `validar_material` (extensão e tamanho já definidos em `config.json`); a interface do RF20 é quem passa a chamá-la.
 
 O acervo continua dado, não ordem. Os padrões de instrução em documento saíram para o guardrail e o RAG os reutiliza: o trecho suspeito sai do contexto, o alerta guarda só o nome do padrão, e a resposta que cita o mesmo documento vai para revisão. As seções informativas do ACV-09 continuam utilizáveis (ADV-02).
 
 Cada bloqueio grava `bloqueio_guardrail` em `resultados/logs/execucoes.jsonl`: código do motivo, origem (`analise` ou `rag`) e hash do texto. O trecho casado e o valor do segredo não entram. Na consulta bloqueada, o evento `consulta_rag` traz `decisao: bloquear` e o mesmo código; a pergunta fica só como hash.
 
-A repetição de rede continua uma: `adaptador_llm.max_retries` é 1 e `gerar_json_estrito` registra `repeticoes_maximas: 1`. O teto, aberto por `com_orcamento`, é por atendimento (`guardrails` no `config.json`): análise e cada classificação de sentimento, 2 chamadas e 8 000 tokens; RAG, 3 chamadas e 60 000 tokens (geração, correção de vigência e segunda leitura). A segunda chamada do sentimento é a correção. A chave no arquivo se chama `teto_analise` e `teto_rag` para não parecer credencial. Resposta simulada conta a chamada e não conta token. Passou do teto, a chamada seguinte não sai e o motivo é `teto_chamadas` ou `teto_tokens`.
+A repetição de rede continua uma: `adaptador_llm.max_retries` é 1 e `gerar_json_estrito` registra `repeticoes_maximas: 1`. O teto, aberto por `com_orcamento`, é por atendimento (`guardrails` no `config.json`): análise e cada classificação de sentimento, 2 chamadas e 8 000 tokens; RAG, 3 chamadas e 60 000 tokens (geração, correção de vigência e segunda leitura). A segunda chamada do sentimento é a correção. A chave no arquivo se chama `teto_analise` e `teto_rag` para não parecer credencial. Resposta simulada conta a chamada e não conta token. Passou do teto, a chamada seguinte não sai e o motivo é `teto_chamadas` ou `teto_tokens`. Na interface o mesmo arquivo entra como `guardrails` e como `src.guardrails`; os dois nomes apontam para um módulo só, então o teto aberto na Ficha vale na chamada ao modelo.
 
 | O quê | Comando | Chama a API? |
 |---|---|---|
@@ -620,7 +621,7 @@ A matriz completa, com entrada, esperado, obtido, evidência e situação, está
 | Abstenção nas duas perguntas sem resposta | 2/2 nas três rodadas | mesma execução |
 | Caso contraditório (P08) | conflito e revisão, 3/3 | mesma execução |
 | Acurácia da polaridade | 10/12 | `resultados/metricas/rf22/execucao_20261030_181951/` |
-| Regressão T15 | CASO-04 (texto) e CASO-05 (áudio já transcrito) chegaram à minuta e a `revisar`; 0 envios | `resultados/metricas/t15/execucao_20261030_182022/` |
+| Regressão T15 | CASO-04 (texto) e CASO-05 (áudio já transcrito) chegaram à minuta e ficam encaminhados à revisão; 0 envios. Sem decisão humana. CASO-05 declara "noturno noturno" | `resultados/metricas/t15/execucao_20261030_182022/` |
 
 P01 e P02 falham no indicador automático porque ele procura palavras que a resposta parafraseia ("presencialmente" contra "pessoalmente" na P02). A conferência humana considerou as duas completas. O gabarito foi ajustado depois (versão 1.2, seção 5), e a decisão final é a conferência humana, não o indicador.
 
@@ -632,7 +633,7 @@ Só entram acervo, solicitações e avaliações fictícias. CPF, RG, e-mail, te
 
 A exclusão de documento é automática e dura: a tela Acervo ou `python -m src.indexar --excluir DOC_ID --motivo "…"` apagam os vetores, registram a exclusão em `dados/acervo/exclusoes.json` (data, motivo e responsável), gravam `exclusao_documento` e listam os resultados derivados que ainda citam o documento (`derivados_a_revisar`). Reindexar não traz o documento de volta; só a restauração (`--restaurar` ou a tela) traz. Apagar entradas, extrações, minutas e linhas do log vencidas é manual: o projeto define o prazo, mas não tem rotina automática de expurgo. A demonstração com o ACV-09 está na seção 4.6.
 
-**Revisão.** A minuta identifica a participação da IA e não é enviada. `aprovada` exige nome e cargo; `rejeitada` e `revisar` exigem justificativa. As duas finais não são reescritas. A prova automática está em `testes/test_rf20_regras.py` (aprovação persistida e segunda decisão recusada) e `testes/test_rf20_telas.py` (rejeição com justificativa). Na regressão T15 os dois casos ficaram em `revisar`, com revisor e justificativa no log, e nenhuma minuta foi enviada.
+**Revisão.** A minuta identifica a participação da IA e não é enviada. `aprovada` exige nome e cargo; `rejeitada` e `revisar` exigem justificativa. As duas finais não são reescritas. A prova automática está em `testes/test_rf20_regras.py` (aprovação persistida e segunda decisão recusada) e `testes/test_rf20_telas.py` (rejeição com justificativa). Na regressão T15 os dois casos chegaram à minuta e ficam encaminhados à revisão; nenhuma minuta foi enviada. O script não grava decisão: as linhas de 30/10 que nomeiam um integrante foram escritas por ele, sem operador, e não contam como revisão humana. O CASO-05 declara a pendência "noturno noturno", com início "não localizado".
 
 ## 11. Custos
 
@@ -644,7 +645,7 @@ Estimativas da tabela de `src/llm_client.py`, não da fatura do provedor. A recu
 | RAG, oito perguntas, três rodadas, `gpt-4o-mini` | seção 5.4 | cerca de US$ 0,012 a US$ 0,013 por rodada |
 | RAG, mesma carga, `gpt-5.6-luna` | seção 5.4 | cerca de US$ 0,022 por rodada |
 | RF22, doze avaliações, `gpt-4o-mini` | 30/10/2026 | US$ 0,001741 |
-| T15, dois casos | 30/10/2026 | as duas análises ocorreram; o resumo não totalizou os tokens. O log guarda a execução e a decisão `revisar` |
+| T15, dois casos | 30/10/2026 | as duas análises ocorreram; o resumo não totalizou os tokens. O log guarda a execução. As linhas `revisar` dessa data foram do script, não de um operador |
 
 A configuração simulada não tem tokens nem custo. Embeddings rodam na máquina.
 
@@ -657,6 +658,7 @@ A configuração simulada não tem tokens nem custo. Embeddings rodam na máquin
 - A confiança do classificador não é calibrada.
 - A segunda configuração real troca o modelo, não o provedor. A simulada só se abstém.
 - Custos são estimados.
+- A transcrição reaproveitada do CASO-05 repete o turno ("noturno noturno") e a minuta copia isso, com início "não localizado". Fica pendente de revisão humana. O script do T15 não registra essa revisão.
 - Incluir um documento pela interface altera `dados/acervo/acervo.json`. Enquanto o arquivo estiver no catálogo, reindexar o traz de volta.
 - O gráfico do painel é HTML. O `st.bar_chart` desta instalação quebra ao importar a biblioteca de gráficos no Python 3.14.
 

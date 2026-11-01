@@ -10,5 +10,12 @@
     "CASO-05": "revisar"
   },
   "minutas_montadas": 2,
-  "enviadas": 0
+  "enviadas": 0,
+  "decisao_humana": null,
+  "pendencias": {
+    "CASO-05": [
+      "Pendente: a transcrição reaproveitada do CASO-05 repete o turno ('noturno noturno'). A minuta reproduz essa duplicidade. O início do curso sai como 'não localizado'. A revisão humana ainda não foi feita."
+    ]
+  },
+  "correcao": "Anotado em 31/10/2026: as linhas de decisão no log (c69ef219 e 12db2152) foram gravadas pelo script, com nome de integrante, e não são decisão de operador."
 }

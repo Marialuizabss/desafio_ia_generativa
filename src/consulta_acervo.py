@@ -90,6 +90,7 @@ MENSAGENS_BLOQUEIO = {
     "teto_chamadas": "O limite de chamadas deste atendimento foi atingido.",
     "teto_tokens": "O limite de tokens deste atendimento foi atingido.",
     "instrucao_na_entrada": "A entrada contém uma instrução ao sistema e segue para revisão.",
+    "fora_de_escopo": "O pedido está fora do atendimento da secretaria e foi bloqueado.",
 }
 
 # Prefixo com que a validação (RF14) lista os alertas da solicitação junto dos motivos.

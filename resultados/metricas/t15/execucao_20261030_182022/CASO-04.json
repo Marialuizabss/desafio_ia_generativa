@@ -8,5 +8,8 @@
   "motivos": [],
   "justificativa_revisao": "Regressão T15: a minuta foi montada com os fatos da solicitação. Documento, prazo e local não foram preenchidos porque esta passagem não consultou o acervo. O caso segue para revisão e nada é enviado.",
   "enviada": false,
-  "id_execucao": "c69ef219-739d-452c-95b5-e737829e17e6"
+  "id_execucao": "c69ef219-739d-452c-95b5-e737829e17e6",
+  "decisao_humana": null,
+  "pendencias": [],
+  "correcao": "Anotado em 31/10/2026: a linha de decisão no log desta execução (revisor Felipe Ferreira Aguiar, cargo Regressão T15) foi gravada pelo script, sem operador. Não é decisão humana."
 }
