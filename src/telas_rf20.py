@@ -119,6 +119,7 @@ ATENDIMENTO_ANTERIOR = (
     "rf20_aviso_correcao",
     "rf20_bloqueado",
     "rf20_decisao_erro",
+    "rf20_origem_ficha",
 )
 
 PREFIXOS_DO_ATENDIMENTO = ("rf20_corrigir_", "rf20_minuta_texto_")
@@ -587,6 +588,11 @@ def _executar_ficha() -> None:
         return
     # Solicitação nova, atendimento novo: nada do atendimento anterior entra nesta minuta.
     _descartar_atendimento()
+    # Origem gravada na execução da Ficha (RF21): a modalidade e a cópia do arquivo, se houver.
+    st.session_state["rf20_origem_ficha"] = {
+        "modalidade": origem.get("modalidade") or "texto",
+        **({"arquivo_origem": origem["arquivo"]} if origem.get("arquivo") else {}),
+    }
     try:
         try:
             from nlp import analisar_solicitacao
@@ -1108,6 +1114,7 @@ def _id_para(origem: str) -> str:
         "origem": "rf20",
         "etapa": origem,
         "sha256_texto": sha256(texto.encode("utf-8")).hexdigest(),
+        **((st.session_state.get("rf20_origem_ficha") or {}) if origem == "ficha" else {}),
     })
     st.session_state["rf20_id_ficha"] = novo
     return novo

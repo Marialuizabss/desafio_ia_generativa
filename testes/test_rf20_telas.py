@@ -293,6 +293,27 @@ class TestTelasRF20(unittest.TestCase):
         texto = _texto(tela)
         self.assertIn("O texto veio da transcrição do áudio", texto)
         self.assertIn("Revisar", texto)
+        # A execução guarda de onde veio a ficha (RF21).
+        execucao = [item for item in self._eventos() if item.get("evento") == "execucao"][-1]
+        self.assertEqual(execucao["modalidade"], "audio")
+        self.assertEqual(execucao["arquivo_origem"], "dados/originais/entrada_audio.mp3")
+
+    def test_ficha_digitada_registra_modalidade_texto(self):
+        from src.nlp import Analise
+        from src.schemas import ResultadoValidacao
+
+        solicitacao = __import__("testes.test_rf20_regras", fromlist=["_solicitacao"])._solicitacao()
+        validacao = ResultadoValidacao("aceita", solicitacao, [{"erros": []}], [], {"arquivo": "ficha"})
+        with patch("src.nlp.analisar_solicitacao", return_value=Analise(validacao, "texto", "versao")):
+            tela = self._abrir("ficha")
+            tela.text_area(key="rf20_texto_ficha").set_value("Quero me matricular.").run()
+            tela.button(key="rf20_analisar").click().run()
+            tela.text_area(key="rf20_justificativa").set_value("Conferir o curso.").run()
+            tela.button(key="rf20_revisar").click().run()
+        self.assertFalse(tela.exception)
+        execucao = [item for item in self._eventos() if item.get("evento") == "execucao"][-1]
+        self.assertEqual(execucao["modalidade"], "texto")
+        self.assertNotIn("arquivo_origem", execucao)
 
     def test_ficha_pede_arquivo_antes_de_ler(self):
         tela = self._abrir("ficha")
