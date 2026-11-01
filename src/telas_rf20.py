@@ -29,6 +29,7 @@ try:
         classificar_ficha_corrigida,
         combinar_estado,
         conferir_minuta_para_aprovar,
+        exigir_conferencia_da_leitura,
         exigir_revisao_sem_orientacoes,
         guia_da_revisao,
         mensagem_de_correcao,
@@ -66,6 +67,7 @@ except ImportError:
         classificar_ficha_corrigida,
         combinar_estado,
         conferir_minuta_para_aprovar,
+        exigir_conferencia_da_leitura,
         exigir_revisao_sem_orientacoes,
         guia_da_revisao,
         mensagem_de_correcao,
@@ -96,7 +98,7 @@ AREAS = (
 AVISO_ATENDIMENTO_ANTERIOR = (
     "Este caminho é o do Desafio 1. Ele confere extensão e tamanho do arquivo, "
     "mas não valida a ficha, não consulta o acervo e não modera o texto. "
-    "O fluxo oficial é a Ficha."
+    "O fluxo oficial é a Ficha, que também recebe áudio e imagem."
 )
 
 # O que uma solicitação nova descarta: orientações, consulta, identificadores e estado.
@@ -434,6 +436,7 @@ def _tela_ficha() -> None:
     encerramento = st.session_state.pop("rf20_aviso_ficha", None)
     if encerramento:
         st.toast(encerramento, icon="✅")
+    _entrada_por_arquivo()
     st.text_area("Texto da solicitação", key="rf20_texto_ficha", height=160)
     if st.button("Analisar solicitação", key="rf20_analisar"):
         with st.spinner("Analisando a solicitação..."):
@@ -442,6 +445,57 @@ def _tela_ficha() -> None:
     if classificacao:
         _mostrar_ficha(classificacao)
     _formulario_decisao("ficha")
+
+
+def _entrada_por_arquivo() -> None:
+    """Áudio, imagem ou TXT viram texto na caixa da Ficha, para conferir antes de analisar."""
+    try:
+        from entrada_ficha import extensoes_aceitas
+    except ImportError:
+        from src.entrada_ficha import extensoes_aceitas
+    # A chave muda quando a Ficha é limpa, e o seletor volta vazio.
+    chave = f"rf20_arquivo_ficha_{st.session_state.get('rf20_rodada_arquivo', 0)}"
+    st.file_uploader(
+        "Áudio, ficha digitalizada ou TXT (opcional)",
+        type=extensoes_aceitas(),
+        key=chave,
+        help="O texto lido aparece na caixa abaixo. Confira com o original antes de analisar.",
+    )
+    if st.button("Ler o arquivo", key="rf20_ler_arquivo"):
+        with st.spinner("Lendo o arquivo..."):
+            _ler_arquivo(chave)
+    erro = st.session_state.pop("rf20_erro_arquivo", None)
+    if erro:
+        st.error(erro)
+    aviso = st.session_state.get("rf20_aviso_arquivo")
+    if aviso:
+        st.warning(aviso)
+
+
+def _ler_arquivo(chave: str) -> None:
+    arquivo = st.session_state.get(chave)
+    if arquivo is None:
+        st.session_state["rf20_erro_arquivo"] = "Escolha um arquivo para ler."
+        return
+    try:
+        from entrada_ficha import ArquivoBloqueado, ler_arquivo_da_ficha
+    except ImportError:
+        from src.entrada_ficha import ArquivoBloqueado, ler_arquivo_da_ficha
+    try:
+        lido = ler_arquivo_da_ficha(arquivo.name, arquivo.getvalue())
+    except ArquivoBloqueado as erro:
+        st.session_state["rf20_erro_arquivo"] = f"🚫 {erro}"
+        return
+    except ValueError as erro:
+        st.session_state["rf20_erro_arquivo"] = str(erro)
+        return
+    except Exception:
+        st.session_state["rf20_erro_arquivo"] = "Não foi possível ler o arquivo agora. Tente de novo."
+        return
+    # O botão vem antes da caixa de texto, então a caixa ainda pode ser preenchida nesta passada.
+    st.session_state["rf20_texto_ficha"] = lido["texto"]
+    st.session_state["rf20_arquivo_lido"] = {"arquivo": lido["arquivo"], "modalidade": lido["modalidade"]}
+    st.session_state["rf20_aviso_arquivo"] = lido["aviso"]
 
 
 def _tela_consulta() -> None:
@@ -523,6 +577,9 @@ def _descartar_atendimento() -> None:
 
 def _executar_ficha() -> None:
     texto = (st.session_state.get("rf20_texto_ficha") or "").strip()
+    # Texto lido de áudio ou imagem: o arquivo vira a origem no registro e a ficha vai para conferência.
+    origem = st.session_state.pop("rf20_arquivo_lido", None) or {}
+    st.session_state.pop("rf20_aviso_arquivo", None)
     if not texto:
         st.session_state["rf20_ficha_classificacao"] = _aviso_local(
             "Informe o texto da solicitação."
@@ -535,7 +592,7 @@ def _executar_ficha() -> None:
             from nlp import analisar_solicitacao
         except ImportError:
             from src.nlp import analisar_solicitacao
-        analise = analisar_solicitacao(texto, "texto-da-ficha")
+        analise = analisar_solicitacao(texto, origem.get("arquivo") or "texto-da-ficha")
         classificacao = classificar_ficha(analise.validacao, analise.guardrail)
         solicitacao = getattr(analise.validacao, "solicitacao", None)
         if solicitacao is not None:
@@ -546,6 +603,7 @@ def _executar_ficha() -> None:
         classificacao = classificar_ficha(None)
         classificacao["texto"] = f"{classificacao['texto']} {erro}".strip()
     classificacao = exigir_revisao_sem_orientacoes(classificacao)
+    classificacao = exigir_conferencia_da_leitura(classificacao, origem.get("modalidade"))
     st.session_state["rf20_ficha_classificacao"] = classificacao
     st.session_state["rf20_travado"] = False
     _aplicar_estado("ficha", classificacao)
@@ -1001,6 +1059,9 @@ def _limpar_ficha(decisao: str, detalhe: str = "") -> None:
         st.session_state.pop(chave, None)
     for campo in ("rf20_texto_ficha", "rf20_revisor", "rf20_cargo", "rf20_justificativa"):
         st.session_state[campo] = ""
+    for chave in ("rf20_arquivo_lido", "rf20_aviso_arquivo"):
+        st.session_state.pop(chave, None)
+    st.session_state["rf20_rodada_arquivo"] = st.session_state.get("rf20_rodada_arquivo", 0) + 1
     st.session_state["rf20_aviso_ficha"] = MENSAGENS_ENCERRAMENTO[decisao] + detalhe
 
 

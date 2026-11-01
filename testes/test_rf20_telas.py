@@ -259,6 +259,47 @@ class TestTelasRF20(unittest.TestCase):
         self.assertIn("ainda não foram consultadas", texto)
         self.assertIn("apoio de IA", texto)
 
+    def test_ficha_le_audio_e_manda_para_conferencia(self):
+        from src import entrada_ficha
+        from src.nlp import Analise
+        from src.schemas import ResultadoValidacao
+
+        pasta = Path(self.temp.name)
+
+        def guardar(nome, conteudo):
+            caminho = pasta / nome
+            caminho.write_bytes(conteudo)
+            return {"caminho": caminho, "relativo": f"dados/originais/{nome}"}
+
+        transcricao = "Meu nome é Marcos e quero me matricular em Enfermagem."
+        solicitacao = __import__("testes.test_rf20_regras", fromlist=["_solicitacao"])._solicitacao()
+        validacao = ResultadoValidacao("aceita", solicitacao, [{"erros": []}], [], {"arquivo": "audio"})
+        with (
+            patch.object(entrada_ficha, "_guardar_copia", guardar),
+            patch.object(entrada_ficha, "_texto_do_arquivo", lambda modalidade, caminho: transcricao),
+            patch("src.nlp.analisar_solicitacao", return_value=Analise(validacao, "texto", "versao")) as analisar,
+        ):
+            tela = self._abrir("ficha")
+            tela.file_uploader(key="rf20_arquivo_ficha_0").upload(
+                "entrada_audio.mp3", b"ID3", "audio/mpeg"
+            ).run()
+            tela.button(key="rf20_ler_arquivo").click().run()
+            self.assertEqual(tela.text_area(key="rf20_texto_ficha").value, transcricao)
+            self.assertIn("confira nome, protocolo e datas com o áudio original", _texto(tela))
+            tela.button(key="rf20_analisar").click().run()
+        self.assertFalse(tela.exception)
+        # A origem no registro é a cópia do arquivo, e a ficha vai para conferência.
+        self.assertEqual(analisar.call_args.args[1], "dados/originais/entrada_audio.mp3")
+        texto = _texto(tela)
+        self.assertIn("O texto veio da transcrição do áudio", texto)
+        self.assertIn("Revisar", texto)
+
+    def test_ficha_pede_arquivo_antes_de_ler(self):
+        tela = self._abrir("ficha")
+        tela.button(key="rf20_ler_arquivo").click().run()
+        self.assertFalse(tela.exception)
+        self.assertIn("Escolha um arquivo para ler.", _texto(tela))
+
     def _abrir_fontes_na(self, tela):
         tela.sidebar.radio(key="rf20_area").set_value("fontes").run()
         self.assertFalse(tela.exception)
