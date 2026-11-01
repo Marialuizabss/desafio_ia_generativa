@@ -7,7 +7,7 @@ from unittest.mock import patch
 from src import audit, fluxo, llm_client
 from src.extracao import resultado_de_dict
 from src.privacidade import MARCADORES, contar_remocoes, minimizar_texto
-from src.varredura_rf12 import credenciais_da_linha
+from src.varredura_rf12 import credenciais_da_linha, separar_chaves
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -267,6 +267,23 @@ class TestRF12Varredura(unittest.TestCase):
         linha = f'OPENAI_API_KEY = "{valor}"'
 
         self.assertEqual(credenciais_da_linha(linha), [valor])
+
+    def test_codigo_interno_nao_e_credencial(self):
+        self.assertEqual(credenciais_da_linha('MOTIVO_TETO_TOKENS = "teto_tokens"'), [])
+        # Valor com dígito ou maiúscula continua credencial.
+        valor = "senha_" + "2026"
+        self.assertEqual(credenciais_da_linha(f'DB_PASSWORD = "{valor}"'), [valor])
+
+    def test_chave_falsa_de_teste_fica_a_parte_e_chave_real_continua_pendencia(self):
+        # Montadas por partes para a própria varredura não achar estas chaves neste arquivo.
+        falsas = ["sk-" + "TESTE" + "1234567890abcdef", "sk-" + "segredo" + "-nao-pode-aparecer"]
+        real = "sk-" + "proj" + "A1b2C3d4E5f6G7h8I9j0"
+        parecida = "sk-" + "proj" + "TESTE1234567890abcdef"
+
+        reais, ficticias = separar_chaves(" ".join([*falsas, real, parecida]))
+
+        self.assertEqual(ficticias, falsas)
+        self.assertEqual(reais, [real, parecida])
 
 
 if __name__ == "__main__":

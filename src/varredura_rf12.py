@@ -3,7 +3,8 @@
 Confere todos os arquivos que iriam na entrega (versionados e novos, exceto
 os ignorados pelo .gitignore) e o histórico do git:
 
-- chaves de API e variáveis de credencial preenchidas;
+- chaves de API e variáveis de credencial preenchidas (as chaves falsas dos
+  testes são listadas à parte, como os CPFs fictícios);
 - arquivo .env versionado;
 - CPFs com dígito verificador válido (possivelmente reais);
 - e-mails fora dos domínios fictícios usados no projeto.
@@ -27,6 +28,11 @@ RELATORIO = BASE_DIR / "resultados" / "logs" / "varredura_rf12.md"
 DOMINIOS_FICTICIOS = {"exemplo.com", "examplo.com", "exemplo.com.br"}
 
 CHAVE = re.compile(r"sk-[A-Za-z0-9_-]{20,}")
+# As chaves falsas dos testes começam com um marcador logo depois de "sk-".
+# Uma chave real do provedor não começa assim.
+MARCADORES_CHAVE_FICTICIA = ("TESTE", "segredo", "falsa", "exemplo")
+# Código interno, como o motivo "teto_tokens": só minúsculas e sublinhado.
+CODIGO_INTERNO = re.compile(r"[a-z]+(?:_[a-z]+)+")
 CREDENCIAL_PREENCHIDA = re.compile(
     r"\b[A-Z0-9_]*(?:API_KEY|SECRET|TOKEN|PASSWORD|SENHA)[A-Z0-9_]*\s*=\s*['\"]?([^\s'\"#]{8,})"
 )
@@ -76,13 +82,29 @@ def cpf_valido(numero):
     return True
 
 
+def chave_ficticia(chave):
+    return chave[3:].startswith(MARCADORES_CHAVE_FICTICIA)
+
+
+def separar_chaves(texto):
+    """(chaves que parecem reais, chaves falsas de teste) encontradas no texto."""
+    reais, ficticias = [], []
+    for chave in CHAVE.findall(texto):
+        (ficticias if chave_ficticia(chave) else reais).append(chave)
+    return reais, ficticias
+
+
 def credenciais_da_linha(linha):
     """Valores preenchidos que parecem credencial.
 
     Código Python não conta: uma chave real não tem parêntese, e expressões
-    como ``re.compile(`` ou ``os.getenv(`` geravam falso positivo.
+    como ``re.compile(`` ou ``os.getenv(`` geravam falso positivo. Código
+    interno (``MOTIVO_TETO_TOKENS = "teto_tokens"``) também não conta.
     """
-    return [valor for valor in CREDENCIAL_PREENCHIDA.findall(linha) if "(" not in valor]
+    return [
+        valor for valor in CREDENCIAL_PREENCHIDA.findall(linha)
+        if "(" not in valor and not CODIGO_INTERNO.fullmatch(valor)
+    ]
 
 
 def mascarar(valor):
@@ -99,6 +121,7 @@ def varrer():
     achados = {"chaves": [], "credenciais": [], "env": [], "cpf_valido": [], "email": []}
     cpfs_ficticios = set()
     emails_ficticios = set()
+    chaves_ficticias = []
     binarios = 0
 
     for caminho in arquivos:
@@ -113,8 +136,10 @@ def varrer():
         for numero_linha, linha in enumerate(texto.splitlines(), start=1):
             local = f"{caminho}:{numero_linha}"
 
-            for chave in CHAVE.findall(linha):
+            reais, ficticias = separar_chaves(linha)
+            for chave in reais:
                 achados["chaves"].append((local, mascarar(chave)))
+            chaves_ficticias += [local] * len(ficticias)
             for valor in credenciais_da_linha(linha):
                 achados["credenciais"].append((local, mascarar(valor)))
 
@@ -132,13 +157,15 @@ def varrer():
                     achados["email"].append((local, mascarar_email(endereco.group(0))))
 
     historico = git("log", "--all", "-p", "--no-color")
-    chaves_no_historico = len(CHAVE.findall(historico))
+    reais_no_historico, ficticias_no_historico = separar_chaves(historico)
 
     return {
         "arquivos": len(arquivos),
         "binarios": binarios,
         "achados": achados,
-        "chaves_no_historico": chaves_no_historico,
+        "chaves_no_historico": len(reais_no_historico),
+        "chaves_ficticias": chaves_ficticias,
+        "chaves_ficticias_no_historico": len(ficticias_no_historico),
         "cpfs_ficticios": sorted(cpfs_ficticios),
         "emails_ficticios": sorted(emails_ficticios),
     }
@@ -182,8 +209,17 @@ def escrever_relatorio(resultado):
         f"- CPFs com dígito verificador inválido: {', '.join(resultado['cpfs_ficticios']) or 'nenhum'}",
         f"- E-mails nos domínios fictícios ({', '.join(sorted(DOMINIOS_FICTICIOS))}): "
         f"{', '.join(resultado['emails_ficticios']) or 'nenhum'}",
+        f"- Chaves falsas de teste nos arquivos: "
+        f"{', '.join(f'`{local}`' for local in resultado['chaves_ficticias']) or 'nenhuma'}",
+        f"- Chaves falsas de teste no histórico do git: "
+        f"{resultado['chaves_ficticias_no_historico'] or 'nenhuma'}",
         "",
         "## Limites",
+        "- Chave falsa de teste é a que começa com um marcador logo depois de `sk-` ("
+        + ", ".join(f"`{marcador}`" for marcador in MARCADORES_CHAVE_FICTICIA)
+        + "). Qualquer outra chave conta como pendência.",
+        "- Valor só com letras minúsculas e sublinhado (código interno, como `teto_tokens`) não conta",
+        "  como credencial.",
         "- A busca é por padrões: um CPF falado dígito a dígito (\"1-2-3-...\") ou escrito por extenso,",
         "  ou um dado dentro de imagem ou áudio, não é detectado.",
         "- Arquivos binários (áudio, imagem, PDF) são conferidos só pelo nome.",
@@ -201,6 +237,10 @@ def main():
     print(f"Arquivos verificados: {resultado['arquivos']}")
     print(f"CPFs fictícios (dígito inválido): {len(resultado['cpfs_ficticios'])}")
     print(f"E-mails fictícios: {len(resultado['emails_ficticios'])}")
+    print(
+        f"Chaves falsas de teste: {len(resultado['chaves_ficticias'])} nos arquivos, "
+        f"{resultado['chaves_ficticias_no_historico']} no histórico"
+    )
     print(f"Pendências: {pendencias}")
     print(f"Relatório: {RELATORIO.relative_to(BASE_DIR).as_posix()}")
     return 1 if pendencias else 0
