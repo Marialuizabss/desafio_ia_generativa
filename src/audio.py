@@ -75,7 +75,7 @@ def transcrever_audio(caminho, destino_texto=None, idioma=None):
     data_execucao = datetime.now().astimezone().isoformat()
 
     try:
-        client = OpenAI(timeout=TIMEOUT_SEGUNDOS, max_retries=2)
+        client = OpenAI(timeout=TIMEOUT_SEGUNDOS, max_retries=1)
 
         print("Iniciando transcrição...")
 

@@ -192,7 +192,7 @@ def ler_texto_visual(caminho):
     imagem, mime = _bytes_visuais(entrada)
     imagem_base64 = base64.b64encode(imagem).decode("ascii")
     try:
-        client = OpenAI(timeout=TIMEOUT_SEGUNDOS, max_retries=2)
+        client = OpenAI(timeout=TIMEOUT_SEGUNDOS, max_retries=1)
 
         print("Lendo o texto do documento...")
 
